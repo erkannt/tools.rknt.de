@@ -11,7 +11,7 @@ format: node_modules
 	npx prettier --ignore-unknown --write '**'
 
 build:
-	npx parcel build src/index.html --no-source-maps --public-url https://svg2solid.rknt.de
+	npx parcel build src/index.html --no-source-maps --public-url https://erkannt.github.io/printable-year/
 
 clean:
 	rm -rf node_modules
