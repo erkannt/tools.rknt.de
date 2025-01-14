@@ -1,0 +1,13 @@
+@media print {
+  footer {
+    display: none;
+  }
+
+  #ui {
+    display: none;
+  }
+
+  body {
+    margin: 0;
+  }
+}
