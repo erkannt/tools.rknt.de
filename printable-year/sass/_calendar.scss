@@ -1,18 +1,25 @@
 #calendarContainer {
-  background-color: wheat;
   display: grid;
   grid-template-columns: repeat(12, 1fr);
-  font-size: 0.5rem;
+  font-size: 9pt;
   grid-auto-flow: dense;
+  column-gap: 3pt;
 }
 
 .month {
-  border-bottom: 3px solid teal;
+  border-bottom: 2pt solid black;
   font-weight: bold;
+  font-size: 12pt;
+  margin-bottom: 5pt;
+  line-height: 1.1;
 }
 
 .day {
-  border-bottom: 1px dotted teal;
+  line-height: 1;
+}
+
+.calendarItem[data-dayofweek='1']:not([data-day='1']) {
+  border-top: solid 1pt black;
 }
 
 .calendarItem[data-month='1'] {

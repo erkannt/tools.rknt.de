@@ -33,8 +33,10 @@ datesInYear().forEach((date) => {
   }
 
   const day = document.createElement('div');
-  day.textContent = date.toDateString();
+  day.textContent = date.getDate().toString();
   day.classList.add('day', 'calendarItem');
   day.setAttribute('data-month', (date.getMonth() + 1).toString());
+  day.setAttribute('data-dayofweek', date.getDay().toString());
+  day.setAttribute('data-day', date.getDate().toString());
   calendarContainer.appendChild(day);
 });
