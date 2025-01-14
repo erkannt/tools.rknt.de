@@ -1,0 +1,52 @@
+#calendarContainer {
+  background-color: wheat;
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  font-size: 0.5rem;
+  grid-auto-flow: dense;
+}
+
+.month {
+  border-bottom: 3px solid teal;
+}
+
+.day {
+  border-bottom: 1px dotted teal;
+}
+
+.calendarItem[data-month='1'] {
+  grid-column: 1;
+}
+.calendarItem[data-month='2'] {
+  grid-column: 2;
+}
+.calendarItem[data-month='3'] {
+  grid-column: 3;
+}
+.calendarItem[data-month='4'] {
+  grid-column: 4;
+}
+.calendarItem[data-month='5'] {
+  grid-column: 5;
+}
+.calendarItem[data-month='6'] {
+  grid-column: 6;
+}
+.calendarItem[data-month='7'] {
+  grid-column: 7;
+}
+.calendarItem[data-month='8'] {
+  grid-column: 8;
+}
+.calendarItem[data-month='9'] {
+  grid-column: 9;
+}
+.calendarItem[data-month='10'] {
+  grid-column: 10;
+}
+.calendarItem[data-month='11'] {
+  grid-column: 11;
+}
+.calendarItem[data-month='12'] {
+  grid-column: 12;
+}
