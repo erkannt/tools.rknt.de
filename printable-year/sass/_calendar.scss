@@ -1,16 +1,20 @@
 #calendarContainer {
   display: grid;
   grid-template-columns: repeat(12, 1fr);
+  grid-template-rows: auto repeat(31, 1fr);
   font-size: 9pt;
   grid-auto-flow: dense;
   column-gap: 3pt;
+  height: 80vh;
+  align-items: end;
+  border-bottom: 2pt solid black;
+  padding-bottom: 5pt;
 }
 
 .month {
   border-bottom: 2pt solid black;
   font-weight: bold;
   font-size: 12pt;
-  margin-bottom: 5pt;
   line-height: 1.1;
 }
 
@@ -18,8 +22,8 @@
   line-height: 1;
 }
 
-.calendarItem[data-dayofweek='1']:not([data-day='1']) {
-  border-top: solid 1pt black;
+.calendarItem[data-dayofweek='6'] {
+  border-bottom: solid 1pt black;
 }
 
 .calendarItem[data-month='1'] {
