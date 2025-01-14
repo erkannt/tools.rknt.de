@@ -29,6 +29,7 @@ const refreshCalendar = (year: number) => {
   calendarContainer.id = 'calendarContainer';
   appContainer.appendChild(calendarContainer);
 
+  const yearFormatter = new Intl.DateTimeFormat('default', { year: '2-digit' });
   const monthFormatter = new Intl.DateTimeFormat('default', { month: 'long' });
   const dayFormatter = new Intl.DateTimeFormat('default', { day: '2-digit' });
   const weekdayFormatter = new Intl.DateTimeFormat('default', { weekday: 'narrow' });
@@ -38,6 +39,9 @@ const refreshCalendar = (year: number) => {
     if (date.getDate() === 1) {
       const month = document.createElement('span');
       monthName = monthFormatter.format(date);
+      if (date.getMonth() === 0) {
+        monthName = `${monthName} '${yearFormatter.format(date)}`;
+      }
       month.textContent = monthName;
       month.classList.add('month', 'calendarItem');
       month.setAttribute('data-month', (date.getMonth() + 1).toString());
