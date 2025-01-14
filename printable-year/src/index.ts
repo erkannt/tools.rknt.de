@@ -3,15 +3,20 @@ if (!appContainer) {
   throw new Error('ERROR: no appContainer found');
 }
 
+const isInputElement = (element: Element): element is HTMLInputElement => element instanceof HTMLInputElement;
+
 const yearInput = document.querySelector('#yearInput');
 if (!yearInput) {
   throw new Error('ERROR: no yearInput found');
+}
+if (!isInputElement(yearInput)) {
+  throw new Error('ERROR: yearInput not an input');
 }
 
 const datesInYear = (year: number) => {
   const dates: Array<Date> = [];
   let currentDate = new Date(year.toString());
-  while (currentDate.getFullYear() == year) {
+  while (currentDate.getFullYear() === year) {
     dates.push(new Date(currentDate));
     currentDate.setDate(currentDate.getDate() + 1);
   }
@@ -50,10 +55,9 @@ const refreshCalendar = (year: number) => {
 };
 
 yearInput.addEventListener('change', () => {
-  refreshCalendar(yearInput.value);
+  refreshCalendar(Number(yearInput.value));
 });
 
-yearInput.value = new Date().getFullYear();
+yearInput.value = new Date().getFullYear().toString();
 
-console.log(yearInput.value);
-refreshCalendar(yearInput.value);
+refreshCalendar(Number(yearInput.value));
