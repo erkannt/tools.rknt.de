@@ -20,6 +20,8 @@ calendarContainer.id = 'calendarContainer';
 appContainer.appendChild(calendarContainer);
 
 const monthFormatter = new Intl.DateTimeFormat('default', { month: 'long' });
+const dayFormatter = new Intl.DateTimeFormat('default', { day: '2-digit' });
+const weekdayFormatter = new Intl.DateTimeFormat('default', { weekday: 'narrow' });
 
 let monthName: string;
 datesInYear().forEach((date) => {
@@ -33,7 +35,7 @@ datesInYear().forEach((date) => {
   }
 
   const day = document.createElement('div');
-  day.textContent = date.getDate().toString();
+  day.textContent = `${dayFormatter.format(date)} ${weekdayFormatter.format(date)}`;
   day.classList.add('day', 'calendarItem');
   day.setAttribute('data-month', (date.getMonth() + 1).toString());
   day.setAttribute('data-dayofweek', date.getDay().toString());
