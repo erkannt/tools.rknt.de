@@ -18,9 +18,16 @@ const datesInYear = () => {
 const calendarContainer = document.createElement('div');
 appContainer.appendChild(calendarContainer);
 
+const monthFormatter = new Intl.DateTimeFormat('default', { month: 'long' });
+
 datesInYear().forEach((date) => {
+  if (date.getDate() === 1) {
+    const month = document.createElement('h2');
+    month.textContent = monthFormatter.format(date);
+    calendarContainer.appendChild(month);
+  }
+
   const day = document.createElement('div');
   day.textContent = date.toDateString();
-
   calendarContainer.appendChild(day);
 });
