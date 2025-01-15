@@ -23,29 +23,33 @@ const datesInMonth = (year: number, month: number) => {
   return dates;
 };
 
+const monthHeader = (year: number, monthIdx: number) => {
+  const yearFormatter = new Intl.DateTimeFormat('default', { year: '2-digit' });
+  const monthFormatter = new Intl.DateTimeFormat('default', { month: 'long' });
+  const month = document.createElement('span');
+  const date = new Date(year, monthIdx);
+  let monthName = monthFormatter.format(date);
+  if (monthIdx === 0) {
+    monthName = `${monthName} '${yearFormatter.format(date)}`;
+  }
+  month.textContent = monthName;
+  month.classList.add('month', 'calendarItem');
+  month.setAttribute('data-month', (date.getMonth() + 1).toString());
+  return month;
+};
+
 const refreshCalendar = (year: number) => {
   appContainer.innerHTML = '';
   const calendarContainer = document.createElement('div');
   calendarContainer.id = 'calendarContainer';
   appContainer.appendChild(calendarContainer);
 
-  const yearFormatter = new Intl.DateTimeFormat('default', { year: '2-digit' });
-  const monthFormatter = new Intl.DateTimeFormat('default', { month: 'long' });
   const dayFormatter = new Intl.DateTimeFormat('default', { day: '2-digit' });
   const weekdayFormatter = new Intl.DateTimeFormat('default', { weekday: 'narrow' });
 
-  let monthName: string;
   const monthsIndices = Array.from({ length: 12 }, (_, i) => i);
   monthsIndices.forEach((monthIdx) => {
-    const month = document.createElement('span');
-    const date = new Date(year, monthIdx);
-    monthName = monthFormatter.format(date);
-    if (monthIdx === 0) {
-      monthName = `${monthName} '${yearFormatter.format(date)}`;
-    }
-    month.textContent = monthName;
-    month.classList.add('month', 'calendarItem');
-    month.setAttribute('data-month', (date.getMonth() + 1).toString());
+    const month = monthHeader(year, monthIdx);
     calendarContainer.appendChild(month);
 
     datesInMonth(year, monthIdx).forEach((date) => {
