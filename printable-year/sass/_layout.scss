@@ -12,14 +12,27 @@ body {
 }
 
 #ui {
-  margin-bottom: 3rem;
-}
+  margin-bottom: var(--space-2xl);
 
-h1 {
-  align-items: baseline;
-  font-size: var(--step-5);
-  margin-bottom: var(--space-l);
-  font-weight: bold;
+  * + * {
+    margin-block-start: var(--space-l);
+  }
+
+  h1 {
+    font-size: var(--step-5);
+    font-weight: bold;
+  }
+
+  select {
+    box-sizing: border-box;
+    max-width: 100%;
+    height: 2.5rem;
+    padding: 5px;
+    padding-bottom: 1px;
+    border: 2px solid black;
+    color: black;
+    background-color: white;
+  }
 
   input {
     border: none;
