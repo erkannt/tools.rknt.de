@@ -1,12 +1,11 @@
 #calendarContainer {
   display: grid;
-  grid-template-columns: repeat(12, 1fr);
-  grid-template-rows: auto;
+  grid-template-columns: repeat(6, 1fr);
+  grid-template-rows: repeat(2, 95vh);
   font-size: 9pt;
   grid-auto-flow: dense;
   column-gap: 3pt;
-  height: 80vh;
-  border-bottom: 2pt solid black;
+  row-gap: 3rem;
   padding-bottom: 5pt;
 }
 
@@ -15,6 +14,7 @@
   grid-template-columns: 1fr;
   grid-template-rows: auto repeat(31, 1fr);
   align-items: end;
+  border-bottom: 2pt solid black;
 }
 
 .month {
@@ -30,4 +30,8 @@
 
 .calendarItem[data-dayofweek='0'] {
   border-bottom: solid 1pt black;
+}
+
+.calendarItem:last-child {
+  border-bottom: none;
 }
