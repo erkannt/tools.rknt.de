@@ -38,14 +38,24 @@ const monthHeader = (year: number, monthIdx: number) => {
   return month;
 };
 
+const dayEntry = (date: Date) => {
+  const dayFormatter = new Intl.DateTimeFormat('default', { day: '2-digit' });
+  const weekdayFormatter = new Intl.DateTimeFormat('default', { weekday: 'narrow' });
+
+  const day = document.createElement('div');
+  day.textContent = `${dayFormatter.format(date)} ${weekdayFormatter.format(date)}`;
+  day.classList.add('day', 'calendarItem');
+  day.setAttribute('data-month', (date.getMonth() + 1).toString());
+  day.setAttribute('data-dayofweek', date.getDay().toString());
+  day.setAttribute('data-day', date.getDate().toString());
+  return day;
+};
+
 const refreshCalendar = (year: number) => {
   appContainer.innerHTML = '';
   const calendarContainer = document.createElement('div');
   calendarContainer.id = 'calendarContainer';
   appContainer.appendChild(calendarContainer);
-
-  const dayFormatter = new Intl.DateTimeFormat('default', { day: '2-digit' });
-  const weekdayFormatter = new Intl.DateTimeFormat('default', { weekday: 'narrow' });
 
   const monthsIndices = Array.from({ length: 12 }, (_, i) => i);
   monthsIndices.forEach((monthIdx) => {
@@ -53,12 +63,7 @@ const refreshCalendar = (year: number) => {
     calendarContainer.appendChild(month);
 
     datesInMonth(year, monthIdx).forEach((date) => {
-      const day = document.createElement('div');
-      day.textContent = `${dayFormatter.format(date)} ${weekdayFormatter.format(date)}`;
-      day.classList.add('day', 'calendarItem');
-      day.setAttribute('data-month', (date.getMonth() + 1).toString());
-      day.setAttribute('data-dayofweek', date.getDay().toString());
-      day.setAttribute('data-day', date.getDate().toString());
+      const day = dayEntry(date);
       calendarContainer.appendChild(day);
     });
   });
