@@ -6,6 +6,21 @@ node_modules: package.json package-lock.json
 	npm install
 	touch node_modules
 
+.PHONY: check
+check: lint prettier typecheck
+
+.PHONY: lint
+lint: node_modules
+	npx eslint .
+
+.PHONY: prettier
+prettier: node_modules
+	npx prettier --ignore-unknown --check '**'
+
+.PHONY: typecheck
+typecheck: node_modules
+	npx tsc --noEmit
+
 .PHONY: dev
 format: node_modules
 	npx prettier --ignore-unknown --write '**'
