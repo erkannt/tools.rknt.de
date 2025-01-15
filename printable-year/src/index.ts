@@ -5,12 +5,22 @@ if (!appContainer) {
 
 const isInputElement = (element: Element): element is HTMLInputElement => element instanceof HTMLInputElement;
 
+const isSelectElement = (element: Element): element is HTMLSelectElement => element instanceof HTMLSelectElement;
+
 const yearInput = document.querySelector('#yearInput');
 if (!yearInput) {
   throw new Error('ERROR: no yearInput found');
 }
 if (!isInputElement(yearInput)) {
   throw new Error('ERROR: yearInput not an input');
+}
+
+const monthsPerPageInput = document.querySelector('#monthsPerPage');
+if (!monthsPerPageInput) {
+  throw new Error('ERROR: no monthsPerPageInput found');
+}
+if (!isSelectElement(monthsPerPageInput)) {
+  throw new Error('ERROR: monthsPerPage not a select');
 }
 
 const datesInMonth = (year: number, month: number) => {
@@ -55,6 +65,7 @@ const refreshCalendar = (year: number) => {
   appContainer.innerHTML = '';
   const calendarContainer = document.createElement('div');
   calendarContainer.id = 'calendarContainer';
+  calendarContainer.setAttribute('data-monthsperpage', monthsPerPageInput.value);
   appContainer.appendChild(calendarContainer);
 
   const monthsIndices = Array.from({ length: 12 }, (_, i) => i);
@@ -74,6 +85,10 @@ const refreshCalendar = (year: number) => {
 };
 
 yearInput.addEventListener('change', () => {
+  refreshCalendar(Number(yearInput.value));
+});
+
+monthsPerPageInput.addEventListener('change', () => {
   refreshCalendar(Number(yearInput.value));
 });
 
