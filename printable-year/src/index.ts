@@ -52,13 +52,22 @@ const dayEntry = (date: Date) => {
   const dayFormatter = new Intl.DateTimeFormat('default', { day: '2-digit' });
   const weekdayFormatter = new Intl.DateTimeFormat('default', { weekday: 'narrow' });
 
-  const day = document.createElement('div');
-  day.textContent = `${dayFormatter.format(date)} ${weekdayFormatter.format(date)}`;
-  day.classList.add('day', 'calendarItem');
-  day.setAttribute('data-month', (date.getMonth() + 1).toString());
-  day.setAttribute('data-dayofweek', date.getDay().toString());
-  day.setAttribute('data-day', date.getDate().toString());
-  return day;
+  const dayNumber = document.createElement('div');
+  dayNumber.textContent = dayFormatter.format(date);
+  dayNumber.classList.add('day-number', 'calendarItem');
+  const dayName = document.createElement('div');
+  dayName.textContent = weekdayFormatter.format(date);
+  dayName.classList.add('day-name', 'calendarItem');
+  const optionalContent = document.createElement('div');
+
+  const entries = [dayNumber, dayName, optionalContent];
+  entries.forEach((entry) => {
+    entry.classList.add('day', 'calendarItem');
+    entry.setAttribute('data-month', (date.getMonth() + 1).toString());
+    entry.setAttribute('data-dayofweek', date.getDay().toString());
+    entry.setAttribute('data-day', date.getDate().toString());
+  });
+  return entries;
 };
 
 const refreshCalendar = (year: number) => {
@@ -76,8 +85,7 @@ const refreshCalendar = (year: number) => {
     monthContainer.appendChild(month);
 
     datesInMonth(year, monthIdx).forEach((date) => {
-      const day = dayEntry(date);
-      monthContainer.appendChild(day);
+      dayEntry(date).forEach((entry) => monthContainer.appendChild(entry));
     });
 
     calendarContainer.append(monthContainer);

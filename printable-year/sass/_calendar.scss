@@ -34,7 +34,7 @@
 
 .monthContainer {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: auto auto 1fr;
   grid-template-rows: auto repeat(31, 1fr);
   align-items: end;
   border-bottom: 2pt solid black;
@@ -45,16 +45,22 @@
   font-weight: bold;
   font-size: 11pt;
   line-height: 1.1;
+  grid-column: 1/-1;
 }
 
 .day {
   line-height: 1;
 }
 
+.day-name {
+  text-align: right;
+  padding-left: 2pt;
+}
+
 .calendarItem[data-dayofweek='0'] {
   border-bottom: solid 1pt black;
 }
 
-.calendarItem:last-child {
+.calendarItem:nth-last-child(-n + 3) {
   border-bottom: none;
 }
