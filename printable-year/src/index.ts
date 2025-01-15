@@ -23,6 +23,17 @@ const datesInYear = (year: number) => {
   return dates;
 };
 
+const datesInMonth = (year: number, month: number) => {
+  const dates: Array<Date> = [];
+  let currentDate = new Date(year, month, 1);
+  console.log(currentDate);
+  while (currentDate.getFullYear() === year && currentDate.getMonth() === month) {
+    dates.push(new Date(currentDate));
+    currentDate.setDate(currentDate.getDate() + 1);
+  }
+  return dates;
+};
+
 const refreshCalendar = (year: number) => {
   appContainer.innerHTML = '';
   const calendarContainer = document.createElement('div');
@@ -35,6 +46,10 @@ const refreshCalendar = (year: number) => {
   const weekdayFormatter = new Intl.DateTimeFormat('default', { weekday: 'narrow' });
 
   let monthName: string;
+  const months = Array.from({ length: 12 }, (_, i) => i);
+  months.forEach((month) => {
+    datesInMonth(year, month).forEach((date) => console.log(date));
+  });
   datesInYear(year).forEach((date) => {
     if (date.getDate() === 1) {
       const month = document.createElement('span');
