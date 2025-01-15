@@ -26,7 +26,6 @@ const datesInYear = (year: number) => {
 const datesInMonth = (year: number, month: number) => {
   const dates: Array<Date> = [];
   let currentDate = new Date(year, month, 1);
-  console.log(currentDate);
   while (currentDate.getFullYear() === year && currentDate.getMonth() === month) {
     dates.push(new Date(currentDate));
     currentDate.setDate(currentDate.getDate() + 1);
@@ -46,30 +45,28 @@ const refreshCalendar = (year: number) => {
   const weekdayFormatter = new Intl.DateTimeFormat('default', { weekday: 'narrow' });
 
   let monthName: string;
-  const months = Array.from({ length: 12 }, (_, i) => i);
-  months.forEach((month) => {
-    datesInMonth(year, month).forEach((date) => console.log(date));
-  });
-  datesInYear(year).forEach((date) => {
-    if (date.getDate() === 1) {
-      const month = document.createElement('span');
-      monthName = monthFormatter.format(date);
-      if (date.getMonth() === 0) {
-        monthName = `${monthName} '${yearFormatter.format(date)}`;
-      }
-      month.textContent = monthName;
-      month.classList.add('month', 'calendarItem');
-      month.setAttribute('data-month', (date.getMonth() + 1).toString());
-      calendarContainer.appendChild(month);
+  const monthsIndices = Array.from({ length: 12 }, (_, i) => i);
+  monthsIndices.forEach((monthIdx) => {
+    const month = document.createElement('span');
+    const date = new Date(year, monthIdx);
+    monthName = monthFormatter.format(date);
+    if (monthIdx === 0) {
+      monthName = `${monthName} '${yearFormatter.format(date)}`;
     }
+    month.textContent = monthName;
+    month.classList.add('month', 'calendarItem');
+    month.setAttribute('data-month', (date.getMonth() + 1).toString());
+    calendarContainer.appendChild(month);
 
-    const day = document.createElement('div');
-    day.textContent = `${dayFormatter.format(date)} ${weekdayFormatter.format(date)}`;
-    day.classList.add('day', 'calendarItem');
-    day.setAttribute('data-month', (date.getMonth() + 1).toString());
-    day.setAttribute('data-dayofweek', date.getDay().toString());
-    day.setAttribute('data-day', date.getDate().toString());
-    calendarContainer.appendChild(day);
+    datesInMonth(year, monthIdx).forEach((date) => {
+      const day = document.createElement('div');
+      day.textContent = `${dayFormatter.format(date)} ${weekdayFormatter.format(date)}`;
+      day.classList.add('day', 'calendarItem');
+      day.setAttribute('data-month', (date.getMonth() + 1).toString());
+      day.setAttribute('data-dayofweek', date.getDay().toString());
+      day.setAttribute('data-day', date.getDate().toString());
+      calendarContainer.appendChild(day);
+    });
   });
 };
 
