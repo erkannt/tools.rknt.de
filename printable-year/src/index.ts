@@ -14,8 +14,8 @@ if (!isInputElement(yearInput)) {
 }
 
 const datesInYear = (year: number) => {
-  const dates: Array<Date> = [];
-  let currentDate = new Date(year.toString());
+  const dates: Date[] = [];
+  const currentDate = new Date(year.toString());
   while (currentDate.getFullYear() === year) {
     dates.push(new Date(currentDate));
     currentDate.setDate(currentDate.getDate() + 1);
@@ -24,8 +24,8 @@ const datesInYear = (year: number) => {
 };
 
 const datesInMonth = (year: number, month: number) => {
-  const dates: Array<Date> = [];
-  let currentDate = new Date(year, month, 1);
+  const dates: Date[] = [];
+  const currentDate = new Date(year, month, 1);
   while (currentDate.getFullYear() === year && currentDate.getMonth() === month) {
     dates.push(new Date(currentDate));
     currentDate.setDate(currentDate.getDate() + 1);
