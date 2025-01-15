@@ -13,16 +13,6 @@ if (!isInputElement(yearInput)) {
   throw new Error('ERROR: yearInput not an input');
 }
 
-const datesInYear = (year: number) => {
-  const dates: Date[] = [];
-  const currentDate = new Date(year.toString());
-  while (currentDate.getFullYear() === year) {
-    dates.push(new Date(currentDate));
-    currentDate.setDate(currentDate.getDate() + 1);
-  }
-  return dates;
-};
-
 const datesInMonth = (year: number, month: number) => {
   const dates: Date[] = [];
   const currentDate = new Date(year, month, 1);
