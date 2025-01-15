@@ -1,14 +1,20 @@
 #calendarContainer {
   display: grid;
   grid-template-columns: repeat(12, 1fr);
-  grid-template-rows: auto repeat(31, 1fr);
+  grid-template-rows: auto;
   font-size: 9pt;
   grid-auto-flow: dense;
   column-gap: 3pt;
   height: 80vh;
-  align-items: end;
   border-bottom: 2pt solid black;
   padding-bottom: 5pt;
+}
+
+.monthContainer {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: auto repeat(31, 1fr);
+  align-items: end;
 }
 
 .month {
@@ -24,41 +30,4 @@
 
 .calendarItem[data-dayofweek='0'] {
   border-bottom: solid 1pt black;
-}
-
-.calendarItem[data-month='1'] {
-  grid-column: 1;
-}
-.calendarItem[data-month='2'] {
-  grid-column: 2;
-}
-.calendarItem[data-month='3'] {
-  grid-column: 3;
-}
-.calendarItem[data-month='4'] {
-  grid-column: 4;
-}
-.calendarItem[data-month='5'] {
-  grid-column: 5;
-}
-.calendarItem[data-month='6'] {
-  grid-column: 6;
-}
-.calendarItem[data-month='7'] {
-  grid-column: 7;
-}
-.calendarItem[data-month='8'] {
-  grid-column: 8;
-}
-.calendarItem[data-month='9'] {
-  grid-column: 9;
-}
-.calendarItem[data-month='10'] {
-  grid-column: 10;
-}
-.calendarItem[data-month='11'] {
-  grid-column: 11;
-}
-.calendarItem[data-month='12'] {
-  grid-column: 12;
 }

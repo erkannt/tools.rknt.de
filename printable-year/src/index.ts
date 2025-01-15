@@ -59,13 +59,17 @@ const refreshCalendar = (year: number) => {
 
   const monthsIndices = Array.from({ length: 12 }, (_, i) => i);
   monthsIndices.forEach((monthIdx) => {
+    const monthContainer = document.createElement('div');
+    monthContainer.classList.add('monthContainer');
     const month = monthHeader(year, monthIdx);
-    calendarContainer.appendChild(month);
+    monthContainer.appendChild(month);
 
     datesInMonth(year, monthIdx).forEach((date) => {
       const day = dayEntry(date);
-      calendarContainer.appendChild(day);
+      monthContainer.appendChild(day);
     });
+
+    calendarContainer.append(monthContainer);
   });
 };
 
