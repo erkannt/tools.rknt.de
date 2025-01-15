@@ -13,4 +13,7 @@ export default tseslint.config(
       },
     },
   },
+  {
+    ignores: ['*.mjs', 'dist/**/*'],
+  },
 );
