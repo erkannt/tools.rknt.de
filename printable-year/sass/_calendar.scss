@@ -3,8 +3,11 @@
   font-size: 9pt;
   grid-auto-flow: dense;
   column-gap: 3pt;
-  row-gap: 3rem;
   padding-bottom: 5pt;
+  row-gap: 3rem;
+  @media print {
+    row-gap: 4vh;
+  }
 }
 
 #calendarContainer[data-monthsperpage='12'] {
