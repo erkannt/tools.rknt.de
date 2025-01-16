@@ -1,8 +1,10 @@
 #calendarContainer {
-  --fontsize-entries: 11pt;
   --fontsize-headings: 11pt;
+  --fontsize-entries: 9pt;
   --linewidth-regular: 1pt;
   --linewidth-bold: 2pt;
+
+  --a4-container-height: calc(297mm * 1pt);
 
   display: grid;
   grid-auto-flow: dense;
@@ -10,6 +12,10 @@
   padding-bottom: 5pt;
   row-gap: var(--space-l);
   @media print {
+    --fontsize-entries: max(8pt, calc(0.015 * 100cqh));
+    --fontsize-entries: max(6pt, calc(0.01 * 100cqh));
+    --linewidth-regular: max(0.5pt, calc(0.001 * 100cqh));
+    --linewidth-bold: max(1.5pt, calc(0.003 * 100cqh));
     row-gap: 4vh;
   }
 }
