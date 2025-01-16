@@ -4,6 +4,8 @@
   --linewidth-regular: 1pt;
   --linewidth-bold: 2pt;
 
+  --calendar-row-height: 98vh;
+
   --a4-container-height: calc(297mm * 1pt);
 
   display: grid;
@@ -22,27 +24,27 @@
 
 #calendarContainer[data-monthsperpage='12'] {
   grid-template-columns: repeat(12, 1fr);
-  grid-template-rows: repeat(1, 95vh);
+  grid-template-rows: repeat(1, var(--calendar-row-height));
 }
 #calendarContainer[data-monthsperpage='6'] {
   grid-template-columns: repeat(6, 1fr);
-  grid-template-rows: repeat(2, 95vh);
+  grid-template-rows: repeat(2, var(--calendar-row-height));
 }
 #calendarContainer[data-monthsperpage='4'] {
   grid-template-columns: repeat(4, 1fr);
-  grid-template-rows: repeat(3, 95vh);
+  grid-template-rows: repeat(3, var(--calendar-row-height));
 }
 #calendarContainer[data-monthsperpage='3'] {
   grid-template-columns: repeat(3, 1fr);
-  grid-template-rows: repeat(4, 95vh);
+  grid-template-rows: repeat(4, var(--calendar-row-height));
 }
 #calendarContainer[data-monthsperpage='2'] {
   grid-template-columns: repeat(2, 1fr);
-  grid-template-rows: repeat(6, 95vh);
+  grid-template-rows: repeat(6, var(--calendar-row-height));
 }
 #calendarContainer[data-monthsperpage='1'] {
   grid-template-columns: repeat(1, 1fr);
-  grid-template-rows: repeat(12, 95vh);
+  grid-template-rows: repeat(12, var(--calendar-row-height));
 }
 
 .monthContainer {
@@ -67,7 +69,7 @@
 
 .day-name {
   text-align: right;
-  padding-left: 2pt;
+  padding-left: 0.2ch;
 }
 
 .calendarItem[data-dayofweek='0'] {
