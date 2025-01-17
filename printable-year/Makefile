@@ -21,15 +21,15 @@ prettier: node_modules
 typecheck: node_modules
 	npx tsc --noEmit
 
-.PHONY: dev
+.PHONY: format
 format: node_modules
 	npx prettier --ignore-unknown --write '**'
 
-.PHONY: dev
+.PHONY: build
 build:
 	npx parcel build src/index.html --no-source-maps --public-url https://erkannt.github.io/printable-year/
 
-.PHONY: dev
+.PHONY: clean
 clean:
 	rm -rf node_modules
 	rm -rf .parcel-cache
