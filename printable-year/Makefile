@@ -3,7 +3,7 @@ dev: node_modules
 	npx parcel -p 8080 src/index.html
 
 node_modules: package.json package-lock.json
-	npm install
+	pnpm install
 	touch node_modules
 
 .PHONY: check
