@@ -56,19 +56,37 @@ const monthHeader = (year: number, monthIdx: number) => {
   return month;
 };
 
+const getIsoWeek = (input: Date) => {
+  const date = new Date(input.getTime());
+  date.setHours(0, 0, 0, 0);
+  // Thursday in current week decides the year.
+  date.setDate(date.getDate() + 3 - ((date.getDay() + 6) % 7));
+  // January 4 is always in week 1.
+  const week1 = new Date(date.getFullYear(), 0, 4);
+  // Adjust to Thursday in week 1 and count number of weeks from date to week1.
+  return 1 + Math.round(((date.getTime() - week1.getTime()) / 86400000 - 3 + ((week1.getDay() + 6) % 7)) / 7);
+};
+
 const dayEntry = (date: Date) => {
   const dayFormatter = new Intl.DateTimeFormat('default', { day: '2-digit' });
   const weekdayFormatter = new Intl.DateTimeFormat('default', { weekday: 'narrow' });
 
   const dayNumber = document.createElement('div');
   dayNumber.textContent = dayFormatter.format(date);
-  dayNumber.classList.add('day-number', 'calendarItem');
+  dayNumber.classList.add('day-number');
+
   const dayName = document.createElement('div');
   dayName.textContent = weekdayFormatter.format(date);
-  dayName.classList.add('day-name', 'calendarItem');
-  const optionalContent = document.createElement('div');
+  dayName.classList.add('day-name');
 
-  const entries = [dayNumber, dayName, optionalContent];
+  const weekNumber = document.createElement('div');
+  weekNumber.classList.add('week-number');
+
+  if (date.getDay() == 1) {
+    weekNumber.textContent = getIsoWeek(date).toString();
+  }
+
+  const entries = [dayNumber, dayName, weekNumber];
   entries.forEach((entry) => {
     entry.classList.add('day', 'calendarItem');
     entry.setAttribute('data-month', (date.getMonth() + 1).toString());

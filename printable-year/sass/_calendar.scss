@@ -69,6 +69,10 @@
   padding-left: 0.2ch;
 }
 
+.week-number {
+  text-align: end;
+}
+
 #calendarContainer[data-shadeWeekends='true'] .calendarItem[data-dayofweek='0'],
 #calendarContainer[data-shadeWeekends='true'] .calendarItem[data-dayofweek='6'] {
   background-color: var(--bg-grey);
