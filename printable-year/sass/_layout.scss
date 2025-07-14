@@ -21,26 +21,46 @@ body {
   h1 {
     font-size: var(--step-5);
     font-weight: bold;
+    gap: 0.5ex;
+  }
+
+  select,
+  input[type='number'] {
+    border: 2px solid black;
+    color: black;
+    background-color: white;
+    box-sizing: border-box;
   }
 
   select {
-    box-sizing: border-box;
     max-width: 100%;
     height: 2.5rem;
     padding: 5px;
     padding-bottom: 1px;
-    border: 2px solid black;
-    color: black;
-    background-color: white;
   }
 
-  input {
-    border: none;
+  input[type='number'] {
+    border: 2px solid black;
     width: 5ch;
     background: none;
-    padding: 0;
     margin: 0;
+    height: 1.2em;
+    padding-top: 12px;
+    padding-left: 10px;
     font-weight: bold;
+  }
+
+  /* For Chrome, Safari, Edge, Opera */
+  input[type='number']::-webkit-outer-spin-button,
+  input[type='number']::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  /* For Firefox */
+  input[type='number'] {
+    appearance: textfield;
+    -moz-appearance: textfield;
   }
 }
 
