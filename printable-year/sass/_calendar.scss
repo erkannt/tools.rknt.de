@@ -49,7 +49,6 @@
   display: grid;
   grid-template-columns: auto auto 1fr;
   grid-template-rows: auto repeat(31, 1fr);
-  border-bottom: var(--linewidth-bold) solid black;
 }
 
 .month {
@@ -68,6 +67,12 @@
 .day-name {
   text-align: right;
   padding-left: 0.2ch;
+}
+
+.calendarItem[data-dayofweek='0'],
+.calendarItem[data-dayofweek='6'] {
+  background-color: var(--bg-grey);
+  height: 100%;
 }
 
 .calendarItem[data-dayofweek='0'] {

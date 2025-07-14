@@ -4,7 +4,9 @@ body {
   font-weight: normal;
   line-height: 1.6;
   color: var(--black);
-  background-color: var(--off-white);
+  @media not print {
+    background-color: var(--off-white);
+  }
 
   h1,
   h2,
