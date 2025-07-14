@@ -10,6 +10,9 @@ jobs:
       - name: Checkout 🛎️
         uses: actions/checkout@v2
 
+      - name: Mise
+        uses: jdx/mise-action@v2
+
       - name: Checks ✅
         run: |
           make check
