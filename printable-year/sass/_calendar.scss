@@ -49,7 +49,6 @@
   display: grid;
   grid-template-columns: auto auto 1fr;
   grid-template-rows: auto repeat(31, 1fr);
-  align-items: end;
   border-bottom: var(--linewidth-bold) solid black;
 }
 
@@ -61,6 +60,7 @@
   grid-column: 1/-1;
 }
 .day {
+  padding-top: 0.5em;
   line-height: 1;
   font-size: var(--fontsize-entries);
 }
