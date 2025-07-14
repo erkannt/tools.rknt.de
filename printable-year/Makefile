@@ -2,7 +2,7 @@
 dev: node_modules
 	npx parcel -p 8080 src/index.html
 
-node_modules: package.json package-lock.json
+node_modules: package.json pnpm-lock.yaml
 	pnpm install
 	touch node_modules
 
