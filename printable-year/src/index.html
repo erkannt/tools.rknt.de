@@ -21,15 +21,23 @@
           <input type="number" id="yearInput" />
         </h1>
 
-        <label for="monthsPerPage">Months per page</label>
-        <select name="monthsPerPage" id="monthsPerPage">
-          <option value="12">12</option>
-          <option value="6">6</option>
-          <option value="4">4</option>
-          <option value="3">3</option>
-          <option value="2">2</option>
-          <option value="1">1</option>
-        </select>
+        <div class="options">
+          <div>
+            <label for="monthsPerPage">Months per page</label>
+            <select name="monthsPerPage" id="monthsPerPage">
+              <option value="12">12</option>
+              <option value="6">6</option>
+              <option value="4">4</option>
+              <option value="3">3</option>
+              <option value="2">2</option>
+              <option value="1">1</option>
+            </select>
+          </div>
+          <div class="checkbox-wrapper">
+            <label for="shadeWeekends">Shade Weekends</label>
+            <input type="checkbox" name="shadeWeekends" id="shadeWeekends" />
+          </div>
+        </div>
 
         <p>Simply print this page. Landscape recommended.</p>
       </div>

@@ -23,6 +23,14 @@ if (!isSelectElement(monthsPerPageInput)) {
   throw new Error('ERROR: monthsPerPage not a select');
 }
 
+const shadeWeekendsInput = document.querySelector('#shadeWeekends');
+if (!shadeWeekendsInput) {
+  throw new Error('ERROR: no shadeWeekendInput found');
+}
+if (!isInputElement(shadeWeekendsInput)) {
+  throw new Error('ERROR: shadeWeekendsInput not an input');
+}
+
 const datesInMonth = (year: number, month: number) => {
   const dates: Date[] = [];
   const currentDate = new Date(year, month, 1);
@@ -75,6 +83,7 @@ const refreshCalendar = (year: number) => {
   const calendarContainer = document.createElement('div');
   calendarContainer.id = 'calendarContainer';
   calendarContainer.setAttribute('data-monthsperpage', monthsPerPageInput.value);
+  calendarContainer.setAttribute('data-shadeWeekends', String(shadeWeekendsInput.checked));
   appContainer.appendChild(calendarContainer);
 
   const monthsIndices = Array.from({ length: 12 }, (_, i) => i);
@@ -97,6 +106,11 @@ yearInput.addEventListener('change', () => {
 });
 
 monthsPerPageInput.addEventListener('change', () => {
+  refreshCalendar(Number(yearInput.value));
+});
+
+shadeWeekendsInput.addEventListener('change', () => {
+  console.log('foo', shadeWeekendsInput.checked);
   refreshCalendar(Number(yearInput.value));
 });
 

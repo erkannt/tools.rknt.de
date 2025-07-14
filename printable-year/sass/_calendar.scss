@@ -69,8 +69,8 @@
   padding-left: 0.2ch;
 }
 
-.calendarItem[data-dayofweek='0'],
-.calendarItem[data-dayofweek='6'] {
+#calendarContainer[data-shadeWeekends='true'] .calendarItem[data-dayofweek='0'],
+#calendarContainer[data-shadeWeekends='true'] .calendarItem[data-dayofweek='6'] {
   background-color: var(--bg-grey);
   height: 100%;
 }
