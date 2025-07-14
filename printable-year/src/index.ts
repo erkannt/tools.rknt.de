@@ -31,6 +31,14 @@ if (!isInputElement(shadeWeekendsInput)) {
   throw new Error('ERROR: shadeWeekendsInput not an input');
 }
 
+const showWeeknumbersInput = document.querySelector('#showWeeknumbers');
+if (!showWeeknumbersInput) {
+  throw new Error('ERROR: no showWeeknumbersInput found');
+}
+if (!isInputElement(showWeeknumbersInput)) {
+  throw new Error('ERROR: showWeeknumbersInput not an input');
+}
+
 const datesInMonth = (year: number, month: number) => {
   const dates: Date[] = [];
   const currentDate = new Date(year, month, 1);
@@ -82,7 +90,7 @@ const dayEntry = (date: Date) => {
   const weekNumber = document.createElement('div');
   weekNumber.classList.add('week-number');
 
-  if (date.getDay() == 1) {
+  if (date.getDay() == 1 && showWeeknumbersInput.checked) {
     weekNumber.textContent = getIsoWeek(date).toString();
   }
 
@@ -128,7 +136,10 @@ monthsPerPageInput.addEventListener('change', () => {
 });
 
 shadeWeekendsInput.addEventListener('change', () => {
-  console.log('foo', shadeWeekendsInput.checked);
+  refreshCalendar(Number(yearInput.value));
+});
+
+showWeeknumbersInput.addEventListener('change', () => {
   refreshCalendar(Number(yearInput.value));
 });
 
