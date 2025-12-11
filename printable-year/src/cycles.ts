@@ -29,29 +29,31 @@ if (!isInputElement(showWeeknumbersInput)) {
   throw new Error('ERROR: showWeeknumbersInput not an input');
 }
 
-const datesInMonth = (year: number, month: number) => {
-  const dates: Date[] = [];
-  const currentDate = new Date(year, month, 1);
-  while (currentDate.getFullYear() === year && currentDate.getMonth() === month) {
-    dates.push(new Date(currentDate));
-    currentDate.setDate(currentDate.getDate() + 1);
+const datesInQuarter = (year: number, quarter: number): Date[] => {
+  const weekOffset = quarter * 13;
+  const daysOffset = weekOffset * 7;
+  const firstMondayOfQuarter = new Date(year, 0, daysOffset - offsetOfFirstMondayFromNewYears(year));
+  const dates = [];
+  for (let i = 0; i <= 13 * 7; i++) {
+    const currentDate = new Date(firstMondayOfQuarter.getTime() + i * 24 * 60 * 60 * 1000);
+    dates.push(currentDate);
   }
   return dates;
 };
 
-const monthHeader = (year: number, monthIdx: number) => {
-  const yearFormatter = new Intl.DateTimeFormat('default', { year: '2-digit' });
-  const monthFormatter = new Intl.DateTimeFormat('default', { month: 'long' });
-  const month = document.createElement('span');
-  const date = new Date(year, monthIdx);
-  let monthName = monthFormatter.format(date);
-  if (monthIdx === 0) {
-    monthName = `${monthName} '${yearFormatter.format(date)}`;
-  }
-  month.textContent = monthName;
-  month.classList.add('month', 'calendarItem');
-  month.setAttribute('data-month', (date.getMonth() + 1).toString());
-  return month;
+const quarterHeader = (year: number, quarterIdx: number) => {
+  const quarter = document.createElement('span');
+  quarter.textContent = `Quarter ${(quarterIdx + 1).toString()}`;
+  quarter.classList.add('quarterHeader', 'calendarItem');
+  quarter.setAttribute('data-quarter', (quarterIdx + 1).toString());
+  return quarter;
+};
+
+const offsetOfFirstMondayFromNewYears = (year: number): number => {
+  const firstDayOfYear = new Date(year, 0, 1);
+  const dayOfWeek = firstDayOfYear.getDay();
+  const offset = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+  return offset;
 };
 
 const getIsoWeek = (input: Date) => {
@@ -67,15 +69,10 @@ const getIsoWeek = (input: Date) => {
 
 const dayEntry = (date: Date) => {
   const dayFormatter = new Intl.DateTimeFormat('default', { day: '2-digit' });
-  const weekdayFormatter = new Intl.DateTimeFormat('default', { weekday: 'narrow' });
 
   const dayNumber = document.createElement('div');
   dayNumber.textContent = dayFormatter.format(date);
   dayNumber.classList.add('day-number');
-
-  const dayName = document.createElement('div');
-  dayName.textContent = weekdayFormatter.format(date);
-  dayName.classList.add('day-name');
 
   const weekNumber = document.createElement('div');
   weekNumber.classList.add('week-number');
@@ -84,7 +81,7 @@ const dayEntry = (date: Date) => {
     weekNumber.textContent = getIsoWeek(date).toString();
   }
 
-  const entries = [dayNumber, dayName, weekNumber];
+  const entries = [dayNumber, weekNumber];
   entries.forEach((entry) => {
     entry.classList.add('day', 'calendarItem');
     entry.setAttribute('data-month', (date.getMonth() + 1).toString());
@@ -96,23 +93,22 @@ const dayEntry = (date: Date) => {
 
 const refreshCalendar = (year: number) => {
   appContainer.innerHTML = '';
-  const calendarContainer = document.createElement('div');
-  calendarContainer.id = 'calendarContainer';
-  calendarContainer.setAttribute('data-shadeWeekends', String(shadeWeekendsInput.checked));
-  appContainer.appendChild(calendarContainer);
+  const yearContainer = document.createElement('div');
+  yearContainer.id = 'yearContainer';
+  yearContainer.setAttribute('data-shadeWeekends', String(shadeWeekendsInput.checked));
+  appContainer.appendChild(yearContainer);
 
-  const monthsIndices = Array.from({ length: 12 }, (_, i) => i);
-  monthsIndices.forEach((monthIdx) => {
-    const monthContainer = document.createElement('div');
-    monthContainer.classList.add('monthContainer');
-    const month = monthHeader(year, monthIdx);
-    monthContainer.appendChild(month);
+  const quarterIndices = Array.from({ length: 4 }, (_, i) => i);
+  quarterIndices.forEach((quarterIdx) => {
+    const quarterContainer = document.createElement('div');
+    quarterContainer.classList.add('quarterContainer');
+    quarterContainer.appendChild(quarterHeader(year, quarterIdx));
 
-    datesInMonth(year, monthIdx).forEach((date) => {
-      dayEntry(date).forEach((entry) => monthContainer.appendChild(entry));
+    datesInQuarter(year, quarterIdx).forEach((date) => {
+      dayEntry(date).forEach((entry) => quarterContainer.appendChild(entry));
     });
 
-    calendarContainer.append(monthContainer);
+    yearContainer.append(quarterContainer);
   });
 };
 
