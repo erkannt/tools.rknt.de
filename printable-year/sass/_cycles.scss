@@ -44,10 +44,6 @@
   height: 100%;
 }
 
-.calendarItem[data-dayofweek='0'] {
-  border-bottom: var(--linewidth-regular) solid black;
-}
-
 .calendarItem:nth-last-child(-n + 3) {
   border-bottom: none;
 }
