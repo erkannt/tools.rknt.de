@@ -83,27 +83,33 @@ const weekdaysHeader = () => {
 };
 
 const dayEntry = (date: Date) => {
+  if (date.getDate() == 1) {
+    return firstDayOfMonthEntry(date);
+  }
   const dayFormatter = new Intl.DateTimeFormat('default', { day: '2-digit' });
 
   const dayNumber = document.createElement('div');
   dayNumber.textContent = dayFormatter.format(date);
   dayNumber.classList.add('day-number');
+  dayNumber.classList.add('day', 'calendarItem');
+  dayNumber.setAttribute('data-month', (date.getMonth() + 1).toString());
+  dayNumber.setAttribute('data-dayofweek', date.getDay().toString());
+  dayNumber.setAttribute('data-day', date.getDate().toString());
 
-  const weekNumber = document.createElement('div');
-  weekNumber.classList.add('week-number');
+  return dayNumber;
+};
 
-  if (date.getDay() == 1 && showWeeknumbersInput.checked) {
-    weekNumber.textContent = getIsoWeek(date).toString();
-  }
+const firstDayOfMonthEntry = (date: Date) => {
+  const monthFormatter = new Intl.DateTimeFormat('default', { month: 'short' });
 
-  const entries = [dayNumber];
-  entries.forEach((entry) => {
-    entry.classList.add('day', 'calendarItem');
-    entry.setAttribute('data-month', (date.getMonth() + 1).toString());
-    entry.setAttribute('data-dayofweek', date.getDay().toString());
-    entry.setAttribute('data-day', date.getDate().toString());
-  });
-  return entries;
+  const firstOfMonth = document.createElement('div');
+  firstOfMonth.textContent = monthFormatter.format(date);
+  firstOfMonth.classList.add('firstOfMonth', 'day', 'calendarItem');
+  firstOfMonth.setAttribute('data-month', (date.getMonth() + 1).toString());
+  firstOfMonth.setAttribute('data-dayofweek', date.getDay().toString());
+  firstOfMonth.setAttribute('data-day', date.getDate().toString());
+
+  return firstOfMonth;
 };
 
 const refreshCalendar = (year: number) => {
@@ -122,7 +128,7 @@ const refreshCalendar = (year: number) => {
     weekdaysHeader().forEach((day) => quarterContainer.appendChild(day));
 
     datesInQuarter(year, quarterIdx).forEach((date) => {
-      dayEntry(date).forEach((entry) => quarterContainer.appendChild(entry));
+      quarterContainer.appendChild(dayEntry(date));
     });
 
     calendarContainer.append(quarterContainer);
