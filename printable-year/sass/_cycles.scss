@@ -1,0 +1,55 @@
+#calendarContainer {
+  --fontsize-headings: 11pt;
+  --fontsize-entries: 9pt;
+  --linewidth-regular: 1pt;
+  --linewidth-bold: 2pt;
+
+  --calendar-row-height: 98vh;
+
+  display: grid;
+  grid-auto-flow: dense;
+  column-gap: 3pt;
+  padding-bottom: 5pt;
+  row-gap: var(--space-l);
+  @media print {
+    --fontsize-entries: max(8pt, calc(0.015 * 100cqh));
+    --fontsize-entries: max(6pt, calc(0.01 * 100cqh));
+    --linewidth-regular: max(0.5pt, calc(0.001 * 100cqh));
+    --linewidth-bold: max(1.5pt, calc(0.003 * 100cqh));
+    row-gap: 4vh;
+  }
+}
+
+#calendarContainer {
+  grid-template-columns: repeat(1, 1fr);
+  grid-template-rows: repeat(12, var(--calendar-row-height));
+}
+
+.day {
+  padding-top: 0.5em;
+  line-height: 1;
+  font-size: var(--fontsize-entries);
+}
+
+.day-name {
+  text-align: right;
+  padding-left: 0.2ch;
+}
+
+.week-number {
+  text-align: end;
+}
+
+#calendarContainer[data-shadeWeekends='true'] .calendarItem[data-dayofweek='0'],
+#calendarContainer[data-shadeWeekends='true'] .calendarItem[data-dayofweek='6'] {
+  background-color: var(--bg-grey);
+  height: 100%;
+}
+
+.calendarItem[data-dayofweek='0'] {
+  border-bottom: var(--linewidth-regular) solid black;
+}
+
+.calendarItem:nth-last-child(-n + 3) {
+  border-bottom: none;
+}
