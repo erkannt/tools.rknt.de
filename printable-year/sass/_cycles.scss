@@ -7,7 +7,6 @@
   --calendar-row-height: 98vh;
 
   display: grid;
-  grid-auto-flow: dense;
   column-gap: 3pt;
   padding-bottom: 5pt;
   row-gap: var(--space-l);
@@ -21,8 +20,7 @@
 }
 
 #calendarContainer {
-  grid-template-columns: repeat(1, 1fr);
-  grid-template-rows: repeat(12, var(--calendar-row-height));
+  grid-template-columns: repeat(4, 1fr);
 }
 
 .day {
@@ -40,7 +38,7 @@
   text-align: end;
 }
 
-#calendarContainer[data-shadeWeekends='true'] .calendarItem[data-dayofweek='0'],
+#calendarContainer[data-shadeWeekends='true'] .calendarItem[data-dayofweek='5'],
 #calendarContainer[data-shadeWeekends='true'] .calendarItem[data-dayofweek='6'] {
   background-color: var(--bg-grey);
   height: 100%;
@@ -52,4 +50,9 @@
 
 .calendarItem:nth-last-child(-n + 3) {
   border-bottom: none;
+}
+
+.quarterContainer {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
 }

@@ -95,7 +95,7 @@ const dayEntry = (date: Date) => {
     weekNumber.textContent = getIsoWeek(date).toString();
   }
 
-  const entries = [dayNumber, weekNumber];
+  const entries = [dayNumber];
   entries.forEach((entry) => {
     entry.classList.add('day', 'calendarItem');
     entry.setAttribute('data-month', (date.getMonth() + 1).toString());
@@ -107,14 +107,14 @@ const dayEntry = (date: Date) => {
 
 const refreshCalendar = (year: number) => {
   appContainer.innerHTML = '';
-  const yearContainer = document.createElement('div');
-  yearContainer.id = 'yearContainer';
-  yearContainer.setAttribute('data-shadeWeekends', String(shadeWeekendsInput.checked));
-  appContainer.appendChild(yearContainer);
+  const calendarContainer = document.createElement('div');
+  calendarContainer.id = 'calendarContainer';
+  calendarContainer.setAttribute('data-shadeWeekends', String(shadeWeekendsInput.checked));
+  appContainer.appendChild(calendarContainer);
 
   const quarterIndices = Array.from({ length: 4 }, (_, i) => i);
   quarterIndices.forEach((quarterIdx) => {
-    yearContainer.appendChild(quarterHeader(year, quarterIdx));
+    //calendarContainer.appendChild(quarterHeader(year, quarterIdx));
 
     const quarterContainer = document.createElement('div');
     quarterContainer.classList.add('quarterContainer');
@@ -124,7 +124,7 @@ const refreshCalendar = (year: number) => {
       dayEntry(date).forEach((entry) => quarterContainer.appendChild(entry));
     });
 
-    yearContainer.append(quarterContainer);
+    calendarContainer.append(quarterContainer);
   });
 };
 
