@@ -11,7 +11,7 @@
   padding-bottom: 5pt;
   row-gap: var(--space-l);
   @media print {
-    --fontsize-entries: max(11pt, calc(0.015 * 100cqh));
+    --fontsize-entries: max(9pt, calc(0.015 * 100cqh));
     --linewidth-regular: max(0.5pt, calc(0.001 * 100cqh));
     --linewidth-bold: max(1.5pt, calc(0.003 * 100cqh));
     row-gap: 4vh;
@@ -24,7 +24,7 @@
 }
 
 .day {
-  padding-top: 0.5em;
+  padding: 0.3em;
   line-height: 1;
   font-size: var(--fontsize-entries);
   text-align: center;
@@ -33,6 +33,8 @@
 .day-name {
   text-align: center;
   border-bottom: var(--linewidth-bold) solid black;
+  line-height: 1;
+  margin-bottom: 0.3em;
 }
 
 .week-number {
@@ -40,13 +42,12 @@
 }
 
 .calendarItem[data-cycleweek='4'] {
-  margin-bottom: var(--space-s);
+  margin-bottom: var(--space-xs);
 }
 
 #calendarContainer[data-shadeWeekends='true'] .calendarItem[data-dayofweek='0'],
 #calendarContainer[data-shadeWeekends='true'] .calendarItem[data-dayofweek='6'] {
   background-color: var(--bg-grey);
-  height: 100%;
 }
 
 .calendarItem:nth-last-child(-n + 3) {
