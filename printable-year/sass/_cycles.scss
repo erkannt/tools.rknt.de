@@ -38,7 +38,7 @@
   text-align: end;
 }
 
-#calendarContainer[data-shadeWeekends='true'] .calendarItem[data-dayofweek='5'],
+#calendarContainer[data-shadeWeekends='true'] .calendarItem[data-dayofweek='0'],
 #calendarContainer[data-shadeWeekends='true'] .calendarItem[data-dayofweek='6'] {
   background-color: var(--bg-grey);
   height: 100%;

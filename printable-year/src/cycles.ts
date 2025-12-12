@@ -34,9 +34,10 @@ const datesInQuarter = (year: number, quarter: number): Date[] => {
   const daysOffset = weekOffset * 7;
   const firstMondayOfQuarter = new Date(year, 0, daysOffset - offsetOfFirstMondayFromNewYears(year));
   const dates = [];
-  for (let i = 0; i <= 13 * 7; i++) {
-    const currentDate = new Date(firstMondayOfQuarter.getTime() + i * 24 * 60 * 60 * 1000);
-    dates.push(currentDate);
+  for (let i = 0; i <= 13 * 7 - 1; i++) {
+    const date = new Date(firstMondayOfQuarter);
+    date.setDate(date.getDate() + i);
+    dates.push(date);
   }
   return dates;
 };
@@ -53,7 +54,7 @@ const offsetOfFirstMondayFromNewYears = (year: number): number => {
   const firstDayOfYear = new Date(year, 0, 1);
   const dayOfWeek = firstDayOfYear.getDay();
   const offset = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-  return offset;
+  return offset - 1;
 };
 
 const getIsoWeek = (input: Date) => {
