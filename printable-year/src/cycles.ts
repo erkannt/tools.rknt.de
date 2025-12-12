@@ -21,14 +21,6 @@ if (!isInputElement(shadeWeekendsInput)) {
   throw new Error('ERROR: shadeWeekendsInput not an input');
 }
 
-const showWeeknumbersInput = document.querySelector('#showWeeknumbers');
-if (!showWeeknumbersInput) {
-  throw new Error('ERROR: no showWeeknumbersInput found');
-}
-if (!isInputElement(showWeeknumbersInput)) {
-  throw new Error('ERROR: showWeeknumbersInput not an input');
-}
-
 const datesInQuarter = (year: number, quarter: number): Date[] => {
   const weekOffset = quarter * 13;
   const daysOffset = weekOffset * 7;
@@ -123,10 +115,6 @@ yearInput.addEventListener('change', () => {
 });
 
 shadeWeekendsInput.addEventListener('change', () => {
-  refreshCalendar(Number(yearInput.value));
-});
-
-showWeeknumbersInput.addEventListener('change', () => {
   refreshCalendar(Number(yearInput.value));
 });
 
