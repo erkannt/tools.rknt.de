@@ -67,6 +67,20 @@ const getIsoWeek = (input: Date) => {
   return 1 + Math.round(((date.getTime() - week1.getTime()) / 86400000 - 3 + ((week1.getDay() + 6) % 7)) / 7);
 };
 
+const weekdaysHeader = () => {
+  const weekdayFormatter = new Intl.DateTimeFormat('default', { weekday: 'narrow' });
+
+  const days = [];
+  for (let i = 0; i <= 6; i++) {
+    const date = new Date(1974, 0, i); // Use a fixed year to ensure the correct weekday
+    const dayName = document.createElement('div');
+    dayName.textContent = weekdayFormatter.format(date);
+    dayName.classList.add('day-name');
+    days.push(dayName);
+  }
+  return days;
+};
+
 const dayEntry = (date: Date) => {
   const dayFormatter = new Intl.DateTimeFormat('default', { day: '2-digit' });
 
@@ -100,9 +114,11 @@ const refreshCalendar = (year: number) => {
 
   const quarterIndices = Array.from({ length: 4 }, (_, i) => i);
   quarterIndices.forEach((quarterIdx) => {
+    yearContainer.appendChild(quarterHeader(year, quarterIdx));
+
     const quarterContainer = document.createElement('div');
     quarterContainer.classList.add('quarterContainer');
-    quarterContainer.appendChild(quarterHeader(year, quarterIdx));
+    weekdaysHeader().forEach((day) => quarterContainer.appendChild(day));
 
     datesInQuarter(year, quarterIdx).forEach((date) => {
       dayEntry(date).forEach((entry) => quarterContainer.appendChild(entry));
