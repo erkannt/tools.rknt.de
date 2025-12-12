@@ -32,10 +32,15 @@
 
 .day-name {
   text-align: center;
+  border-bottom: var(--linewidth-bold) solid black;
 }
 
 .week-number {
   text-align: end;
+}
+
+.calendarItem[data-cycleweek='4'] {
+  margin-bottom: var(--space-s);
 }
 
 #calendarContainer[data-shadeWeekends='true'] .calendarItem[data-dayofweek='0'],

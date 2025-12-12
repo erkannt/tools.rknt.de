@@ -127,8 +127,12 @@ const refreshCalendar = (year: number) => {
     quarterContainer.classList.add('quarterContainer');
     weekdaysHeader().forEach((day) => quarterContainer.appendChild(day));
 
-    datesInQuarter(year, quarterIdx).forEach((date) => {
-      quarterContainer.appendChild(dayEntry(date));
+    datesInQuarter(year, quarterIdx).forEach((date, index) => {
+      const dayElement = dayEntry(date);
+      dayElement.setAttribute('data-quarter', quarterIdx.toString());
+      dayElement.setAttribute('data-cycle', (Math.floor(index / 7 / 4) + 1).toString());
+      dayElement.setAttribute('data-cycleweek', ((Math.floor(index / 7) % 4) + 1).toString());
+      quarterContainer.appendChild(dayElement);
     });
 
     calendarContainer.append(quarterContainer);
