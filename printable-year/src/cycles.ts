@@ -42,30 +42,11 @@ const datesInQuarter = (year: number, quarter: number): Date[] => {
   return dates;
 };
 
-const quarterHeader = (year: number, quarterIdx: number) => {
-  const quarter = document.createElement('span');
-  quarter.textContent = `Quarter ${(quarterIdx + 1).toString()}`;
-  quarter.classList.add('quarterHeader', 'calendarItem');
-  quarter.setAttribute('data-quarter', (quarterIdx + 1).toString());
-  return quarter;
-};
-
 const offsetOfFirstMondayFromNewYears = (year: number): number => {
   const firstDayOfYear = new Date(year, 0, 1);
   const dayOfWeek = firstDayOfYear.getDay();
   const offset = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
   return offset - 1;
-};
-
-const getIsoWeek = (input: Date) => {
-  const date = new Date(input.getTime());
-  date.setHours(0, 0, 0, 0);
-  // Thursday in current week decides the year.
-  date.setDate(date.getDate() + 3 - ((date.getDay() + 6) % 7));
-  // January 4 is always in week 1.
-  const week1 = new Date(date.getFullYear(), 0, 4);
-  // Adjust to Thursday in week 1 and count number of weeks from date to week1.
-  return 1 + Math.round(((date.getTime() - week1.getTime()) / 86400000 - 3 + ((week1.getDay() + 6) % 7)) / 7);
 };
 
 const weekdaysHeader = () => {
@@ -121,8 +102,6 @@ const refreshCalendar = (year: number) => {
 
   const quarterIndices = Array.from({ length: 4 }, (_, i) => i);
   quarterIndices.forEach((quarterIdx) => {
-    //calendarContainer.appendChild(quarterHeader(year, quarterIdx));
-
     const quarterContainer = document.createElement('div');
     quarterContainer.classList.add('quarterContainer');
     weekdaysHeader().forEach((day) => quarterContainer.appendChild(day));
@@ -135,7 +114,7 @@ const refreshCalendar = (year: number) => {
       quarterContainer.appendChild(dayElement);
     });
 
-    calendarContainer.append(quarterContainer);
+    calendarContainer.appendChild(quarterContainer);
   });
 };
 
