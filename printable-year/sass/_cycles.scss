@@ -1,18 +1,17 @@
 #calendarContainer {
-  --fontsize-headings: 11pt;
-  --fontsize-entries: 9pt;
+  --fontsize-headings: 14pt;
+  --fontsize-entries: 11pt;
   --linewidth-regular: 1pt;
   --linewidth-bold: 2pt;
 
   --calendar-row-height: 98vh;
 
   display: grid;
-  column-gap: 3pt;
+  column-gap: var(--space-l);
   padding-bottom: 5pt;
   row-gap: var(--space-l);
   @media print {
-    --fontsize-entries: max(8pt, calc(0.015 * 100cqh));
-    --fontsize-entries: max(6pt, calc(0.01 * 100cqh));
+    --fontsize-entries: max(11pt, calc(0.015 * 100cqh));
     --linewidth-regular: max(0.5pt, calc(0.001 * 100cqh));
     --linewidth-bold: max(1.5pt, calc(0.003 * 100cqh));
     row-gap: 4vh;
@@ -20,18 +19,19 @@
 }
 
 #calendarContainer {
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(2, 1fr);
 }
 
 .day {
   padding-top: 0.5em;
   line-height: 1;
   font-size: var(--fontsize-entries);
+  text-align: center;
 }
 
 .day-name {
-  text-align: right;
-  padding-left: 0.2ch;
+  text-align: center;
 }
 
 .week-number {

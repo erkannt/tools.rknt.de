@@ -69,7 +69,7 @@ const getIsoWeek = (input: Date) => {
 };
 
 const weekdaysHeader = () => {
-  const weekdayFormatter = new Intl.DateTimeFormat('default', { weekday: 'narrow' });
+  const weekdayFormatter = new Intl.DateTimeFormat('default', { weekday: 'short' });
 
   const days = [];
   for (let i = 0; i <= 6; i++) {
