@@ -1,5 +1,10 @@
-<script>
-	const goldcards = [
+<script lang="ts">
+	interface GoldCard {
+		id: number;
+		date: string;
+		comment: string;
+	}
+	const goldcards: GoldCard[] = [
 		{ id: 1, date: '2023-01-01', comment: 'First goldcard logged' },
 		{ id: 2, date: '2023-02-15', comment: 'Second entry' },
 		{ id: 3, date: '2023-03-10', comment: 'Third entry' },
