@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { getISOWeekInfo } from '$lib/isoweek';
 	import { LocalStorage } from '$lib/localStorage.svelte';
 
 	interface GoldCard {
@@ -18,11 +19,15 @@
 		{ id: '1a2b3c4d-0000-0000-0000-000000000004', date: '2023-04-05', comment: 'Fourth entry' },
 		{ id: '1a2b3c4d-0000-0000-0000-000000000005', date: '2023-05-20', comment: 'Fifth entry' }
 	]);
+	const sortedByDate = $derived(
+		[...goldcards.current].sort((a, b) => b.date.localeCompare(a.date))
+	);
+	const byIsoWeek = $derived(groupByIsoWeek(sortedByDate));
+
 	const goldcardBudget = new LocalStorage('budget', 5);
 
-	// Default date set to today (YYYY‑MM‑DD)
-	let newDate: string = new Date().toISOString().split('T')[0];
-	let newComment: string = '';
+	let newDate: string = $state(new Date().toISOString().split('T')[0]);
+	let newComment: string = $state('');
 
 	function addGoldCard() {
 		if (!newComment.trim()) {
@@ -39,13 +44,32 @@
 		// Reset comment field (keep date as today)
 		newComment = '';
 	}
+
+	function groupByIsoWeek(sortedByDate: GoldCard[]) {
+		const map: Record<string, { week: number; year: number; cards: GoldCard[] }> = {};
+
+		for (const card of sortedByDate) {
+			const { week, year } = getISOWeekInfo(card.date);
+			const key = `${year}-${String(week).padStart(2, '0')}`;
+			if (!map[key]) {
+				map[key] = { week, year, cards: [] };
+			}
+			map[key].cards.push(card);
+		}
+
+		// Convert to array and sort descending by year then week
+		return Object.values(map).sort((a, b) => {
+			if (a.year !== b.year) return b.year - a.year;
+			return b.week - a.week;
+		});
+	}
 </script>
 
 <h1>Goldcard Log</h1>
 
 <p>To be taken: {goldcardBudget.current}</p>
 
-<form on:submit|preventDefault={addGoldCard}>
+<form onsubmit={addGoldCard}>
 	<label>
 		Date:
 		<input type="date" bind:value={newDate} required />
@@ -58,10 +82,14 @@
 </form>
 
 <h2>Log</h2>
-<ul>
-	{#each goldcards.current as card (card.id)}
-		<li>
-			<strong>{card.date}</strong>: {card.comment}
-		</li>
-	{/each}
-</ul>
+
+{#each byIsoWeek as group (group.week)}
+	<h3>Week {String(group.week).padStart(2, '0')}-{String(group.year)}</h3>
+	<ul>
+		{#each group.cards as card (card.id)}
+			<li>
+				<strong>{card.date}</strong>: {card.comment}
+			</li>
+		{/each}
+	</ul>
+{/each}
