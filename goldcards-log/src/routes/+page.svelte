@@ -84,6 +84,24 @@
 		// `undefined` lets Intl pick up the browser's locale automatically
 		return new Intl.DateTimeFormat(undefined, { weekday: 'short' }).format(date);
 	}
+
+	/** CSV generation utilities */
+	function escapeCsvField(value: string): string {
+		if (value.includes('"') || value.includes(',') || value.includes('\n')) {
+			return `"${value.replace(/"/g, '""')}"`;
+		}
+		return value;
+	}
+	function generateCsv(cards: GoldCard[]): string {
+		const header = ['id', 'date', 'comment'].join(',');
+		const rows = cards.map((c) =>
+			[escapeCsvField(c.id), escapeCsvField(c.date), escapeCsvField(c.comment)].join(',')
+		);
+		return [header, ...rows].join('\n');
+	}
+
+	const csvContent = $derived(generateCsv(goldcards.current));
+	const csvUrl = $derived.by(() => `data:text/csv;charset=utf-8,${encodeURIComponent(csvContent)}`);
 </script>
 
 <h1>Goldcard Log</h1>
@@ -103,6 +121,15 @@
 </form>
 
 <h2>Log</h2>
+
+<a
+	href={csvUrl}
+	download={'goldcards_' + new Date().toISOString().replace(/[:.]/g, '-') + '.csv'}
+	target="_blank"
+	rel="noopener noreferrer external"
+>
+	Download CSV
+</a>
 
 {#each byIsoWeek as group (group.week)}
 	<h3>Week {String(group.week).padStart(2, '0')}-{String(group.year)}</h3>
