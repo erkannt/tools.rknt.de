@@ -1,11 +1,13 @@
 <script lang="ts">
+	import { LocalStorage } from '$lib/localStorage.svelte';
+
 	interface GoldCard {
 		id: string;
 		date: string;
 		comment: string;
 	}
 
-	let goldcards: GoldCard[] = [
+	const goldcards = new LocalStorage<GoldCard[]>('goldcards', [
 		{
 			id: '1a2b3c4d-0000-0000-0000-000000000001',
 			date: '2023-01-01',
@@ -15,27 +17,25 @@
 		{ id: '1a2b3c4d-0000-0000-0000-000000000003', date: '2023-03-10', comment: 'Third entry' },
 		{ id: '1a2b3c4d-0000-0000-0000-000000000004', date: '2023-04-05', comment: 'Fourth entry' },
 		{ id: '1a2b3c4d-0000-0000-0000-000000000005', date: '2023-05-20', comment: 'Fifth entry' }
-	];
+	]);
+	const goldcardBudget = new LocalStorage('budget', 5);
 
 	// Default date set to today (YYYY‑MM‑DD)
 	let newDate: string = new Date().toISOString().split('T')[0];
 	let newComment: string = '';
-
-	// Goldcard budget starts at 5 and can go negative
-	let goldcardBudget: number = 5;
 
 	function addGoldCard() {
 		if (!newComment.trim()) {
 			return;
 		}
 		const newId = crypto.randomUUID();
-		goldcards.push({
+		goldcards.current.push({
 			id: newId,
 			date: newDate,
 			comment: newComment.trim()
 		});
 		// Decrement budget (allow negative values)
-		goldcardBudget -= 1;
+		goldcardBudget.current -= 1;
 		// Reset comment field (keep date as today)
 		newComment = '';
 	}
@@ -43,7 +43,7 @@
 
 <h1>Goldcard Log</h1>
 
-<p>To be taken: {goldcardBudget}</p>
+<p>To be taken: {goldcardBudget.current}</p>
 
 <form on:submit|preventDefault={addGoldCard}>
 	<label>
@@ -59,7 +59,7 @@
 
 <h2>Log</h2>
 <ul>
-	{#each goldcards as card (card.id)}
+	{#each goldcards.current as card (card.id)}
 		<li>
 			<strong>{card.date}</strong>: {card.comment}
 		</li>
