@@ -21,6 +21,9 @@
 	let newDate: string = new Date().toISOString().split('T')[0];
 	let newComment: string = '';
 
+	// Goldcard budget starts at 5 and can go negative
+	let goldcardBudget: number = 5;
+
 	function addGoldCard() {
 		if (!newComment.trim()) {
 			return;
@@ -31,12 +34,16 @@
 			date: newDate,
 			comment: newComment.trim()
 		});
+		// Decrement budget (allow negative values)
+		goldcardBudget -= 1;
 		// Reset comment field (keep date as today)
 		newComment = '';
 	}
 </script>
 
 <h1>Goldcard Log</h1>
+
+<p>To be taken: {goldcardBudget}</p>
 
 <form on:submit|preventDefault={addGoldCard}>
 	<label>
