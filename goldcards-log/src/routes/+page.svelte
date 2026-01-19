@@ -1,16 +1,20 @@
 <script lang="ts">
 	interface GoldCard {
-		id: number;
+		id: string;
 		date: string;
 		comment: string;
 	}
 
 	let goldcards: GoldCard[] = [
-		{ id: 1, date: '2023-01-01', comment: 'First goldcard logged' },
-		{ id: 2, date: '2023-02-15', comment: 'Second entry' },
-		{ id: 3, date: '2023-03-10', comment: 'Third entry' },
-		{ id: 4, date: '2023-04-05', comment: 'Fourth entry' },
-		{ id: 5, date: '2023-05-20', comment: 'Fifth entry' }
+		{
+			id: '1a2b3c4d-0000-0000-0000-000000000001',
+			date: '2023-01-01',
+			comment: 'First goldcard logged'
+		},
+		{ id: '1a2b3c4d-0000-0000-0000-000000000002', date: '2023-02-15', comment: 'Second entry' },
+		{ id: '1a2b3c4d-0000-0000-0000-000000000003', date: '2023-03-10', comment: 'Third entry' },
+		{ id: '1a2b3c4d-0000-0000-0000-000000000004', date: '2023-04-05', comment: 'Fourth entry' },
+		{ id: '1a2b3c4d-0000-0000-0000-000000000005', date: '2023-05-20', comment: 'Fifth entry' }
 	];
 
 	// Default date set to today (YYYY‑MM‑DD)
@@ -21,15 +25,12 @@
 		if (!newComment.trim()) {
 			return;
 		}
-		const nextId = goldcards.length ? Math.max(...goldcards.map((c) => c.id)) + 1 : 1;
-		goldcards = [
-			...goldcards,
-			{
-				id: nextId,
-				date: newDate,
-				comment: newComment.trim()
-			}
-		];
+		const newId = crypto.randomUUID();
+		goldcards.push({
+			id: newId,
+			date: newDate,
+			comment: newComment.trim()
+		});
 		// Reset comment field (keep date as today)
 		newComment = '';
 	}
