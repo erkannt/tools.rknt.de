@@ -19,12 +19,29 @@
 		{ id: '1a2b3c4d-0000-0000-0000-000000000004', date: '2023-04-05', comment: 'Fourth entry' },
 		{ id: '1a2b3c4d-0000-0000-0000-000000000005', date: '2023-05-20', comment: 'Fifth entry' }
 	]);
-	const sortedByDate = $derived(
+	const sortedByDate: GoldCard[] = $derived(
 		[...goldcards.current].sort((a, b) => b.date.localeCompare(a.date))
 	);
 	const byIsoWeek = $derived(groupByIsoWeek(sortedByDate));
 
-	const goldcardBudget = new LocalStorage('budget', 5);
+	// Determine the earliest logged goldcard date
+	const firstGoldcardDate = $derived.by(() => {
+		if (goldcards.current.length === 0) {
+			return new Date().toISOString().split('T')[0];
+		}
+		return sortedByDate[sortedByDate.length - 1].date;
+	});
+
+	// Number of whole weeks that have elapsed since that first week
+	const weeksPassed = $derived.by(() => {
+		const start = new Date(firstGoldcardDate);
+		const now = new Date();
+		const msPerWeek = 7 * 24 * 60 * 60 * 1000;
+		const diff = now.getTime() - start.getTime();
+		return Math.max(0, Math.floor(diff / msPerWeek));
+	});
+
+	const goldcardBudget = $derived(5 + weeksPassed * 5 - goldcards.current.length);
 
 	let newDate: string = $state(new Date().toISOString().split('T')[0]);
 	let newComment: string = $state('');
@@ -39,8 +56,6 @@
 			date: newDate,
 			comment: newComment.trim()
 		});
-		// Decrement budget (allow negative values)
-		goldcardBudget.current -= 1;
 		// Reset comment field (keep date as today)
 		newComment = '';
 	}
@@ -73,7 +88,7 @@
 
 <h1>Goldcard Log</h1>
 
-<p>To be taken: {goldcardBudget.current}</p>
+<p>To be taken: {goldcardBudget}</p>
 
 <form onsubmit={addGoldCard}>
 	<label>
