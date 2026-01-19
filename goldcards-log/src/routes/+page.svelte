@@ -63,6 +63,12 @@
 			return b.week - a.week;
 		});
 	}
+
+	function formatDate(dateStr: string): string {
+		const date = new Date(dateStr);
+		// `undefined` lets Intl pick up the browser's locale automatically
+		return new Intl.DateTimeFormat(undefined, { weekday: 'short' }).format(date);
+	}
 </script>
 
 <h1>Goldcard Log</h1>
@@ -88,7 +94,8 @@
 	<ul>
 		{#each group.cards as card (card.id)}
 			<li>
-				<strong>{card.date}</strong>: {card.comment}
+				<strong>{formatDate(card.date)}:</strong>
+				{card.comment}
 			</li>
 		{/each}
 	</ul>
