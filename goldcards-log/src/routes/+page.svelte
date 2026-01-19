@@ -100,6 +100,74 @@
 		return [header, ...rows].join('\n');
 	}
 
+	/** CSV parsing utilities for upload */
+	function parseCsvLine(line: string): string[] {
+		const result: string[] = [];
+		let cur = '';
+		let inQuotes = false;
+		for (let i = 0; i < line.length; i++) {
+			const char = line[i];
+			if (inQuotes) {
+				if (char === '"') {
+					if (i + 1 < line.length && line[i + 1] === '"') {
+						cur += '"';
+						i++;
+					} else {
+						inQuotes = false;
+					}
+				} else {
+					cur += char;
+				}
+			} else {
+				if (char === ',') {
+					result.push(cur);
+					cur = '';
+				} else if (char === '"') {
+					inQuotes = true;
+				} else {
+					cur += char;
+				}
+			}
+		}
+		result.push(cur);
+		return result;
+	}
+
+	function parseCsv(text: string): GoldCard[] {
+		const lines = text.split(/\r?\n/).filter((l) => l.trim() !== '');
+		if (lines.length === 0) return [];
+
+		// Skip header line
+		const dataLines = lines.slice(1);
+		const cards: GoldCard[] = [];
+
+		for (const line of dataLines) {
+			const fields = parseCsvLine(line);
+			if (fields.length < 3) continue;
+			const [id, date, comment] = fields;
+			cards.push({ id, date, comment });
+		}
+		return cards;
+	}
+
+	function handleCsvUpload(event: Event) {
+		const input = event.target as HTMLInputElement;
+		const file = input.files?.[0];
+		if (!file) return;
+
+		const reader = new FileReader();
+		reader.onload = (e) => {
+			const text = e.target?.result as string;
+			const parsed = parseCsv(text);
+			if (parsed.length) {
+				goldcards.current = parsed;
+			}
+		};
+		reader.readAsText(file);
+		// Reset the file input so the same file can be uploaded again if needed
+		input.value = '';
+	}
+
 	const csvContent = $derived(generateCsv(goldcards.current));
 	const csvUrl = $derived.by(() => `data:text/csv;charset=utf-8,${encodeURIComponent(csvContent)}`);
 </script>
@@ -128,8 +196,12 @@
 	target="_blank"
 	rel="noopener noreferrer external"
 >
-	Download CSV
+	Download as CSV
 </a>
+<label>
+	Import CSV (overwrites current log)
+	<input type="file" accept=".csv,text/csv" onchange={handleCsvUpload} value="Import" />
+</label>
 
 {#each byIsoWeek as group (group.week)}
 	<h3>Week {String(group.week).padStart(2, '0')}-{String(group.year)}</h3>
