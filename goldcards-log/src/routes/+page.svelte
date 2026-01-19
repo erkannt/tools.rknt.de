@@ -195,6 +195,8 @@
 	download={'goldcards_' + new Date().toISOString().replace(/[:.]/g, '-') + '.csv'}
 	target="_blank"
 	rel="noopener noreferrer external"
+	role="button"
+	class="secondary"
 >
 	Download as CSV
 </a>
