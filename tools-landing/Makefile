@@ -1,6 +1,7 @@
 .PHONY: release
 release: style.css
 	mc cp index.html rknt/tools/index.html
+	mc cp styles/main.css rknt/tools/styles.css
 
-style.css: styles
+style.css: styles/*.css
 	npx lightningcss-cli --output-file style.css --bundle styles/main.css
