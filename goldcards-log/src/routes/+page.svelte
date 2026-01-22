@@ -31,7 +31,7 @@
 		return Math.max(0, Math.floor(diff / msPerWeek));
 	});
 
-	const goldcardBudget = $derived(10 + weeksPassed * 5 - goldcards.current.length);
+	const goldcardBudget = $derived(5 + weeksPassed * 5 - goldcards.current.length);
 
 	let newDate: string = $state(new Date().toISOString().split('T')[0]);
 	let newComment: string = $state('');
