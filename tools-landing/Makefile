@@ -1,3 +1,7 @@
+.PHONY: dev
+dev:
+	npx vite --port 8080
+
 .PHONY: release
 release: style.css
 	mc cp index.html rknt/tools/index.html
