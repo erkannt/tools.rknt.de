@@ -21,6 +21,14 @@ if (!isInputElement(shadeWeekendsInput)) {
   throw new Error('ERROR: shadeWeekendsInput not an input');
 }
 
+const boldMonthsInput = document.querySelector('#boldMonths');
+if (!boldMonthsInput) {
+  throw new Error('ERROR: no boldMonthsInput found');
+}
+if (!isInputElement(boldMonthsInput)) {
+  throw new Error('ERROR: boldMonthsInput not an input');
+}
+
 const datesInQuarter = (year: number, quarter: number): Date[] => {
   const weekOffset = quarter * 13;
   const daysOffset = weekOffset * 7;
@@ -90,6 +98,7 @@ const refreshCalendar = (year: number) => {
   const calendarContainer = document.createElement('div');
   calendarContainer.id = 'calendarContainer';
   calendarContainer.setAttribute('data-shadeWeekends', String(shadeWeekendsInput.checked));
+  calendarContainer.setAttribute('data-boldMonths', String(boldMonthsInput.checked));
   appContainer.appendChild(calendarContainer);
 
   const quarterIndices = Array.from({ length: 4 }, (_, i) => i);
@@ -115,6 +124,10 @@ yearInput.addEventListener('change', () => {
 });
 
 shadeWeekendsInput.addEventListener('change', () => {
+  refreshCalendar(Number(yearInput.value));
+});
+
+boldMonthsInput.addEventListener('change', () => {
   refreshCalendar(Number(yearInput.value));
 });
 

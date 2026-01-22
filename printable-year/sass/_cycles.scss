@@ -50,6 +50,10 @@
   background-color: var(--bg-grey);
 }
 
+#calendarContainer[data-boldMonths='true'] .calendarItem[data-day='1'] {
+  font-weight: bold;
+}
+
 .calendarItem:nth-last-child(-n + 3) {
   border-bottom: none;
 }
