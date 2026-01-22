@@ -8,17 +8,7 @@
 		comment: string;
 	}
 
-	const goldcards = new LocalStorage<GoldCard[]>('goldcards', [
-		{
-			id: '1a2b3c4d-0000-0000-0000-000000000001',
-			date: '2023-01-01',
-			comment: 'First goldcard logged'
-		},
-		{ id: '1a2b3c4d-0000-0000-0000-000000000002', date: '2023-02-15', comment: 'Second entry' },
-		{ id: '1a2b3c4d-0000-0000-0000-000000000003', date: '2023-03-10', comment: 'Third entry' },
-		{ id: '1a2b3c4d-0000-0000-0000-000000000004', date: '2023-04-05', comment: 'Fourth entry' },
-		{ id: '1a2b3c4d-0000-0000-0000-000000000005', date: '2023-05-20', comment: 'Fifth entry' }
-	]);
+	const goldcards = new LocalStorage<GoldCard[]>('goldcards', []);
 	const sortedByDate: GoldCard[] = $derived(
 		[...goldcards.current].sort((a, b) => b.date.localeCompare(a.date))
 	);
