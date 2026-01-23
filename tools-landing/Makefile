@@ -4,7 +4,8 @@ dev:
 
 .PHONY: release
 release: dist
-	mc mirror --overwrite --remove dist rknt/tools
+	mc cp dist/index.html rknt/tools/index.html
+	mc mirror --overwrite --remove dist/assets rknt/tools/assets
 
 dist: styles/*.css index.html
 	npx vite build
