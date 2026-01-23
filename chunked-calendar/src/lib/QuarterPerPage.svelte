@@ -1,6 +1,5 @@
 <script lang="ts">
     import {
-        formatDay,
         formatDayWithWeekdaySuffix,
         generateWeekdays,
         getDatesForYear,
@@ -57,10 +56,6 @@
         text-align: left;
         margin-bottom: 1em;
         border-top: 3px solid black;
-    }
-
-    .weekday {
-        justify-self: end;
     }
 
     .boldMonth {
