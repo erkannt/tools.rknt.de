@@ -1,5 +1,6 @@
 <script lang="ts">
     import {
+        formatDay,
         generateWeekdays,
         getDatesForYear,
         splitIntoQuarters,
@@ -19,7 +20,7 @@
     {/each}
     {#each quarter as week}
         {#each week as day}
-            <span>{day}</span>
+            <span>{formatDay(day)}</span>
         {/each}
     {/each}
 {/each}

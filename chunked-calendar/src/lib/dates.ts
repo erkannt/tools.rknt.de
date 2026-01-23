@@ -68,3 +68,14 @@ export function generateWeekdays(): string[] {
     formatter.format(new Date(reference.getTime() + i * 24 * 60 * 60 * 1000)),
   );
 }
+
+/** Return day of month, or abbreviated month name if it's the first day */
+export function formatDay(dateStr: string): string {
+  const d = new Date(dateStr);
+  const day = d.getDate();
+  if (day === 1) {
+    // Use the user's locale; fallback to default if unavailable
+    return d.toLocaleString(undefined, { month: "short" });
+  }
+  return String(day);
+}
