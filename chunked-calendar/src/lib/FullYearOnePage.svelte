@@ -10,7 +10,6 @@
     const { year, boldMonths } = $props<{
         year: number;
         boldMonths: boolean;
-        quarterPerPage: boolean;
     }>();
     const dates: string[] = $derived(getDatesForYear(year));
 

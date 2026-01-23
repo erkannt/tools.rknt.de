@@ -1,5 +1,6 @@
 <script lang="ts">
-    import Calendar from "./lib/Calendar.svelte";
+    import FullYearOnePage from "./lib/FullYearOnePage.svelte";
+    import QuarterPerPage from "./lib/QuarterPerPage.svelte";
     const thisYear = () => new Date().getFullYear();
 
     let year = $state(thisYear());
@@ -22,7 +23,11 @@
         <p>Simply print this page.</p>
     </section>
 
-    <Calendar {year} {boldMonths} {quarterPerPage} />
+    {#if quarterPerPage}
+        <QuarterPerPage {year} {boldMonths} />
+    {:else}
+        <FullYearOnePage {year} {boldMonths} />
+    {/if}
     <footer>
         <p>
             Inspired by <a href="https://www.youtube.com/watch?v=BiY2yUwTgQc"
