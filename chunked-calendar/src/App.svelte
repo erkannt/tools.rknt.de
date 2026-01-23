@@ -3,6 +3,7 @@
     const thisYear = () => new Date().getFullYear();
 
     let year = $state(thisYear());
+    let boldMonths = $state(true);
 </script>
 
 <main>
@@ -10,13 +11,18 @@
 
     <section>
         <p>Simply print this page.</p>
+        <label>
+            <input type="checkbox" bind:checked={boldMonths} />
+            Bold Months
+        </label>
         <p>
             Inspired by <a href="https://www.youtube.com/watch?v=BiY2yUwTgQc"
                 >a JashiiCorrin video</a
             >.
         </p>
     </section>
-    <Calendar {year} />
+
+    <Calendar {year} {boldMonths} />
 </main>
 
 <style>

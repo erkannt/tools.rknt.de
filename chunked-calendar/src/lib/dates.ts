@@ -95,3 +95,8 @@ export function formatDay(dateStr: string): string {
   // Zero‑pad day numbers (e.g., "01", "02", …)
   return day.toString().padStart(2, "0");
 }
+
+export function isFirstOfMonth(day: string): boolean {
+  const d = new Date(day);
+  return d.getDate() === 1;
+}

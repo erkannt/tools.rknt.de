@@ -4,9 +4,13 @@
         generateWeekdays,
         getDatesForYear,
         splitIntoQuarters,
+        isFirstOfMonth,
     } from "./dates";
 
-    const { year } = $props<{ year: number }>();
+    const { year, boldMonths } = $props<{
+        year: number;
+        boldMonths: boolean;
+    }>();
     const dates: string[] = $derived(getDatesForYear(year));
 
     const quarters = $derived.by(() => splitIntoQuarters(dates));
@@ -25,7 +29,12 @@
             {#each quarter as week}
                 <div class="week">
                     {#each week as day}
-                        <div class="day">{formatDay(day)}</div>
+                        <div
+                            class="day"
+                            class:boldMonth={isFirstOfMonth(day) && boldMonths}
+                        >
+                            {formatDay(day)}
+                        </div>
                     {/each}
                 </div>
             {/each}
@@ -66,6 +75,10 @@
         border-bottom: 3px solid black;
         flex: 1;
         text-align: center;
+    }
+
+    .boldMonth {
+        font-weight: bold;
     }
 
     .day {
