@@ -4,6 +4,7 @@
 
     let year = $state(thisYear());
     let boldMonths = $state(true);
+    let quarterPerPage = $state(false);
 </script>
 
 <main>
@@ -14,10 +15,14 @@
             <input type="checkbox" bind:checked={boldMonths} />
             Bold Months
         </label>
+        <label>
+            <input type="checkbox" bind:checked={quarterPerPage} />
+            One Quarter per Page
+        </label>
         <p>Simply print this page.</p>
     </section>
 
-    <Calendar {year} {boldMonths} />
+    <Calendar {year} {boldMonths} {quarterPerPage} />
     <footer>
         <p>
             Inspired by <a href="https://www.youtube.com/watch?v=BiY2yUwTgQc"
