@@ -77,5 +77,6 @@ export function formatDay(dateStr: string): string {
     // Use the user's locale; fallback to default if unavailable
     return d.toLocaleString(undefined, { month: "short" });
   }
-  return String(day);
+  // Zero‑pad day numbers (e.g., "01", "02", …)
+  return day.toString().padStart(2, "0");
 }
