@@ -61,4 +61,10 @@
     .boldMonth {
         font-weight: bold;
     }
+
+    @media print {
+        .quarter {
+            break-after: page;
+        }
+    }
 </style>
