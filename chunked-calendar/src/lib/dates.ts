@@ -43,7 +43,9 @@ export function splitIntoQuarters(dates: string[]): string[][][] {
 
   const result: string[][][] = []; // quarters → weeks → days
 
-  for (let i = 0; i < dates.length; i += daysPerQuarter) {
+  let i = 0;
+  // Process full quarters (13 weeks each)
+  for (; i + daysPerQuarter <= dates.length; i += daysPerQuarter) {
     const quarterDays = dates.slice(i, i + daysPerQuarter);
     const weeks: string[][] = [];
 
@@ -52,6 +54,19 @@ export function splitIntoQuarters(dates: string[]): string[][][] {
     }
 
     result.push(weeks);
+  }
+
+  // If there are leftover days (i.e., a 53rd week), add them to the fourth quarter
+  const remainingDays = dates.length - i;
+  if (remainingDays > 0) {
+    const extraWeek = dates.slice(i); // should be exactly 7 days
+    if (result.length === 0) {
+      // Edge case: no quarters created yet
+      result.push([extraWeek]);
+    } else {
+      // Append the extra week to the last quarter (fourth quarter)
+      result[result.length - 1].push(extraWeek);
+    }
   }
 
   return result;

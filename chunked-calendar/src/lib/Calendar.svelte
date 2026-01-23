@@ -40,7 +40,7 @@
         display: grid;
         grid-template-columns: repeat(7, 1fr);
         text-align: center;
-        row-gap: 0.5rem;
+        row-gap: var(--space-2xs);
     }
 
     /* larger gap after 5th, 9th, and 13th rows */
