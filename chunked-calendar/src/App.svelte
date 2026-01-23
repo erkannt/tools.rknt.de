@@ -16,7 +16,7 @@
             >.
         </p>
     </section>
-    <Calendar />
+    <Calendar {year} />
 </main>
 
 <style>
