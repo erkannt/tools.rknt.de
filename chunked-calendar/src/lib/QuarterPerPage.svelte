@@ -3,8 +3,8 @@
         formatDay,
         generateWeekdays,
         getDatesForYear,
-        splitIntoQuarters,
         isFirstOfMonth,
+        splitIntoQuartersWithChunks,
     } from "./dates";
 
     const { year, boldMonths } = $props<{
@@ -13,7 +13,8 @@
     }>();
     const dates: string[] = $derived(getDatesForYear(year));
 
-    const quarters = $derived.by(() => splitIntoQuarters(dates));
+    const quarters = $derived.by(() => splitIntoQuartersWithChunks(dates));
+    $inspect(quarters);
 
     const weekdays = $derived(generateWeekdays());
 </script>
@@ -21,14 +22,12 @@
 <div class="calendar-grid">
     {#each quarters as quarter}
         <div class="quarter">
-            <div class="weekday-row">
-                {#each weekdays as wd}
-                    <div class="weekday">{wd}</div>
-                {/each}
-            </div>
-            {#each quarter as week}
-                <div class="week">
-                    {#each week as day}
+            {#each quarter as chunk}
+                <div class="chunk">
+                    {#each weekdays as wd}
+                        <div class="weekday">{wd}</div>
+                    {/each}
+                    {#each chunk as day}
                         <div
                             class="day"
                             class:boldMonth={isFirstOfMonth(day) && boldMonths}
@@ -44,68 +43,28 @@
 
 <style>
     .calendar-grid {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 2em;
-        color: teal;
-    }
-
-    .quarter {
         display: flex;
         flex-direction: column;
-        gap: 0.1em;
-        text-align: center;
+        gap: 2em;
     }
 
-    .weekday-row,
-    .week {
-        display: flex;
-        justify-content: space-between;
-    }
-
-    /* Add margin‑bottom to the 5th, 9th, and 13th week rows */
-    .quarter .week:nth-child(5),
-    .quarter .week:nth-child(9),
-    .quarter .week:nth-child(13) {
-        margin-bottom: 0.5em;
+    .chunk {
+        display: grid;
+        grid-template-columns: auto 1fr 1fr 1fr 1fr;
+        grid-template-rows: repeat(7, auto);
+        grid-auto-flow: column;
+        column-gap: 0.5em;
+        justify-items: start;
+        align-items: baseline;
+        text-align: left;
+        margin-bottom: 1em;
     }
 
     .weekday {
-        font-weight: bold;
-        border-bottom: 3px solid black;
-        flex: 1;
-        text-align: center;
+        justify-self: end;
     }
 
     .boldMonth {
         font-weight: bold;
-    }
-
-    .day {
-        flex: 1;
-        text-align: center;
-    }
-
-    /* Ensure the calendar fits on a single printed page by scaling font size and preventing page breaks */
-    @media print {
-        /* Dynamically scale font size based on page dimensions */
-        .calendar-grid {
-            font-size: calc(90vh / 50);
-            break-inside: avoid;
-            page-break-inside: avoid;
-            margin: 0;
-        }
-
-        /* Prevent page breaks inside quarters and weeks */
-        .quarter,
-        .week {
-            break-inside: avoid;
-            page-break-inside: avoid;
-        }
-
-        /* Optional: set page margins to maximize usable area */
-        @page {
-            margin: 1cm;
-        }
     }
 </style>
