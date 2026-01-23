@@ -10,19 +10,21 @@
     <h1><span>Chunked</span><input type="number" bind:value={year} /></h1>
 
     <section>
-        <p>Simply print this page.</p>
         <label>
             <input type="checkbox" bind:checked={boldMonths} />
             Bold Months
         </label>
-        <p>
-            Inspired by <a href="https://www.youtube.com/watch?v=BiY2yUwTgQc"
-                >a JashiiCorrin video</a
-            >.
-        </p>
+        <p>Simply print this page.</p>
     </section>
 
     <Calendar {year} {boldMonths} />
+    <footer>
+        <p>
+            Inspired by <a href="https://www.youtube.com/watch?v=BiY2yUwTgQc"
+                >a JashiiCorrin video</a
+            >
+        </p>
+    </footer>
 </main>
 
 <style>
@@ -44,13 +46,21 @@
         margin-bottom: var(--space-xl);
     }
 
+    footer {
+        margin-top: var(--space-2xl);
+        margin-bottom: var(--space-2xl);
+        padding-top: var(--space-l);
+        border-top: 1px solid black;
+    }
+
     @media print {
         main,
         h1 {
             margin: 0;
         }
         h1,
-        section {
+        section,
+        footer {
             display: none;
         }
     }
