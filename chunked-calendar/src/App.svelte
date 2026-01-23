@@ -37,4 +37,11 @@
     section {
         margin-bottom: var(--space-xl);
     }
+
+    @media print {
+        h1,
+        section {
+            display: none;
+        }
+    }
 </style>
