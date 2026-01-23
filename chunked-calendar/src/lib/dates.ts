@@ -147,6 +147,21 @@ export function formatDay(dateStr: string): string {
   return day.toString().padStart(2, "0");
 }
 
+export function formatDayWithWeekdaySuffix(dateStr: string): string {
+  const d = new Date(dateStr);
+  const day = d.getDate();
+
+  // If it's the first day of the month, return the short month name (e.g., "Jan")
+  if (day === 1) {
+    return d.toLocaleString(undefined, { month: "short" });
+  }
+
+  // Otherwise return zero‑padded day + single‑letter weekday (e.g., "02 M")
+  const dayStr = day.toString().padStart(2, "0");
+  const weekday = d.toLocaleString(undefined, { weekday: "narrow" });
+  return `${dayStr} ${weekday}`;
+}
+
 export function isFirstOfMonth(day: string): boolean {
   const d = new Date(day);
   return d.getDate() === 1;
