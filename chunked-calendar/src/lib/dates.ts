@@ -21,18 +21,39 @@ function getMondayOfISOWeek(date: Date): Date {
  *                     covering every day of the specified ISO year.
  */
 export function getDatesForYear(year: number): string[] {
-  // Start on the Monday of the first ISO week (the week containing Jan 4)
-  const start = getMondayOfISOWeek(new Date(year, 0, 4));
+  // Determine the start Monday of the first ISO week (the week containing Jan 4)
+  const startLocal = getMondayOfISOWeek(new Date(year, 0, 4));
+  // Convert to a UTC midnight date to avoid DST issues
+  const start = new Date(
+    Date.UTC(
+      startLocal.getFullYear(),
+      startLocal.getMonth(),
+      startLocal.getDate(),
+    ),
+  );
 
-  // End after the Sunday of the last ISO week (the week containing Dec 28)
-  const lastMonday = getMondayOfISOWeek(new Date(year, 11, 28));
-  const end = new Date(lastMonday);
-  end.setDate(end.getDate() + 7); // exclusive upper bound (next Monday)
+  // Determine the Monday after the last ISO week (the week containing Dec 28)
+  const lastMondayLocal = getMondayOfISOWeek(new Date(year, 11, 28));
+  const afterLastMondayLocal = new Date(lastMondayLocal);
+  afterLastMondayLocal.setDate(afterLastMondayLocal.getDate() + 7); // exclusive upper bound
+  // Convert to UTC midnight as well
+  const end = new Date(
+    Date.UTC(
+      afterLastMondayLocal.getFullYear(),
+      afterLastMondayLocal.getMonth(),
+      afterLastMondayLocal.getDate(),
+    ),
+  );
 
-  let dates = [];
-  for (let d = new Date(start); d < end; d.setDate(d.getDate() + 1)) {
-    dates.push(d.toISOString().split("T")[0]);
+  const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+  const dates: string[] = [];
+
+  // Iterate in UTC, stepping one whole day at a time – this sidesteps DST anomalies
+  for (let ts = start.getTime(); ts < end.getTime(); ts += ONE_DAY_MS) {
+    const d = new Date(ts);
+    dates.push(d.toISOString().split("T")[0]); // YYYY‑MM‑DD
   }
+
   return dates;
 }
 
