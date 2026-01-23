@@ -1,30 +1,10 @@
 <script lang="ts">
-    import { getDatesForYear } from "./dates";
+    import { getDatesForYear, splitIntoQuarters } from "./dates";
 
     const { year } = $props<{ year: number }>();
     const dates: string[] = $derived(getDatesForYear(year));
 
-    // Derive quarters: each quarter = 13 weeks, each week = 7 days
-    const quarters = $derived.by(() => {
-        const daysPerWeek = 7;
-        const weeksPerQuarter = 13;
-        const daysPerQuarter = daysPerWeek * weeksPerQuarter;
-
-        const result: string[][][] = []; // quarters → weeks → days
-
-        for (let i = 0; i < dates.length; i += daysPerQuarter) {
-            const quarterDays = dates.slice(i, i + daysPerQuarter);
-            const weeks: string[][] = [];
-
-            for (let j = 0; j < quarterDays.length; j += daysPerWeek) {
-                weeks.push(quarterDays.slice(j, j + daysPerWeek));
-            }
-
-            result.push(weeks);
-        }
-
-        return result;
-    });
+    const quarters = $derived.by(() => splitIntoQuarters(dates));
 </script>
 
 {#each quarters as quarter}

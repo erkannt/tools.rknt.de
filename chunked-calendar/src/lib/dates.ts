@@ -35,3 +35,24 @@ export function getDatesForYear(year: number): string[] {
   }
   return dates;
 }
+
+export function splitIntoQuarters(dates: string[]): string[][][] {
+  const daysPerWeek = 7;
+  const weeksPerQuarter = 13;
+  const daysPerQuarter = daysPerWeek * weeksPerQuarter;
+
+  const result: string[][][] = []; // quarters → weeks → days
+
+  for (let i = 0; i < dates.length; i += daysPerQuarter) {
+    const quarterDays = dates.slice(i, i + daysPerQuarter);
+    const weeks: string[][] = [];
+
+    for (let j = 0; j < quarterDays.length; j += daysPerWeek) {
+      weeks.push(quarterDays.slice(j, j + daysPerWeek));
+    }
+
+    result.push(weeks);
+  }
+
+  return result;
+}
