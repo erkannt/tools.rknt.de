@@ -46,14 +46,14 @@
     .calendar-grid {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
-        gap: var(--space-l);
+        gap: 2em;
         height: 90vh;
     }
 
     .quarter {
         display: flex;
         flex-direction: column;
-        gap: 0.2em;
+        gap: 0.1em;
         text-align: center;
     }
 
@@ -67,7 +67,7 @@
     .quarter .week:nth-child(5),
     .quarter .week:nth-child(9),
     .quarter .week:nth-child(13) {
-        margin-bottom: var(--space-xs);
+        margin-bottom: 0.5em;
     }
 
     .weekday {
@@ -90,7 +90,7 @@
     @media print {
         /* Dynamically scale font size based on page dimensions */
         .calendar-grid {
-            font-size: max(8pt, calc(0.015 * 100cqh));
+            font-size: calc(90vh / 50);
             break-inside: avoid;
             page-break-inside: avoid;
             margin: 0;
