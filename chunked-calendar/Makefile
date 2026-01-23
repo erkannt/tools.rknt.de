@@ -20,3 +20,7 @@ node_modules:
 .PHONY: clean
 clean:
 	rm -rf node_modules dist
+
+.PHONY: release
+release: build
+	mc mirror --overwrite --remove ./dist rknt/tools/chunked-calendar
