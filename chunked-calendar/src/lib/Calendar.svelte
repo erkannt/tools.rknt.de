@@ -38,12 +38,13 @@
         display: grid;
         grid-template-columns: repeat(2, 1fr);
         gap: var(--space-l);
+        height: 90vh;
     }
 
     .quarter {
         display: flex;
         flex-direction: column;
-        gap: var(--space-2xs);
+        gap: 0.2em;
         text-align: center;
     }
 
@@ -70,5 +71,28 @@
     .day {
         flex: 1;
         text-align: center;
+    }
+
+    /* Ensure the calendar fits on a single printed page by scaling font size and preventing page breaks */
+    @media print {
+        /* Dynamically scale font size based on page dimensions */
+        .calendar-grid {
+            font-size: max(8pt, calc(0.015 * 100cqh));
+            break-inside: avoid;
+            page-break-inside: avoid;
+            margin: 0;
+        }
+
+        /* Prevent page breaks inside quarters and weeks */
+        .quarter,
+        .week {
+            break-inside: avoid;
+            page-break-inside: avoid;
+        }
+
+        /* Optional: set page margins to maximize usable area */
+        @page {
+            margin: 1cm;
+        }
     }
 </style>

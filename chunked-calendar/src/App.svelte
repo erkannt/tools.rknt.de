@@ -39,6 +39,10 @@
     }
 
     @media print {
+        main,
+        h1 {
+            margin: 0;
+        }
         h1,
         section {
             display: none;
