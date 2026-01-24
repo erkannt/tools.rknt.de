@@ -57,6 +57,14 @@ export function getDatesForYear(year: number): string[] {
   return dates;
 }
 
+/**
+ * Splits an array of date strings (YYYY-MM-DD) into quarters, each consisting of up to 13 weeks.
+ *
+ * @param {string[]} dates - An array of date strings formatted as "YYYY-MM-DD".
+ * @returns {string[][][]} A three-dimensional array where the outermost array represents quarters,
+ *                          the middle arrays represent weeks within each quarter, and the innermost
+ *                          arrays represent individual days within each week.
+ */
 export function splitIntoQuarters(dates: string[]): string[][][] {
   const daysPerWeek = 7;
   const weeksPerQuarter = 13;
