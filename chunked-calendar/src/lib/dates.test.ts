@@ -95,39 +95,39 @@ describe("formatDayWithWeekdaySuffix", () => {
   type TestCase = {
     desc: string;
     date: string;
-    expectedPattern: RegExp;
+    expected: string;
   };
 
   const testCases: readonly TestCase[] = [
     {
       desc: "returns month name for first day of month",
       date: "2024-01-01",
-      expectedPattern: /^Jan$/,
+      expected: "Jan",
     },
     {
       desc: "returns month name for December 1st",
       date: "2024-12-01",
-      expectedPattern: /^Dec$/,
+      expected: "Dec",
     },
     {
       desc: "returns day with weekday for Monday",
       date: "2024-01-08", // Monday
-      expectedPattern: /^08 [MTWTFMS]$/,
+      expected: "08 M",
     },
     {
       desc: "returns day with weekday for Sunday",
       date: "2024-01-07", // Sunday
-      expectedPattern: /^07 [MTWTFMS]$/,
+      expected: "07 S",
     },
     {
       desc: "handles leap year February 29th",
       date: "2024-02-29", // Thursday
-      expectedPattern: /^29 [MTWTFMS]$/,
+      expected: "29 T",
     },
   ];
 
-  it.each(testCases)("$desc", ({ date, expectedPattern }) => {
+  it.each(testCases)("$desc", ({ date, expected }) => {
     const result = formatDayWithWeekdaySuffix(date);
-    expect(result).toMatch(expectedPattern);
+    expect(result).toBe(expected);
   });
 });
