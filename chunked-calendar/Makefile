@@ -21,13 +21,27 @@ check: svelte-check test
 test: node_modules
 	npx vitest run
 
+# Visual regression tests in Docker for reproducible screenshots
 .PHONY: visual
 visual: node_modules
-	 npx playwright test
+	docker run --rm \
+		--ipc=host \
+		--add-host=host.docker.internal:host-gateway \
+		-v $(PWD):/app \
+		-w /app \
+		mcr.microsoft.com/playwright:v1.58.0-noble \
+		npx playwright test
 
+# Update visual regression snapshots in Docker
 .PHONY: visual-update
 visual-update: node_modules
-	npx playwright test --update-snapshots
+	docker run --rm \
+		--ipc=host \
+		--add-host=host.docker.internal:host-gateway \
+		-v $(PWD):/app \
+		-w /app \
+		mcr.microsoft.com/playwright:v1.58.0-noble \
+		npx playwright test --update-snapshots
 
 
 node_modules: package.json pnpm-lock.yaml
