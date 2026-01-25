@@ -35,9 +35,9 @@ test.describe('Visual Regression Tests - Calendar App', () => {
       // Wait for calendar to update
       await page.waitForTimeout(1000)
       
-      // Take screenshot of the main content area (exclude header/footer)
-      const calendar = page.locator('main').locator('> :nth-child(3)')
-      await expect(calendar).toHaveScreenshot(`${name}.png`)
+      // Take screenshot of the complete main content area
+      const mainContent = page.locator('main')
+      await expect(mainContent).toHaveScreenshot(`${name}.png`)
     })
   })
 })
