@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { formatDay, isFirstOfMonth } from "./dates";
+import { formatDay, formatDayWithWeekdaySuffix, isFirstOfMonth } from "./dates";
 
 describe("isFirstOfMonth", () => {
   type TestCase = {
@@ -88,5 +88,46 @@ describe("formatDay", () => {
 
   it.each(testCases)("$desc", ({ date, expected }) => {
     expect(formatDay(date)).toBe(expected);
+  });
+});
+
+describe("formatDayWithWeekdaySuffix", () => {
+  type TestCase = {
+    desc: string;
+    date: string;
+    expectedPattern: RegExp;
+  };
+
+  const testCases: readonly TestCase[] = [
+    {
+      desc: "returns month name for first day of month",
+      date: "2024-01-01",
+      expectedPattern: /^Jan$/,
+    },
+    {
+      desc: "returns month name for December 1st",
+      date: "2024-12-01",
+      expectedPattern: /^Dec$/,
+    },
+    {
+      desc: "returns day with weekday for Monday",
+      date: "2024-01-08", // Monday
+      expectedPattern: /^08 [MTWTFMS]$/,
+    },
+    {
+      desc: "returns day with weekday for Sunday",
+      date: "2024-01-07", // Sunday
+      expectedPattern: /^07 [MTWTFMS]$/,
+    },
+    {
+      desc: "handles leap year February 29th",
+      date: "2024-02-29", // Thursday
+      expectedPattern: /^29 [MTWTFMS]$/,
+    },
+  ];
+
+  it.each(testCases)("$desc", ({ date, expectedPattern }) => {
+    const result = formatDayWithWeekdaySuffix(date);
+    expect(result).toMatch(expectedPattern);
   });
 });
