@@ -28,6 +28,9 @@ a:not([class]) {
     text-underline-offset: 0.12em;
     color: oklch(50% 0.11 231.7);
 }
+a:not([class]):visited {
+    color: oklch(50% 0.11 231.7);
+}
 :link:hover {
     text-decoration-thickness: max(3px, 0.1875rem, 0.12em);
 }
