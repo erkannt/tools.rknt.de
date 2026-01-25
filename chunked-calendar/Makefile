@@ -10,9 +10,12 @@ build: node_modules
 prod: node_modules build
 	npx vite preview --port 8080
 
-.PHONY: check
-check: node_modules
+.PHONY: svelte-check
+svelte-check: node_modules
 	npx svelte-check --tsconfig ./tsconfig.app.json && npx tsc -p tsconfig.node.json
+
+.PHONY: check
+check: svelte-check test
 
 .PHONY: test
 test: node_modules
