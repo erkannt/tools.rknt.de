@@ -14,7 +14,6 @@
     const dates: string[] = $derived(getDatesForYear(year));
 
     const quarters = $derived.by(() => splitIntoQuartersWithChunks(dates));
-    $inspect(quarters);
 
     const weekdays = $derived(generateWeekdays());
 </script>
