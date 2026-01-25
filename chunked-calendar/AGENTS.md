@@ -8,6 +8,8 @@ This is a **Svelte5 + TypeScript + Vite** calendar application that generates pr
 
 ## Build & Development Commands
 
+Before running any shell command you must add `~/mise/shims` to the `PATH` envvar.
+
 ### Primary Commands (via Makefile)
 
 - `make dev` - Start development server on port 8080
