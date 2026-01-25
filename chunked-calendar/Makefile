@@ -21,7 +21,16 @@ check: svelte-check test
 test: node_modules
 	npx vitest run
 
-node_modules:
+.PHONY: visual
+visual: node_modules
+	 npx playwright test
+
+.PHONY: visual-update
+visual-update: node_modules
+	npx playwright test --update-snapshots
+
+
+node_modules: package.json pnpm-lock.yaml
 	pnpm install --frozen-lockfile
 
 .PHONY: clean
