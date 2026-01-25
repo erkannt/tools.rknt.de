@@ -1,3 +1,5 @@
+import type { DateString, Week, Quarter, QuarterWithChunks } from "./types";
+
 /**
  * Gets the Monday of the ISO week for a given date.
  *
@@ -19,7 +21,7 @@ function getMondayOfISOWeek(date: Date): Date {
  * @returns {string[]} An array of date strings formatted as "YYYY-MM-DD",
  *                     covering every day of the specified ISO year.
  */
-export function getDatesForYear(year: number): string[] {
+export function getDatesForYear(year: number): DateString[] {
   // Determine the start Monday of the first ISO week (the week containing Jan 4)
   const startLocal = getMondayOfISOWeek(new Date(year, 0, 4));
   // Convert to a UTC midnight date to avoid DST issues
@@ -66,7 +68,7 @@ export function getDatesForYear(year: number): string[] {
  *                         the middle arrays represent weeks within each quarter,
  *                         the inner contains days for each week.
  */
-export function splitIntoQuarters(dates: string[]): string[][][] {
+export function splitIntoQuarters(dates: DateString[]): Quarter[] {
   const daysPerWeek = 7;
   const weeksPerQuarter = 13;
   const daysPerQuarter = daysPerWeek * weeksPerQuarter;
@@ -113,7 +115,7 @@ export function splitIntoQuarters(dates: string[]): string[][][] {
  *                          the middle arrays represent chunks within each quarter, and the innermost
  *                          arrays represent individual days within each chunk.
  */
-export function splitIntoQuartersWithChunks(dates: string[]): string[][][] {
+export function splitIntoQuartersWithChunks(dates: DateString[]): QuarterWithChunks[] {
   const daysPerWeek = 7;
 
   // Split the flat list of dates into weeks (arrays of 7 days)
