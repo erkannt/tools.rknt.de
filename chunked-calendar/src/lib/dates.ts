@@ -1,4 +1,9 @@
-// Helper to get the Monday of the ISO week for a given date
+/**
+ * Gets the Monday of the ISO week for a given date.
+ *
+ * @param {Date} date - The input date.
+ * @returns {Date} The Monday that starts the ISO week containing the given date.
+ */
 function getMondayOfISOWeek(date: Date): Date {
   const jsDay = date.getDay(); // 0 (Sun) .. 6 (Sat)
   const isoDay = (jsDay + 6) % 7; // 0 (Mon) .. 6 (Sun)
@@ -9,12 +14,6 @@ function getMondayOfISOWeek(date: Date): Date {
 
 /**
  * Generates an array of date strings (YYYY-MM-DD) for every day in the ISO year.
- *
- * The function computes the start date as the Monday of the first ISO week
- * (the week containing January 4) and the end date as the Monday after the
- * last ISO week (the week containing December 28). It then iterates from the
- * start date up to, but not including, the end date, collecting each date
- * in ISO 8601 format.
  *
  * @param {number} year - The calendar year for which to generate dates.
  * @returns {string[]} An array of date strings formatted as "YYYY-MM-DD",
@@ -58,12 +57,14 @@ export function getDatesForYear(year: number): string[] {
 }
 
 /**
- * Splits an array of date strings (YYYY-MM-DD) into quarters, each consisting of up to 13 weeks.
+ * Splits an array of date strings (YYYY-MM-DD) into quarters, containing weeks, containing days
+ *
+ * Quarters have 13 weeks. In ISO years with 53 weeks the last quarter will have 14 weeks.
  *
  * @param {string[]} dates - An array of date strings formatted as "YYYY-MM-DD".
- * @returns {string[][][]} A three-dimensional array where the outermost array represents quarters,
- *                          the middle arrays represent weeks within each quarter, and the innermost
- *                          arrays represent individual days within each week.
+ * @returns {string[][][]} Outermost array represents quarters,
+ *                         the middle arrays represent weeks within each quarter,
+ *                         the inner contains days for each week.
  */
 export function splitIntoQuarters(dates: string[]): string[][][] {
   const daysPerWeek = 7;
@@ -101,6 +102,17 @@ export function splitIntoQuarters(dates: string[]): string[][][] {
   return result;
 }
 
+/**
+ * Splits an array of date strings into quarters with 4 chunks per quarter.
+ *
+ * Each quarter contains 3 chunks of 4 weeks and last chunk consisting of a single week.
+ * In ISO years with 53 weeks the last chunk of the last quarter has two weeks.
+ *
+ * @param {string[]} dates - An array of date strings formatted as "YYYY-MM-DD".
+ * @returns {string[][][]} A three-dimensional array where the outermost array represents quarters,
+ *                          the middle arrays represent chunks within each quarter, and the innermost
+ *                          arrays represent individual days within each chunk.
+ */
 export function splitIntoQuartersWithChunks(dates: string[]): string[][][] {
   const daysPerWeek = 7;
 
@@ -152,6 +164,11 @@ export function splitIntoQuartersWithChunks(dates: string[]): string[][][] {
   return result;
 }
 
+/**
+ * Returns an array of 7 localized short weekday names (e.g., "Mon") starting with Monday.
+ *
+ * @returns {string[]} Short weekday names for Monday through Sunday.
+ */
 export function generateWeekdays(): string[] {
   // Generate localized short weekday names using the browser's locale
   const formatter = new Intl.DateTimeFormat(undefined, {
@@ -176,6 +193,15 @@ export function formatDay(dateStr: string): string {
   return day.toString().padStart(2, "0");
 }
 
+/**
+ * Formats a date string for calendar display with weekday suffix with first day of month showing month name.
+ *
+ * If the date is the first day of the month, returns the short month name.
+ * Otherwise returns the zero-padded day number followed by a single-letter weekday.
+ *
+ * @param {string} dateStr - Date string in "YYYY-MM-DD" format.
+ * @returns {string} Formatted string (e.g., "Jan" for first day, "02 M" for 2nd Monday).
+ */
 export function formatDayWithWeekdaySuffix(dateStr: string): string {
   const d = new Date(dateStr);
   const day = d.getDate();
@@ -191,6 +217,12 @@ export function formatDayWithWeekdaySuffix(dateStr: string): string {
   return `${dayStr} ${weekday}`;
 }
 
+/**
+ * Checks if a given date string represents the first day of the month.
+ *
+ * @param {string} day - Date string in "YYYY-MM-DD" format.
+ * @returns {boolean} True if the date is the first day of the month, false otherwise.
+ */
 export function isFirstOfMonth(day: string): boolean {
   const d = new Date(day);
   return d.getDate() === 1;
