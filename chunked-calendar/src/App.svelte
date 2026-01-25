@@ -30,6 +30,10 @@
     {/if}
     <footer>
         <p>
+            <a href="https://github.com/erkannt/chunked-calendar">Source Code</a
+            >
+        </p>
+        <p>
             Inspired by <a href="https://www.youtube.com/watch?v=BiY2yUwTgQc"
                 >a JashiiCorrin video</a
             >
