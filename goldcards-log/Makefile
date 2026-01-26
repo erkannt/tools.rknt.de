@@ -1,6 +1,6 @@
 .PHONY: dev
 dev: node_modules
-	pnpm run dev
+	pnpm run dev --port 8080
 
 .PHONY: build
 build: node_modules
@@ -8,8 +8,8 @@ build: node_modules
 
 .PHONY: prod-preview
 prod-preview: node_modules
-	pnpm run preview
+	pnpm run preview --port 8080
 
 .PHONY: release
 release: build
-	mc mirror --overwrite --remove ./build rknt/tools/goldcards
+	mc mirror --overwrite --remove ./dist rknt/tools/goldcards

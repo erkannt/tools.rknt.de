@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { getISOWeekInfo } from '$lib/isoweek';
 	import { LocalStorage } from '$lib/localStorage.svelte';
+	import Layout from './Layout.svelte';
 
 	interface GoldCard {
 		id: string;
@@ -162,48 +163,50 @@
 	const csvUrl = $derived.by(() => `data:text/csv;charset=utf-8,${encodeURIComponent(csvContent)}`);
 </script>
 
-<h1>Goldcard Log</h1>
+<Layout>
+	<h1>Goldcard Log</h1>
 
-<p>Logged: {goldcards.current.length}</p>
-<p>To be taken: {goldcardBudget}</p>
+	<p>Logged: {goldcards.current.length}</p>
+	<p>To be taken: {goldcardBudget}</p>
 
-<form onsubmit={addGoldCard}>
+	<form onsubmit={addGoldCard}>
+		<label>
+			Date:
+			<input type="date" bind:value={newDate} required />
+		</label>
+		<label>
+			Comment:
+			<input type="text" bind:value={newComment} required />
+		</label>
+		<button type="submit">Log Goldcard</button>
+	</form>
+
+	<h2>Log</h2>
+
+	<a
+		href={csvUrl}
+		download={'goldcards_' + new Date().toISOString().replace(/[:.]/g, '-') + '.csv'}
+		target="_blank"
+		rel="noopener noreferrer external"
+		role="button"
+		class="secondary"
+	>
+		Download as CSV
+	</a>
 	<label>
-		Date:
-		<input type="date" bind:value={newDate} required />
+		Import CSV (overwrites current log)
+		<input type="file" accept=".csv,text/csv" onchange={handleCsvUpload} value="Import" />
 	</label>
-	<label>
-		Comment:
-		<input type="text" bind:value={newComment} required />
-	</label>
-	<button type="submit">Log Goldcard</button>
-</form>
 
-<h2>Log</h2>
-
-<a
-	href={csvUrl}
-	download={'goldcards_' + new Date().toISOString().replace(/[:.]/g, '-') + '.csv'}
-	target="_blank"
-	rel="noopener noreferrer external"
-	role="button"
-	class="secondary"
->
-	Download as CSV
-</a>
-<label>
-	Import CSV (overwrites current log)
-	<input type="file" accept=".csv,text/csv" onchange={handleCsvUpload} value="Import" />
-</label>
-
-{#each byIsoWeek as group (group.week)}
-	<h3>Week {String(group.week).padStart(2, '0')}-{String(group.year)}</h3>
-	<ul>
-		{#each group.cards as card (card.id)}
-			<li>
-				<strong>{formatDate(card.date)}:</strong>
-				{card.comment}
-			</li>
-		{/each}
-	</ul>
-{/each}
+	{#each byIsoWeek as group (group.week)}
+		<h3>Week {String(group.week).padStart(2, '0')}-{String(group.year)}</h3>
+		<ul>
+			{#each group.cards as card (card.id)}
+				<li>
+					<strong>{formatDate(card.date)}:</strong>
+					{card.comment}
+				</li>
+			{/each}
+		</ul>
+	{/each}
+</Layout>

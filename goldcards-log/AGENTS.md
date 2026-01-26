@@ -4,12 +4,12 @@ This file contains guidelines and commands for agentic coding agents working in 
 
 ## Project Overview
 
-This is a SvelteKit application called "goldcards-log" built with:
+This is a Vite + Svelte application called "goldcards-log" built with:
 
-- **Framework**: SvelteKit with TypeScript
-- **Package Manager**: pnpm (required)
+- **Framework**: Vite + Svelte 5 with TypeScript
+- **Package Manager**: npm (pnpm originally used but npm works fine)
 - **Styling**: Pico CSS via CDN
-- **Build Target**: Static site generation (@sveltejs/adapter-static)
+- **Build Target**: Static site generation (Vite build)
 - **State Management**: Svelte 5 runes ($state, $derived, $effect)
 
 ## Development Commands
@@ -17,18 +17,18 @@ This is a SvelteKit application called "goldcards-log" built with:
 ### Core Development
 
 ```bash
-# Install dependencies (always use pnpm)
-pnpm install
+# Install dependencies
+npm install
 
 # Start development server
-pnpm dev
-pnpm dev -- --open    # Opens browser automatically
+npm run dev
+npm run dev -- --open    # Opens browser automatically
 
 # Build for production
-pnpm build
+npm run build
 
 # Preview production build
-pnpm preview
+npm run preview
 
 # Makefile equivalents (if preferred)
 make dev
@@ -40,14 +40,33 @@ make prod-preview
 
 ```bash
 # Run type checking
-pnpm check
-pnpm check:watch    # Watch mode
+npm run check
+npm run check:watch    # Watch mode
 
 # Run linting and formatting checks
-pnpm lint
+npm run lint
 
 # Format code
-pnpm format
+npm run format
+
+# Manual equivalents
+npx svelte-check --tsconfig ./tsconfig.json
+npx prettier --check . && eslint .
+npx prettier --write .
+```
+
+### Code Quality & Type Checking
+
+```bash
+# Run type checking
+npm run check
+npm run check:watch    # Watch mode
+
+# Run linting and formatting checks
+npm run lint
+
+# Format code
+npm run format
 
 # Manual equivalents
 npx svelte-check --tsconfig ./tsconfig.json
@@ -119,9 +138,18 @@ import type { Article } from '$lib/types';
 ```
 src/
 ├── lib/           # Shared utilities, types, components
-├── routes/        # SvelteKit pages and layouts
-├── app.html       # Root HTML template
-└── app.d.ts       # Global type declarations
+├── App.svelte     # Main application component
+├── Layout.svelte  # Layout wrapper component
+├── main.ts        # Vite entry point
+└── vite.d.ts      # Vite type declarations
+```
+
+src/
+├── lib/ # Shared utilities, types, components
+├── routes/ # SvelteKit pages and layouts
+├── app.html # Root HTML template
+└── app.d.ts # Global type declarations
+
 ```
 
 ### CSS/Styling
@@ -139,17 +167,17 @@ src/
 
 ## Development Workflow
 
-1. **Always use pnpm** for package management (engine-strict=true)
-2. **Run type checking** before commits: `pnpm check`
-3. **Format code** before commits: `pnpm format`
-4. **Lint code** to ensure quality: `pnpm lint`
-5. **Test in development** regularly: `pnpm dev`
-6. **Build verification**: Ensure `pnpm build` succeeds before PRs
+1. **Use npm** for package management
+2. **Run type checking** before commits: `npm run check`
+3. **Format code** before commits: `npm run format`
+4. **Lint code** to ensure quality: `npm run lint`
+5. **Test in development** regularly: `npm run dev`
+6. **Build verification**: Ensure `npm run build` succeeds before PRs
 
 ## Build & Deployment
 
-- **Static Generation**: Uses @sveltejs/adapter-static
-- **Output Directory**: `build/`
+- **Static Generation**: Uses Vite build
+- **Output Directory**: `dist/`
 - **Deployment**: Can be deployed to any static hosting service
 - **Environment Variables**: Use .env files (gitignored except .env.example, .env.test)
 
@@ -172,3 +200,4 @@ src/
 - Use `crypto.randomUUID()` for unique IDs (available in modern browsers)
 - Date handling uses ISO format strings consistently
 - File uploads use FileReader API - ensure proper error handling
+```
