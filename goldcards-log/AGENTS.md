@@ -4,10 +4,10 @@ This file contains guidelines and commands for agentic coding agents working in 
 
 ## Project Overview
 
-This is a Vite + Svelte application called "goldcards-log" built with:
+This is a Vite + Svelte application called "goldcards‑log" built with:
 
 - **Framework**: Vite + Svelte 5 with TypeScript
-- **Package Manager**: npm (pnpm originally used but npm works fine)
+- **Package Manager**: pnpm
 - **Styling**: Pico CSS via CDN
 - **Build Target**: Static site generation (Vite build)
 - **State Management**: Svelte 5 runes ($state, $derived, $effect)
@@ -17,58 +17,40 @@ This is a Vite + Svelte application called "goldcards-log" built with:
 ### Core Development
 
 ```bash
+# Ensure ~/mise/shims is in PATH for all commands
+export PATH="$HOME/mise/shims:$PATH"
+
 # Install dependencies
-npm install
+pnpm install
 
 # Start development server
-npm run dev
-npm run dev -- --open    # Opens browser automatically
+pnpm run dev
+pnpm run dev -- --open    # Opens browser automatically
 
-# Build for production
-npm run build
-
-# Preview production build
-npm run preview
-
-# Makefile equivalents (if preferred)
-make dev
+# Build for production (use Make target)
 make build
+
+# Preview production build (use Make target)
 make prod-preview
 ```
 
 ### Code Quality & Type Checking
 
 ```bash
-# Run type checking
-npm run check
-npm run check:watch    # Watch mode
+# Ensure ~/mise/shims is in PATH for all commands
+export PATH="$HOME/mise/shims:$PATH"
 
-# Run linting and formatting checks
-npm run lint
+# Run type checking (Make target)
+make check
+make check:watch    # Watch mode
 
-# Format code
-npm run format
+# Run linting (Make target)
+make lint
 
-# Manual equivalents
-npx svelte-check --tsconfig ./tsconfig.json
-npx prettier --check . && eslint .
-npx prettier --write .
-```
+# Format code (Make target)
+make format
 
-### Code Quality & Type Checking
-
-```bash
-# Run type checking
-npm run check
-npm run check:watch    # Watch mode
-
-# Run linting and formatting checks
-npm run lint
-
-# Format code
-npm run format
-
-# Manual equivalents
+# Manual equivalents (if needed)
 npx svelte-check --tsconfig ./tsconfig.json
 npx prettier --check . && eslint .
 npx prettier --write .
@@ -124,11 +106,11 @@ import type { Article } from '$lib/types';
 - Use `$derived.by()` for complex derived computations
 - Use `$effect()` for side effects
 - Use `$props()` for component props
-- Prefer class-based utilities with Svelte reactivity
+- Prefer class‑based utilities with Svelte reactivity
 
 ### Error Handling
 
-- Use TypeScript for compile-time error prevention
+- Use TypeScript for compile‑time error prevention
 - Validate user input before processing (see `addGoldCard()` function)
 - Use conditional rendering for empty/loading states
 - Handle async operations with proper error boundaries
@@ -150,8 +132,6 @@ src/
 ├── app.html # Root HTML template
 └── app.d.ts # Global type declarations
 
-```
-
 ### CSS/Styling
 
 - External Pico CSS via CDN in layout
@@ -167,12 +147,12 @@ src/
 
 ## Development Workflow
 
-1. **Use npm** for package management
-2. **Run type checking** before commits: `npm run check`
-3. **Format code** before commits: `npm run format`
-4. **Lint code** to ensure quality: `npm run lint`
-5. **Test in development** regularly: `npm run dev`
-6. **Build verification**: Ensure `npm run build` succeeds before PRs
+1. **Use pnpm** for package management
+2. **Run type checking** before commits: `make check`
+3. **Format code** before commits: `make format`
+4. **Lint code** to ensure quality: `make lint`
+5. **Test in development** regularly: `pnpm run dev`
+6. **Build verification**: Ensure `make build` succeeds before PRs
 
 ## Build & Deployment
 
@@ -192,12 +172,11 @@ src/
 - This is a goldcard logging application with CSV import/export functionality
 - Data is stored in browser localStorage using a custom reactive wrapper
 - Uses ISO week calculations for organizing entries
-- No server-side dependencies - purely client-side application
+- No server‑side dependencies – purely client‑side application
 
 ## Common Gotchas
 
 - Always check `typeof localStorage !== 'undefined'` before using it
 - Use `crypto.randomUUID()` for unique IDs (available in modern browsers)
 - Date handling uses ISO format strings consistently
-- File uploads use FileReader API - ensure proper error handling
-```
+- File uploads use FileReader API – ensure proper error handling
