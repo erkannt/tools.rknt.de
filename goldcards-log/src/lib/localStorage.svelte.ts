@@ -25,11 +25,11 @@ export class LocalStorage<T> {
 	}
 
 	get current() {
-		this.#version;
+		void this.#version;
 
 		const root =
 			typeof localStorage !== 'undefined'
-				? JSON.parse(localStorage.getItem(this.#key) as any)
+				? JSON.parse(localStorage.getItem(this.#key) as string)
 				: this.#value;
 
 		const proxies = new WeakMap();
@@ -44,7 +44,7 @@ export class LocalStorage<T> {
 			if (!p) {
 				p = new Proxy(value, {
 					get: (target, property) => {
-						this.#version;
+						void this.#version;
 						return proxy(Reflect.get(target, property));
 					},
 					set: (target, property, value) => {

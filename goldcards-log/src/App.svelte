@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { getISOWeekInfo } from '$lib/isoweek';
-	import { LocalStorage } from '$lib/localStorage.svelte';
+	import { getISOWeekInfo } from './lib/isoweek';
+	import { LocalStorage } from './lib/localStorage.svelte';
 	import Layout from './Layout.svelte';
 
 	interface GoldCard {
