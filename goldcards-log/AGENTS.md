@@ -40,10 +40,7 @@ pnpm run preview
 # Ensure ~/mise/shims is in PATH for all commands
 export PATH="$HOME/mise/shims:$PATH"
 
-# Manual equivalents (if needed)
-npx svelte-check --tsconfig ./tsconfig.json
-npx prettier --check . && eslint .
-npx prettier --write .
+make check # runs eslint, prettier and svelte checks
 ```
 
 ## Code Style Guidelines
@@ -140,11 +137,9 @@ index.html # Root HTML template (Vite standard)
 ## Development Workflow
 
 1. **Use pnpm** for package management
-2. **Run type checking** before commits: `make check`
-3. **Format code** before commits: `make format`
-4. **Lint code** to ensure quality: `make lint`
-5. **Test in development** regularly: `pnpm run dev`
-6. **Build verification**: Ensure `make build` succeeds before PRs
+2. **Run checks to validate changes** before commits: `make check`
+3. **Test in development** regularly: `pnpm run dev`
+4. **Build verification**: Ensure `make build` succeeds before PRs
 
 ## Build & Deployment
 

@@ -13,3 +13,9 @@ prod-preview: node_modules
 .PHONY: release
 release: build
 	mc mirror --overwrite --remove ./dist rknt/tools/goldcards
+
+.PHONY: check
+check: node_modules
+	npx svelte-check --tsconfig ./tsconfig.json
+	npx prettier --check .
+	npx eslint .
