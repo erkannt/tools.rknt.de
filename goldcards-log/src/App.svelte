@@ -36,7 +36,8 @@
 	let newDate: string = $state(new Date().toISOString().split('T')[0]);
 	let newComment: string = $state('');
 
-	function addGoldCard() {
+	function addGoldCard(event: SubmitEvent) {
+		event.preventDefault();
 		if (!newComment.trim()) {
 			return;
 		}
