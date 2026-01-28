@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { getISOWeekInfo } from './lib/isoweek';
 	import { LocalStorage } from './lib/localStorage.svelte';
-	import Layout from './Layout.svelte';
 
 	interface GoldCard {
 		id: string;
@@ -163,7 +162,11 @@
 	const csvUrl = $derived.by(() => `data:text/csv;charset=utf-8,${encodeURIComponent(csvContent)}`);
 </script>
 
-<Layout>
+<svelte:head>
+	<title>Goldcard Log</title>
+</svelte:head>
+
+<main class="container">
 	<h1>Goldcard Log</h1>
 
 	<p>Logged: {goldcards.current.length}</p>
@@ -209,4 +212,10 @@
 			{/each}
 		</ul>
 	{/each}
-</Layout>
+</main>
+
+<style>
+	main {
+		margin-top: 6rem;
+	}
+</style>
