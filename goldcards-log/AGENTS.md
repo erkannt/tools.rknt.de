@@ -130,9 +130,52 @@ index.html # Root HTML template (Vite standard)
 
 ### Testing
 
-- No test framework currently configured
-- When adding tests, consider Vitest + @testing-library/svelte
-- Tests should be placed alongside source files or in `tests/` directory
+- **Framework**: Vitest is configured with Node.js environment
+- **Running Tests**: Use `make test` (runs `npx vitest run`) - integrated in `make check`
+- **Test Files**: Place alongside source files as `*.test.ts` (e.g., `budget.ts` → `budget.test.ts`)
+- **Vitest Config**: Available in `vite.config.ts` with `/// <reference types="vitest" />`
+
+#### Test Structure Pattern
+
+```typescript
+import { describe, it, expect } from 'vitest';
+import { functionToTest } from './module';
+import type { TypeUsed } from './types';
+
+// Helper functions for test data creation
+function createTestData(...params): TypeUsed {
+    return { /* test data construction */ };
+}
+
+interface TestCase {
+    input: TypeInput;
+    expected: TypeExpected;
+    purpose: string;
+}
+
+const testCases: TestCase[] = [
+    // Group by requirements with comment headers
+    {
+        input: createTestData(...), // inline comments explain scenarios
+        expected: ...,
+        purpose: 'descriptive explanation of expected behavior'
+    }
+];
+
+describe('functionName', () => {
+    it.each(testCases)('$purpose', ({ input, expected }) => {
+        expect(functionToTest(input)).toBe(expected);
+    });
+});
+```
+
+#### Test Style Guidelines
+
+- **Helper Functions**: Create utility functions for test data (e.g., `cardOn()`)
+- **Inline Comments**: Use comments in test cases to explain test scenarios
+- **Requirement Grouping**: Organize test cases by business requirements with comment headers
+- **Concise Names**: Use `$purpose` pattern without "should" prefix
+- **Descriptive Purposes**: Make purpose strings explain the expected behavior/calculation
 
 ## Development Workflow
 
