@@ -15,7 +15,11 @@ release: build
 	mc mirror --overwrite --remove ./dist rknt/tools/goldcards
 
 .PHONY: check
-check: node_modules
+check: node_modules test
 	npx svelte-check --tsconfig ./tsconfig.json
 	npx prettier --check .
 	npx eslint .
+
+.PHONY: test
+test: node_modules
+	npx vitest run
