@@ -1,12 +1,10 @@
 <script lang="ts">
-	import { getISOWeekInfo } from './lib/isoweek';
 	import { LocalStorage } from './lib/localStorage.svelte';
-
-	interface GoldCard {
-		id: string;
-		date: string;
-		comment: string;
-	}
+	import type { GoldCard } from './lib/types';
+	import { generateCsv, parseCsv } from './lib/csv';
+	import { calculateBudget } from './lib/budget';
+	import { groupByIsoWeek } from './lib/weekGrouping';
+	import { formatDate } from './lib/dateUtils';
 
 	const goldcards = new LocalStorage<GoldCard[]>('goldcards', []);
 	const sortedByDate: GoldCard[] = $derived(
@@ -14,24 +12,7 @@
 	);
 	const byIsoWeek = $derived(groupByIsoWeek(sortedByDate));
 
-	// Determine the earliest logged goldcard date
-	const firstGoldcardDate = $derived.by(() => {
-		if (goldcards.current.length === 0) {
-			return new Date().toISOString().split('T')[0];
-		}
-		return sortedByDate[sortedByDate.length - 1].date;
-	});
-
-	// Number of whole weeks that have elapsed since that first week
-	const weeksPassed = $derived.by(() => {
-		const start = new Date(firstGoldcardDate);
-		const now = new Date();
-		const msPerWeek = 7 * 24 * 60 * 60 * 1000;
-		const diff = now.getTime() - start.getTime();
-		return Math.max(0, Math.floor(diff / msPerWeek));
-	});
-
-	const goldcardBudget = $derived(5 + weeksPassed * 5 - goldcards.current.length);
+	const goldcardBudget = $derived(calculateBudget(goldcards.current));
 
 	let newDate: string = $state(new Date().toISOString().split('T')[0]);
 	let newComment: string = $state('');
@@ -49,96 +30,6 @@
 		});
 		// Reset comment field (keep date as today)
 		newComment = '';
-	}
-
-	function groupByIsoWeek(sortedByDate: GoldCard[]) {
-		const map: Record<string, { week: number; year: number; cards: GoldCard[] }> = {};
-
-		for (const card of sortedByDate) {
-			const { week, year } = getISOWeekInfo(card.date);
-			const key = `${year}-${String(week).padStart(2, '0')}`;
-			if (!map[key]) {
-				map[key] = { week, year, cards: [] };
-			}
-			map[key].cards.push(card);
-		}
-
-		// Convert to array and sort descending by year then week
-		return Object.values(map).sort((a, b) => {
-			if (a.year !== b.year) return b.year - a.year;
-			return b.week - a.week;
-		});
-	}
-
-	function formatDate(dateStr: string): string {
-		const date = new Date(dateStr);
-		// `undefined` lets Intl pick up the browser's locale automatically
-		return new Intl.DateTimeFormat(undefined, { weekday: 'short' }).format(date);
-	}
-
-	/** CSV generation utilities */
-	function escapeCsvField(value: string): string {
-		if (value.includes('"') || value.includes(',') || value.includes('\n')) {
-			return `"${value.replace(/"/g, '""')}"`;
-		}
-		return value;
-	}
-	function generateCsv(cards: GoldCard[]): string {
-		const header = ['id', 'date', 'comment'].join(',');
-		const rows = cards.map((c) =>
-			[escapeCsvField(c.id), escapeCsvField(c.date), escapeCsvField(c.comment)].join(',')
-		);
-		return [header, ...rows].join('\n');
-	}
-
-	/** CSV parsing utilities for upload */
-	function parseCsvLine(line: string): string[] {
-		const result: string[] = [];
-		let cur = '';
-		let inQuotes = false;
-		for (let i = 0; i < line.length; i++) {
-			const char = line[i];
-			if (inQuotes) {
-				if (char === '"') {
-					if (i + 1 < line.length && line[i + 1] === '"') {
-						cur += '"';
-						i++;
-					} else {
-						inQuotes = false;
-					}
-				} else {
-					cur += char;
-				}
-			} else {
-				if (char === ',') {
-					result.push(cur);
-					cur = '';
-				} else if (char === '"') {
-					inQuotes = true;
-				} else {
-					cur += char;
-				}
-			}
-		}
-		result.push(cur);
-		return result;
-	}
-
-	function parseCsv(text: string): GoldCard[] {
-		const lines = text.split(/\r?\n/).filter((l) => l.trim() !== '');
-		if (lines.length === 0) return [];
-
-		// Skip header line
-		const dataLines = lines.slice(1);
-		const cards: GoldCard[] = [];
-
-		for (const line of dataLines) {
-			const fields = parseCsvLine(line);
-			if (fields.length < 3) continue;
-			const [id, date, comment] = fields;
-			cards.push({ id, date, comment });
-		}
-		return cards;
 	}
 
 	function handleCsvUpload(event: Event) {
