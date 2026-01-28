@@ -54,10 +54,6 @@
 	const csvUrl = $derived.by(() => `data:text/csv;charset=utf-8,${encodeURIComponent(csvContent)}`);
 </script>
 
-<svelte:head>
-	<title>Goldcard Log</title>
-</svelte:head>
-
 <main class="container">
 	<h1>Goldcard Log</h1>
 
