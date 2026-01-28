@@ -27,11 +27,11 @@ pnpm install
 pnpm run dev
 pnpm run dev -- --open    # Opens browser automatically
 
-# Build for production (use Make target)
-make build
+# Build for production
+pnpm run build
 
-# Preview production build (use Make target)
-make prod-preview
+# Preview production build
+pnpm run preview
 ```
 
 ### Code Quality & Type Checking
@@ -39,16 +39,6 @@ make prod-preview
 ```bash
 # Ensure ~/mise/shims is in PATH for all commands
 export PATH="$HOME/mise/shims:$PATH"
-
-# Run type checking (Make target)
-make check
-make check:watch    # Watch mode
-
-# Run linting (Make target)
-make lint
-
-# Format code (Make target)
-make format
 
 # Manual equivalents (if needed)
 npx svelte-check --tsconfig ./tsconfig.json
@@ -70,7 +60,7 @@ npx prettier --write .
 
 - **Strict Mode**: Enabled
 - **Module Resolution**: Bundler
-- **Path Aliases**: `$lib` points to `src/lib/` (SvelteKit default)
+- **Path Aliases**: None (uses relative imports)
 - **Import Extensions**: Automatic rewriting enabled
 
 ### ESLint Rules
@@ -90,13 +80,13 @@ npx prettier --write .
 ### Import/Export Patterns
 
 ```typescript
-// Use $lib alias for internal imports
-import { getISOWeekInfo } from '$lib/isoweek';
-import { LocalStorage } from '$lib/localStorage.svelte';
+// Use relative imports for internal modules
+import { getISOWeekInfo } from './lib/isoweek';
+import { LocalStorage } from './lib/localStorage.svelte';
 
 // External imports grouped separately
 import { tick } from 'svelte';
-import type { Article } from '$lib/types';
+import type { Article } from './lib/types';
 ```
 
 ### Svelte 5 Patterns
@@ -126,11 +116,13 @@ src/
 └── vite.d.ts      # Vite type declarations
 ```
 
-src/
-├── lib/ # Shared utilities, types, components
-├── routes/ # SvelteKit pages and layouts
-├── app.html # Root HTML template
-└── app.d.ts # Global type declarations
+```
+public/
+├── robots.txt # SEO robots file
+└── favicon.svg # (moved from src/lib/assets/ if needed)
+```
+
+index.html # Root HTML template (Vite standard)
 
 ### CSS/Styling
 
