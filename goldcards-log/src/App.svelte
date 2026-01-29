@@ -1,10 +1,12 @@
 <script lang="ts">
 	import { LocalStorage } from './lib/localStorage.svelte';
 	import type { GoldCard } from './lib/types';
-	import { generateCsv, parseCsv } from './lib/csv';
 	import { calculateBudget } from './lib/budget';
 	import { groupByIsoWeek } from './lib/weekGrouping';
-	import { formatDate } from './lib/dateUtils';
+	import BudgetDisplay from './lib/components/BudgetDisplay.svelte';
+	import CardLogger from './lib/components/CardLogger.svelte';
+	import CsvImportExport from './lib/components/CsvImportExport.svelte';
+	import GoldcardLog from './lib/components/GoldcardLog.svelte';
 
 	const goldcards = new LocalStorage<GoldCard[]>('goldcards', []);
 	const sortedByDate: GoldCard[] = $derived(
@@ -14,92 +16,30 @@
 
 	const goldcardBudget = $derived(calculateBudget(goldcards.current));
 
-	let newDate: string = $state(new Date().toISOString().split('T')[0]);
-	let newComment: string = $state('');
-
-	function addGoldCard(event: SubmitEvent) {
-		event.preventDefault();
-		if (!newComment.trim()) {
-			return;
-		}
+	function addGoldCard(cardData: { date: string; comment: string }) {
 		const newId = crypto.randomUUID();
 		goldcards.current.push({
 			id: newId,
-			date: newDate,
-			comment: newComment.trim()
+			date: cardData.date,
+			comment: cardData.comment
 		});
-		// Reset comment field (keep date as today)
-		newComment = '';
 	}
 
-	function handleCsvUpload(event: Event) {
-		const input = event.target as HTMLInputElement;
-		const file = input.files?.[0];
-		if (!file) return;
-
-		const reader = new FileReader();
-		reader.onload = (e) => {
-			const text = e.target?.result as string;
-			const parsed = parseCsv(text);
-			if (parsed.length) {
-				goldcards.current = parsed;
-			}
-		};
-		reader.readAsText(file);
-		// Reset the file input so the same file can be uploaded again if needed
-		input.value = '';
+	function handleImport(importedCards: GoldCard[]) {
+		goldcards.current = importedCards;
 	}
-
-	const csvContent = $derived(generateCsv(goldcards.current));
-	const csvUrl = $derived.by(() => `data:text/csv;charset=utf-8,${encodeURIComponent(csvContent)}`);
 </script>
 
 <main class="container">
 	<h1>Goldcard Log</h1>
 
-	<p>Logged: {goldcards.current.length}</p>
-	<p>To be taken: {goldcardBudget}</p>
+	<BudgetDisplay loggedCount={goldcards.current.length} budget={goldcardBudget} />
 
-	<form onsubmit={addGoldCard}>
-		<label>
-			Date:
-			<input type="date" bind:value={newDate} required />
-		</label>
-		<label>
-			Comment:
-			<input type="text" bind:value={newComment} required />
-		</label>
-		<button type="submit">Log Goldcard</button>
-	</form>
+	<CardLogger onAddCard={addGoldCard} />
 
-	<h2>Log</h2>
+	<CsvImportExport cards={goldcards.current} onImport={handleImport} />
 
-	<a
-		href={csvUrl}
-		download={'goldcards_' + new Date().toISOString().replace(/[:.]/g, '-') + '.csv'}
-		target="_blank"
-		rel="noopener noreferrer external"
-		role="button"
-		class="secondary"
-	>
-		Download as CSV
-	</a>
-	<label>
-		Import CSV (overwrites current log)
-		<input type="file" accept=".csv,text/csv" onchange={handleCsvUpload} value="Import" />
-	</label>
-
-	{#each byIsoWeek as group (group.week)}
-		<h3>Week {String(group.week).padStart(2, '0')}-{String(group.year)}</h3>
-		<ul>
-			{#each group.cards as card (card.id)}
-				<li>
-					<strong>{formatDate(card.date)}:</strong>
-					{card.comment}
-				</li>
-			{/each}
-		</ul>
-	{/each}
+	<GoldcardLog {byIsoWeek} />
 </main>
 
 <style>
