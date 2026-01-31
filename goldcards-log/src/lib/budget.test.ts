@@ -3,8 +3,8 @@ import { calculateBudget } from './budget';
 import type { GoldCard } from './types';
 import { v4 as uuidv4 } from 'uuid';
 
-function cardOn(date: string, comment: string = 'test'): GoldCard {
-	return { id: uuidv4(), date, comment };
+function cardOn(date: string, time: string = '12:00:00.000Z', comment: string = 'test'): GoldCard {
+	return { id: uuidv4(), date: `${date}T${time}`, comment };
 }
 
 interface CalculateBudgetTestCase {
@@ -71,6 +71,14 @@ const calculateBudgetTestCases: CalculateBudgetTestCase[] = [
 		currentDate: '2024-02-05',
 		expected: 17,
 		purpose: 'three cards across three weeks and fourth week started (5 + 15 - 3)'
+	},
+
+	// Requirement: Test with different times on same day for sorting
+	{
+		cards: [cardOn('2024-01-15', '09:00:00.000Z'), cardOn('2024-01-15', '14:30:00.000Z')],
+		currentDate: '2024-01-17',
+		expected: 3,
+		purpose: 'two cards on same day with different times (5 - 2)'
 	}
 ];
 

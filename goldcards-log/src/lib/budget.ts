@@ -16,7 +16,10 @@ export function calculateBudget(cards: GoldCard[], currentDate?: string | Date):
 	// Get the earliest date (last in sorted array)
 	const sortedCards = [...cards].sort((a, b) => b.date.localeCompare(a.date));
 	const firstDate = sortedCards[sortedCards.length - 1].date;
-	const weeksPassed = calculateWeeksPassed(firstDate, currentDate);
+
+	// For budget calculation, use only the date portion (ignore time)
+	const firstDateOnly = firstDate.split('T')[0];
+	const weeksPassed = calculateWeeksPassed(firstDateOnly, currentDate);
 
 	return 5 + weeksPassed * 5 - cards.length;
 }

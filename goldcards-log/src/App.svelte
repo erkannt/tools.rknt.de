@@ -18,9 +18,24 @@
 
 	function addGoldCard(cardData: { date: string; comment: string }) {
 		const newId = crypto.randomUUID();
+
+		// Create datetime: use selected date with current time
+		const now = new Date(Date.now());
+		const selectedDateStr =
+			cardData.date +
+			'T' +
+			String(now.getHours()).padStart(2, '0') +
+			':' +
+			String(now.getMinutes()).padStart(2, '0') +
+			':' +
+			String(now.getSeconds()).padStart(2, '0') +
+			'.' +
+			String(now.getMilliseconds()).padStart(3, '0') +
+			'Z';
+
 		goldcards.current.push({
 			id: newId,
-			date: cardData.date,
+			date: selectedDateStr,
 			comment: cardData.comment
 		});
 	}
