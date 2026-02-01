@@ -229,4 +229,46 @@ describe('slackify', () => {
       expect(slackify(input)).toBe(expected);
     });
   });
+
+  describe('table handling', () => {
+    it.each<TestCase>([
+      {
+        message: 'should wrap simple table in code block',
+        input: '| Name | Age |\n|------|-----|\n| John | 25  |',
+        expected: '```\n| Name | Age |\n|------|-----|\n| John | 25  |\n```'
+      },
+      {
+        message: 'should wrap table with markdown in code block',
+        input: '| **Name** | *Age* |\n|----------|------|\n| **John** | *25*  |',
+        expected: '```\n| **Name** | *Age* |\n|----------|------|\n| **John** | *25*  |\n```'
+      },
+      {
+        message: 'should handle table with links',
+        input: '| Name | Link |\n|------|------|\n| Site | [Google](https://google.com) |',
+        expected: '```\n| Name | Link |\n|------|------|\n| Site | <https://google.com|Google> |\n```'
+      },
+      {
+        message: 'should preserve empty lines around tables',
+        input: 'Text before\n\n| Name | Age |\n|------|-----|\n| John | 25  |\n\nText after',
+        expected: 'Text before\n\n```\n| Name | Age |\n|------|-----|\n| John | 25  |\n```\n\nText after'
+      },
+      {
+        message: 'should handle table with pipe characters in content',
+        input: '| Name | Description |\n|------|-------------|\n| Test | Contains \\| character |',
+        expected: '```\n| Name | Description |\n|------|-------------|\n| Test | Contains \\| character |\n```'
+      },
+      {
+        message: 'should not wrap non-table lines that look like tables',
+        input: 'This is | not | a table',
+        expected: 'This is | not | a table'
+      },
+      {
+        message: 'should handle incomplete table structures',
+        input: '| Name | Age |\n| John | 25',
+        expected: '```\n| Name | Age |\n| John | 25\n```'
+      }
+    ])('$message', ({ input, expected }) => {
+      expect(slackify(input)).toBe(expected);
+    });
+  });
 });
