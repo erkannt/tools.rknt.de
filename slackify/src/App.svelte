@@ -24,7 +24,7 @@
         <h1>Slackify</h1>
         <p>Convert Markdown to Slack markup ready for pasting.</p>
         <button onclick={clear}>Clear Input</button>
-        <button onclick={copy}>Copy Slackified output</button>
+        <button onclick={copy}>Copy Output</button>
     </header>
 
     <section>
