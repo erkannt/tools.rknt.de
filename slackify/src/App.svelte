@@ -22,7 +22,11 @@
 <main>
     <header>
         <h1>Slackify</h1>
-        <p>Convert Markdown to Slack markup ready for pasting.</p>
+        <p>
+            Convert Markdown to Slack markup ready for pasting <a
+                href="https://github.com/erkannt/slackify">(view sourcode)</a
+            >
+        </p>
         <div class="button-wrapper">
             <button onclick={clear}>Clear Input</button>
             <button onclick={copy}>Copy Output</button>
