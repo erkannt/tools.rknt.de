@@ -1,6 +1,5 @@
 <script lang="ts">
-    // Identity slackify function – replace with real implementation later
-    const slackify = (input: string): string => input;
+    import { slackify } from "./slackify";
 
     let markdown = $state("");
     let slackified = $derived(slackify(markdown));
