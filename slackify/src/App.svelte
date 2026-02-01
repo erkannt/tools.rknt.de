@@ -1,5 +1,10 @@
 <script lang="ts">
+    // Identity slackify function – replace with real implementation later
+    const slackify = (input: string): string => input;
+
     let markdown = $state("");
+    let slackified = $derived(slackify(markdown));
+
     const clear = () => {
         markdown = "";
     };
@@ -22,7 +27,7 @@
     </section>
 
     <section>
-        <h2>Converted Markdown</h2>
-        <pre>{markdown}</pre>
+        <h2>Slackified</h2>
+        <pre>{slackified}</pre>
     </section>
 </main>
