@@ -7,17 +7,25 @@
     const clear = () => {
         markdown = "";
     };
+
+    const copy = async () => {
+        try {
+            await navigator.clipboard.writeText(slackified);
+            // Optionally provide feedback to the user
+            // e.g., console.log('Copied to clipboard');
+        } catch (err) {
+            console.error("Failed to copy:", err);
+        }
+    };
 </script>
 
 <main>
     <header>
         <h1>Slackify</h1>
         <p>Convert Markdown to Slack markup ready for pasting.</p>
+        <button onclick={clear}>Clear Input</button>
+        <button onclick={copy}>Copy Slackified output</button>
     </header>
-
-    <section>
-        <button onclick={clear}>Clear</button>
-    </section>
 
     <section>
         <h2>Markdown</h2>
