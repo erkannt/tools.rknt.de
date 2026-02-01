@@ -20,4 +20,9 @@
 
         <button onclick={clear}> Clear </button>
     </section>
+
+    <section>
+        <h2>Converted Markdown</h2>
+        <pre>{markdown}</pre>
+    </section>
 </main>
