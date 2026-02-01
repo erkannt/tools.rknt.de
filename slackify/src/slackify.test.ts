@@ -44,6 +44,31 @@ describe('slackify', () => {
         message: 'should handle headings with extra whitespace',
         input: '#   Hello   World   ',
         expected: '*Hello   World*'
+      },
+      {
+        message: 'should handle empty heading',
+        input: '# ',
+        expected: '**'
+      },
+      {
+        message: 'should handle heading with only spaces',
+        input: '#   ',
+        expected: '**'
+      },
+      {
+        message: 'should handle heading with markdown inside',
+        input: '# **Bold** and *italic* text',
+        expected: '***Bold** and *italic* text*'
+      },
+      {
+        message: 'should not convert lines starting with # but not headings',
+        input: '#hashtag content',
+        expected: '#hashtag content'
+      },
+      {
+        message: 'should handle heading with inline code',
+        input: '# Code: `console.log()`',
+        expected: '*Code: `console.log()`*'
       }
     ])('$message', ({ input, expected }) => {
       expect(slackify(input)).toBe(expected);
