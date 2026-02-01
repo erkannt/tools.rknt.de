@@ -271,4 +271,87 @@ describe('slackify', () => {
       expect(slackify(input)).toBe(expected);
     });
   });
+
+  describe('edge cases and cleanup', () => {
+    it.each<TestCase>([
+      {
+        message: 'should handle empty input',
+        input: '',
+        expected: ''
+      },
+      {
+        message: 'should handle only whitespace input',
+        input: '   \n\n   ',
+        expected: '   \n\n   '
+      },
+      {
+        message: 'should handle mixed content with multiple formatting types',
+        input: '# Title\n\nThis has **bold** and *italic* and [links](http://example.com)\n\n| Name | Link |\n|------|------|\n| Site | [Example](http://example.com) |',
+        expected: '*Title*\n\nThis has *bold* and _italic_ and <http://example.com|links>\n\n```\n| Name | Link |\n|------|------|\n| Site | <http://example.com|Example> |\n```'
+      },
+      {
+        message: 'should handle nested formatting in headings',
+        input: '# **Bold** *italic* heading',
+        expected: '***Bold** *italic* heading*'
+      },
+      {
+        message: 'should handle code blocks with other formatting',
+        input: 'Here is `code` and **bold** text',
+        expected: 'Here is `code` and *bold* text'
+      },
+      {
+        message: 'should handle malformed bold markup',
+        input: 'This is **bold text',
+        expected: 'This is **bold text'
+      },
+      {
+        message: 'should handle malformed italic markup',
+        input: 'This is *italic text',
+        expected: 'This is *italic text'
+      },
+      {
+        message: 'should handle malformed links',
+        input: 'This is [broken link(http://example.com)',
+        expected: 'This is [broken link(http://example.com)'
+      },
+      {
+        message: 'should handle unsupported markdown formats',
+        input: 'This has ~~strikethrough~~ and ==highlight== text',
+        expected: 'This has ~~strikethrough~~ and ==highlight== text'
+      },
+      {
+        message: 'should handle list items',
+        input: '- First item\n- Second item\n\n1. Numbered item\n2. Another numbered',
+        expected: '- First item\n- Second item\n\n1. Numbered item\n2. Another numbered'
+      },
+      {
+        message: 'should handle blockquotes',
+        input: '> This is a quote\n> That continues',
+        expected: '> This is a quote\n> That continues'
+      },
+      {
+        message: 'should handle horizontal rules',
+        input: 'Text above\n\n---\n\nText below',
+        expected: 'Text above\n\n---\n\nText below'
+      },
+
+      {
+        message: 'should handle edge case with empty formatting',
+        input: 'This has **empty** and ** ** bold',
+        expected: 'This has *empty* and * * bold'
+      },
+      {
+        message: 'should preserve trailing whitespace',
+        input: 'Text with trailing spaces   ',
+        expected: 'Text with trailing spaces   '
+      },
+      {
+        message: 'should handle special characters',
+        input: 'Special chars: & < > " \'',
+        expected: 'Special chars: & < > " \''
+      }
+    ])('$message', ({ input, expected }) => {
+      expect(slackify(input)).toBe(expected);
+    });
+  });
 });
