@@ -23,8 +23,10 @@
     <header>
         <h1>Slackify</h1>
         <p>Convert Markdown to Slack markup ready for pasting.</p>
-        <button onclick={clear}>Clear Input</button>
-        <button onclick={copy}>Copy Output</button>
+        <div class="button-wrapper">
+            <button onclick={clear}>Clear Input</button>
+            <button onclick={copy}>Copy Output</button>
+        </div>
     </header>
 
     <section>
@@ -43,11 +45,43 @@
 </main>
 
 <style>
+    header {
+        h1,
+        p {
+            margin-bottom: var(--space-m);
+        }
+
+        margin-bottom: var(--space-xl);
+    }
+
+    .button-wrapper {
+        display: flex;
+        gap: var(--space-s);
+    }
+
+    button {
+        padding-inline: var(--space-xs);
+        padding-block: var(--space-3xs);
+    }
+
+    h2 {
+        margin-bottom: var(--space-s);
+    }
+
+    textarea {
+        width: 100%;
+        box-sizing: border-box;
+        resize: vertical; /* allow only vertical resizing */
+    }
+
     #slackified-output {
+        margin-bottom: var(--space-3xl);
+
         pre {
             border: 1px solid black;
             min-height: 20rem;
             overflow: scroll;
+            background-color: lightgrey;
         }
     }
 </style>
