@@ -1,97 +1,128 @@
-export const slackify = (input: string): string => {
-  const lines = input.split("\n");
-  let result: string[] = [];
-  let i = 0;
+/**
+ * Convert markdown headings to Slack bold format
+ */
+function processHeading(line: string): string | null {
+  const headingMatch = line.match(/^#{1,6}\s+(.*)$/);
+  if (headingMatch) {
+    const text = headingMatch[1].trim();
+    return `*${text}*`;
+  }
+  return null;
+}
+
+/**
+ * Convert markdown links to Slack format
+ */
+function processLinks(line: string): string {
+  return line.replace(/\[([^\]]*)\]\(([^)]+)\)/g, (match, text, url) => {
+    if (text === '') {
+      return `<${url}>`;
+    }
+    return `<${url}|${text}>`;
+  });
+}
+
+/**
+ * Convert markdown formatting (bold/italic) to Slack format
+ */
+function processFormatting(line: string, originalLine: string): string {
+  let processedLine = line;
   
-  while (i < lines.length) {
+  // First pass: Convert bold text: **text** and __text__ -> *text*
+  processedLine = processedLine.replace(/\*\*([^*]+)\*\*/g, '*$1*');
+  processedLine = processedLine.replace(/__([^_]+)__/g, '*$1*');
+  
+  // Second pass: Convert italic text: *text* -> _text_
+  // But only convert if it wasn't originally bold (**text** or __text__)
+  processedLine = processedLine.replace(/\*([^*\n]+)\*/g, (match, content) => {
+    const wasAsteriskBold = originalLine.includes(`**${content}**`);
+    const wasUnderscoreBold = originalLine.includes(`__${content}__`);
+    
+    if (wasAsteriskBold || wasUnderscoreBold) {
+      return match; // Keep as *content*
+    }
+    return `_${content}_`; // Convert italic to _content_
+  });
+  
+  return processedLine;
+}
+
+/**
+ * Process table lines and return processed lines with new index
+ */
+function processTableLines(lines: string[], startIndex: number): [string[], number] {
+  const tableLines: string[] = [];
+  let currentIndex = startIndex;
+  
+  // Collect consecutive table rows
+  while (currentIndex < lines.length && isTableRow(lines[currentIndex])) {
+    tableLines.push(lines[currentIndex]);
+    currentIndex++;
+  }
+  
+  // Process each table line (limited markdown conversion)
+  const processedTableLines = tableLines.map(tableLine => {
+    // Handle headings within table rows
+    const headingResult = processHeading(tableLine);
+    if (headingResult) {
+      return headingResult;
+    }
+    
+    // Only process links in tables, leave other markdown as-is
+    return processLinks(tableLine);
+  });
+  
+  // Wrap table in code blocks
+  const wrappedTable = ['```', ...processedTableLines, '```'];
+  return [wrappedTable, currentIndex];
+}
+
+
+
+/**
+ * Convert markdown to Slack markup
+ */
+export const slackify = (input: string): string => {
+  // Early return for empty input
+  if (!input || input.trim() === '') {
+    return input;
+  }
+  
+  const lines = input.split("\n");
+  const processedLines: string[] = [];
+  
+  for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
     
     // Check if this line starts a table
     if (isTableRow(line)) {
-      // Find all consecutive table rows
-      const tableLines: string[] = [];
-      while (i < lines.length && isTableRow(lines[i])) {
-        tableLines.push(lines[i]);
-        i++;
-      }
-      
-      // Process each table line individually (excluding markdown conversion)
-      const processedTableLines = tableLines.map(tableLine => {
-        let processedLine = tableLine;
-        
-        // Handle headings within table rows
-        const headingMatch = processedLine.match(/^#{1,6}\s+(.*)$/);
-        if (headingMatch) {
-          const text = headingMatch[1].trim();
-          return `*${text}*`;
-        }
-        
-        // Only process links in tables, leave other markdown as-is
-        processedLine = processedLine.replace(/\[([^\]]*)\]\(([^)]+)\)/g, (match, text, url) => {
-          if (text === '') {
-            return `<${url}>`;
-          }
-          return `<${url}|${text}>`;
-        });
-        
-        return processedLine;
-      });
-      
-      // Wrap the entire table in code blocks
-      result.push('```');
-      result.push(...processedTableLines);
-      result.push('```');
+      const [tableResult, nextIndex] = processTableLines(lines, i);
+      processedLines.push(...tableResult);
+      i = nextIndex - 1; // -1 because for loop will increment
     } else {
       // Process regular line
       let processedLine = line;
       
       // Handle headings first
-      const headingMatch = processedLine.match(/^#{1,6}\s+(.*)$/);
-      if (headingMatch) {
-        const text = headingMatch[1].trim();
-        processedLine = `*${text}*`;
+      const headingResult = processHeading(processedLine);
+      if (headingResult) {
+        processedLine = headingResult;
       } else {
-        // Store original line for context checks
+        // Store original line for formatting context checks
         const originalLine = processedLine;
         
-        // Convert markdown links: [text](url) -> <url|text>
-        processedLine = processedLine.replace(/\[([^\]]*)\]\(([^)]+)\)/g, (match, text, url) => {
-          if (text === '') {
-            return `<${url}>`;
-          }
-          return `<${url}|${text}>`;
-        });
+        // Convert links
+        processedLine = processLinks(processedLine);
         
-        // First pass: Convert bold text and mark converted portions
-        // Replace **bold** with *bold*
-        processedLine = processedLine.replace(/\*\*([^*]+)\*\*/g, '*$1*');
-        // Replace __bold__ with *bold*
-        processedLine = processedLine.replace(/__([^_]+)__/g, '*$1*');
-        
-        // Second pass: Convert italic text: *text* -> _text_
-        // But only convert if it wasn't originally bold (**text** or __text__)
-        processedLine = processedLine.replace(/\*([^*\n]+)\*/g, (match, content) => {
-          // Check if this was originally bold in the original line
-          const wasAsteriskBold = originalLine.includes(`**${content}**`);
-          const wasUnderscoreBold = originalLine.includes(`__${content}__`);
-          
-          if (wasAsteriskBold || wasUnderscoreBold) {
-            // This was originally bold, keep it as *content*
-            return match;
-          }
-          // This was originally *content* (italic), convert to _content_
-          return `_${content}_`;
-        });
+        // Convert formatting (bold/italic)
+        processedLine = processFormatting(processedLine, originalLine);
       }
       
-      // Code blocks remain unchanged (handled by default)
-      
-      result.push(processedLine);
-      i++;
+      processedLines.push(processedLine);
     }
   }
   
-  return result.join("\n");
+  return processedLines.join("\n");
 };
 
 /**

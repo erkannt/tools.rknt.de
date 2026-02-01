@@ -16,7 +16,7 @@
     </header>
 
     <section>
-        <button onclick={clear}> Clear </button>
+        <button onclick={clear}>Clear</button>
     </section>
 
     <section>
