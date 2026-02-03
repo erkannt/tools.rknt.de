@@ -67,4 +67,9 @@
 	main {
 		margin-top: 6rem;
 	}
+
+	h2 {
+		border-top: 2px solid black;
+		padding-block-start: var(--space-xs);
+	}
 </style>
