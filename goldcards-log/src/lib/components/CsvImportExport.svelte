@@ -37,11 +37,51 @@
 	target="_blank"
 	rel="noopener noreferrer external"
 	role="button"
-	class="secondary"
+	class="btn"
 >
-	Download as CSV
+	Export CSV
 </a>
-<label>
-	Import CSV (overwrites current log)
-	<input type="file" accept=".csv,text/csv" onchange={handleCsvUpload} value="Import" />
+
+<label class="btn">
+	Import CSV
+	<input type="file" accept=".csv,text/csv" onchange={handleCsvUpload} />
 </label>
+
+<style>
+	/* Minimalist button styling */
+	.btn {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		padding: var(--space-xs) var(--space-s);
+		line-height: 1;
+		font-size: var(--step-1);
+		background: #f5f5f5;
+		border: 1px solid #ccc;
+		border-radius: 4px;
+		color: inherit;
+		text-decoration: none;
+		cursor: pointer;
+		user-select: none;
+		margin-inline-end: var(--space-l);
+	}
+
+	.btn:hover,
+	.btn:focus-visible {
+		background: #eaeaea;
+		outline: 2px solid #66afe9;
+		outline-offset: 2px;
+	}
+
+	/* Hide the native file input but keep it accessible */
+	.btn input[type='file'] {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		padding: 0;
+		margin: -1px;
+		overflow: hidden;
+		clip: rect(0, 0, 0, 0);
+		border: 0;
+	}
+</style>
