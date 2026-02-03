@@ -56,8 +56,7 @@
 		padding: var(--space-xs) var(--space-s);
 		line-height: 1;
 		font-size: var(--step-1);
-		background: #f5f5f5;
-		border: 1px solid #ccc;
+		background-color: oklch(from lightslategrey calc(l * 1.3) c h);
 		border-radius: 4px;
 		color: inherit;
 		text-decoration: none;
@@ -68,8 +67,7 @@
 
 	.btn:hover,
 	.btn:focus-visible {
-		background: #eaeaea;
-		outline: 2px solid #66afe9;
+		outline: 2px solid lightslategrey;
 		outline-offset: 2px;
 	}
 

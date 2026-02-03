@@ -25,13 +25,54 @@
 </script>
 
 <form onsubmit={handleSubmit}>
-	<label>
-		Date:
-		<input type="date" bind:value={newDate} required />
-	</label>
-	<label>
-		Comment:
-		<input type="text" bind:value={newComment} required />
-	</label>
-	<button type="submit">Log Goldcard</button>
+	<label for="date">Date</label>
+	<input id="date" type="date" bind:value={newDate} required />
+
+	<label for="comment">Comment</label>
+	<input id="comment" type="text" bind:value={newComment} required />
+
+	<button type="submit" class="btn">Log Goldcard</button>
 </form>
+
+<style>
+	form {
+		display: flex;
+		flex-direction: column;
+	}
+
+	label {
+		margin-bottom: var(--space-2xs);
+	}
+
+	input {
+		padding: var(--space-2xs);
+		margin-bottom: var(--space-s);
+	}
+
+	button {
+		margin-top: var(--space-s);
+		grid-column: 1 / -1;
+	}
+
+	.btn {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		padding: var(--space-xs) var(--space-s);
+		line-height: 1;
+		font-size: var(--step-1);
+		background-color: oklch(from lightslategrey calc(l * 1.3) c h);
+		border-radius: 4px;
+		border: none;
+		color: inherit;
+		text-decoration: none;
+		cursor: pointer;
+		user-select: none;
+	}
+
+	.btn:hover,
+	.btn:focus-visible {
+		outline: 2px solid lightslategrey;
+		outline-offset: 2px;
+	}
+</style>

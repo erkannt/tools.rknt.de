@@ -34,6 +34,6 @@
 		align-items: center;
 		padding-block: var(--space-xs);
 		background-color: cornsilk;
-		width: 20ch;
+		flex-grow: 1;
 	}
 </style>
