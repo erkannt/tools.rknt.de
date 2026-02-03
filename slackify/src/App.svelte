@@ -22,11 +22,7 @@
 <main>
     <header>
         <h1>Slackify</h1>
-        <p>
-            Convert Markdown to Slack markup ready for pasting <a
-                href="https://github.com/erkannt/slackify">(view sourcode)</a
-            >
-        </p>
+        <p>Convert Markdown to Slack markup ready for pasting</p>
         <div class="button-wrapper">
             <button onclick={clear}>Clear Input</button>
             <button onclick={copy}>Copy Output</button>
@@ -46,6 +42,10 @@
         <h2>Slackified</h2>
         <pre>{slackified}</pre>
     </section>
+
+    <footer>
+        <a href="https://github.com/erkannt/slackify">Source Code</a>
+    </footer>
 </main>
 
 <style>
@@ -87,5 +87,11 @@
             overflow: scroll;
             background-color: lightgrey;
         }
+    }
+
+    footer {
+        margin-top: var(--space-3xl);
+        border-top: 1px solid black;
+        padding-top: var(--space-l);
     }
 </style>
