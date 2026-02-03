@@ -34,3 +34,7 @@ clean:
 	rm -rf node_modules
 	rm -rf .parcel-cache
 	rm -rf dist
+
+.PHONY: release
+release: build
+	mc mirror --overwrite --remove ./dist rknt/tools/printable-year
