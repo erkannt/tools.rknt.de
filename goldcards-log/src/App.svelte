@@ -46,21 +46,19 @@
 </script>
 
 <main class="stack">
-	<h1>Goldcard Log</h1>
-
-	<section>
+	<section class="stack">
+		<h1>Log Goldcards</h1>
+		<CardLogger onAddCard={addGoldCard} />
 		<BudgetDisplay loggedCount={goldcards.current.length} budget={goldcardBudget} />
 	</section>
 
 	<section>
-		<CardLogger onAddCard={addGoldCard} />
-	</section>
-
-	<section>
+		<h2>Export/Import</h2>
 		<CsvImportExport cards={goldcards.current} onImport={handleImport} />
 	</section>
 
 	<section>
+		<h2>Log</h2>
 		<GoldcardLog {byIsoWeek} />
 	</section>
 </main>

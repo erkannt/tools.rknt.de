@@ -9,8 +9,6 @@
 	let { byIsoWeek }: Props = $props();
 </script>
 
-<h2>Log</h2>
-
 {#each byIsoWeek as group (group.week)}
 	<h3>Week {String(group.week).padStart(2, '0')}-{String(group.year)}</h3>
 	<ul>
