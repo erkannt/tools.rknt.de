@@ -45,16 +45,24 @@
 	}
 </script>
 
-<main class="container">
+<main class="stack">
 	<h1>Goldcard Log</h1>
 
-	<BudgetDisplay loggedCount={goldcards.current.length} budget={goldcardBudget} />
+	<section>
+		<BudgetDisplay loggedCount={goldcards.current.length} budget={goldcardBudget} />
+	</section>
 
-	<CardLogger onAddCard={addGoldCard} />
+	<section>
+		<CardLogger onAddCard={addGoldCard} />
+	</section>
 
-	<CsvImportExport cards={goldcards.current} onImport={handleImport} />
+	<section>
+		<CsvImportExport cards={goldcards.current} onImport={handleImport} />
+	</section>
 
-	<GoldcardLog {byIsoWeek} />
+	<section>
+		<GoldcardLog {byIsoWeek} />
+	</section>
 </main>
 
 <style>
