@@ -1,0 +1,105 @@
+body {
+  padding: var(--space-2xl) var(--space-s);
+  margin: 0 auto;
+  max-width: 1200px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+
+  main {
+    flex-grow: 1;
+  }
+}
+
+#ui {
+  margin-bottom: var(--space-2xl);
+
+  * + * {
+    margin-block-start: var(--space-l);
+  }
+
+  h1 {
+    font-size: var(--step-5);
+    font-weight: bold;
+    gap: 0.5ex;
+  }
+
+  .options {
+    display: flex;
+    gap: 2rem;
+    align-items: baseline;
+  }
+
+  select,
+  input[type='number'] {
+    border: 2px solid black;
+    color: black;
+    background-color: white;
+    box-sizing: border-box;
+  }
+
+  select {
+    max-width: 100%;
+    height: 2.5rem;
+    padding: 5px;
+    padding-bottom: 1px;
+  }
+
+  input[type='number'] {
+    border: 2px solid black;
+    width: 5ch;
+    background: none;
+    margin: 0;
+    height: 1.2em;
+    padding-top: 12px;
+    padding-left: 10px;
+    font-weight: bold;
+  }
+
+  /* For Chrome, Safari, Edge, Opera */
+  input[type='number']::-webkit-outer-spin-button,
+  input[type='number']::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  /* For Firefox */
+  input[type='number'] {
+    appearance: textfield;
+    -moz-appearance: textfield;
+  }
+
+  .checkbox-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+  }
+
+  input[type='checkbox'] {
+    appearance: none;
+    width: 2em;
+    height: 2em;
+    border: 2px solid black;
+    margin: 0;
+    margin-bottom: 5px;
+    border-radius: 0;
+    background: white;
+    cursor: pointer;
+    position: relative;
+  }
+
+  input[type='checkbox']:checked::after {
+    content: '✔';
+    font-size: 1.5em;
+    position: absolute;
+    left: 50%;
+    top: 62%;
+    transform: translate(-50%, -50%);
+  }
+}
+
+footer {
+  border-top: 1px solid var(--black);
+  padding-top: var(--space-xl);
+  margin-top: var(--space-3xl);
+}
