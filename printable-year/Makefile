@@ -3,8 +3,7 @@ dev: node_modules
 	npx parcel -p 8080 src/index.html
 
 node_modules: package.json pnpm-lock.yaml
-	pnpm install
-	touch node_modules
+	pnpm install --frozen-lockfile
 
 .PHONY: check
 check: lint prettier typecheck
@@ -26,7 +25,7 @@ format: node_modules
 	npx prettier --ignore-unknown --write '**'
 
 .PHONY: build
-build:
+build: node_modules
 	npx parcel build src/index.html --no-source-maps --public-url https://tools.rknt.de/printable-year/
 
 .PHONY: clean
