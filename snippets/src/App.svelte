@@ -7,11 +7,35 @@
         content: string;
     };
 
-    var snippets: Snippet[] = [];
+    let snippets = $state<Snippet[]>([]);
 
-    function handleClick() {
+    let title = $state("");
+    let content = $state("");
+
+    function addSnippet(event: SubmitEvent) {
+        event.preventDefault();
+
+        if (!title.trim() || !content.trim()) {
+            return;
+        }
+
+        snippets = [
+            ...snippets,
+            {
+                id: crypto.randomUUID(),
+                title,
+                content,
+            },
+        ];
+
+        // Reset form fields
+        title = "";
+        content = "";
+    }
+
+    function copyToClipboard(text: string) {
         navigator.clipboard
-            .writeText("foobar")
+            .writeText(text)
             .then(() => {
                 window.close();
             })
@@ -21,15 +45,45 @@
     }
 </script>
 
-<main>
+<main class="stack">
     <h1>Snippets</h1>
-    <button on:click={handleClick}>Copy foobar</button>
-    <form>
+
+    <section>
+        {#if snippets.length}
+            <ul>
+                {#each snippets as snippet (snippet.id)}
+                    <li>
+                        <button
+                            onclick={() => copyToClipboard(snippet.content)}
+                        >
+                            {snippet.title}
+                        </button>
+                    </li>
+                {/each}
+            </ul>
+        {:else}
+            <p>No saved snippets</p>
+        {/if}
+    </section>
+
+    <form onsubmit={addSnippet}>
         <label for="title">Title:</label>
-        <input type="text" id="title" name="title" required />
+        <input
+            type="text"
+            id="title"
+            name="title"
+            bind:value={title}
+            required
+        />
 
         <label for="content">Content:</label>
-        <textarea id="content" name="content" rows="5" required></textarea>
+        <textarea
+            id="content"
+            name="content"
+            rows="5"
+            bind:value={content}
+            required
+        ></textarea>
 
         <button type="submit">Add Snippet</button>
     </form>
