@@ -23,3 +23,6 @@ check: node_modules test
 .PHONY: test
 test: node_modules
 	npx vitest run
+
+node_modules: pnpm-lock.yaml package.json
+	pnpm install --frozen-lockfile
