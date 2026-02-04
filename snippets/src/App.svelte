@@ -1,5 +1,6 @@
 <script lang="ts">
     import "../../tools-landing/styles/main.css";
+    import { LocalStorage } from "./localStorage.svelte";
 
     type Snippet = {
         id: string;
@@ -7,7 +8,7 @@
         content: string;
     };
 
-    let snippets = $state<Snippet[]>([]);
+    let snippets = new LocalStorage<Snippet[]>("snippets", []);
 
     let title = $state("");
     let content = $state("");
@@ -19,14 +20,11 @@
             return;
         }
 
-        snippets = [
-            ...snippets,
-            {
-                id: crypto.randomUUID(),
-                title,
-                content,
-            },
-        ];
+        snippets.current.push({
+            id: crypto.randomUUID(),
+            title,
+            content,
+        });
 
         // Reset form fields
         title = "";
@@ -49,9 +47,9 @@
     <h1>Snippets</h1>
 
     <section>
-        {#if snippets.length}
+        {#if snippets.current.length}
             <ul>
-                {#each snippets as snippet (snippet.id)}
+                {#each snippets.current as snippet (snippet.id)}
                     <li>
                         <button
                             onclick={() => copyToClipboard(snippet.content)}
@@ -102,9 +100,9 @@
         textarea {
             margin-block-end: var(--space-s);
         }
+    }
 
-        button {
-            padding-block: var(--space-2xs);
-        }
+    button {
+        padding-block: var(--space-2xs);
     }
 </style>
