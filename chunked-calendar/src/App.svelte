@@ -30,7 +30,8 @@
     {/if}
     <footer>
         <p>
-            <a href="https://github.com/erkannt/chunked-calendar">Source Code</a
+            <a href="https://github.com/erkannt/tools.rknt.de/chunked-calendar"
+                >Source Code</a
             >
         </p>
         <p>

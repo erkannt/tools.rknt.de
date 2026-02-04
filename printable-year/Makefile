@@ -27,7 +27,7 @@ format: node_modules
 
 .PHONY: build
 build:
-	npx parcel build src/index.html --no-source-maps --public-url https://erkannt.github.io/printable-year/
+	npx parcel build src/index.html --no-source-maps --public-url https://tools.rknt.de/printable-year/
 
 .PHONY: clean
 clean:

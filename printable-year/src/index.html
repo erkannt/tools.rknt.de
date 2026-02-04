@@ -1,58 +1,58 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <meta name="twitter:card" content="summary" />
-    <meta name="twitter:site" content="Printable Year" />
-    <meta property="og:site_name" content="Printable Year" />
-    <meta property="og:title" content="Printable Year" />
-    <meta property="og:description" content="Printable Year Calendar" />
-    <title>Printable Year</title>
-    <link rel="stylesheet" href="/sass/style.scss" />
-    <script type="module" src="index.ts"></script>
-  </head>
-  <body>
-    <main>
-      <div id="ui">
-        <h1>
-          <span>Printable</span>
-          <input type="number" id="yearInput" />
-        </h1>
-        <nav>
-          <p>Also available as a <a href="https://tools.rknt.de/chunked-calendar">chunked calendar</a>.</p>
-        </nav>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+        <meta name="twitter:card" content="summary" />
+        <meta name="twitter:site" content="Printable Year" />
+        <meta property="og:site_name" content="Printable Year" />
+        <meta property="og:title" content="Printable Year" />
+        <meta property="og:description" content="Printable Year Calendar" />
+        <title>Printable Year</title>
+        <link rel="stylesheet" href="/sass/style.scss" />
+        <script type="module" src="index.ts"></script>
+    </head>
+    <body>
+        <main>
+            <div id="ui">
+                <h1>
+                    <span>Printable</span>
+                    <input type="number" id="yearInput" />
+                </h1>
+                <nav>
+                    <p>Also available as a <a href="https://tools.rknt.de/chunked-calendar">chunked calendar</a>.</p>
+                </nav>
 
-        <div class="options">
-          <div>
-            <label for="monthsPerPage">Months per page</label>
-            <select name="monthsPerPage" id="monthsPerPage">
-              <option value="12">12</option>
-              <option value="6">6</option>
-              <option value="4">4</option>
-              <option value="3">3</option>
-              <option value="2">2</option>
-              <option value="1">1</option>
-            </select>
-          </div>
-          <div class="checkbox-wrapper">
-            <label for="shadeWeekends">Shade Weekends</label>
-            <input type="checkbox" name="shadeWeekends" id="shadeWeekends" />
-          </div>
-          <div class="checkbox-wrapper">
-            <label for="showWeeknumbers">Show ISO Week Numbers</label>
-            <input type="checkbox" name="showWeeknumbers" id="showWeeknumbers" />
-          </div>
-        </div>
+                <div class="options">
+                    <div>
+                        <label for="monthsPerPage">Months per page</label>
+                        <select name="monthsPerPage" id="monthsPerPage">
+                            <option value="12">12</option>
+                            <option value="6">6</option>
+                            <option value="4">4</option>
+                            <option value="3">3</option>
+                            <option value="2">2</option>
+                            <option value="1">1</option>
+                        </select>
+                    </div>
+                    <div class="checkbox-wrapper">
+                        <label for="shadeWeekends">Shade Weekends</label>
+                        <input type="checkbox" name="shadeWeekends" id="shadeWeekends" />
+                    </div>
+                    <div class="checkbox-wrapper">
+                        <label for="showWeeknumbers">Show ISO Week Numbers</label>
+                        <input type="checkbox" name="showWeeknumbers" id="showWeeknumbers" />
+                    </div>
+                </div>
 
-        <p>Simply print this page. Landscape recommended.</p>
-      </div>
-      <div id="appContainer"></div>
-    </main>
+                <p>Simply print this page. Landscape recommended.</p>
+            </div>
+            <div id="appContainer"></div>
+        </main>
 
-    <footer>
-      <a href="https://github.com/erkannt/printable-year">Source code</a>
-    </footer>
-  </body>
+        <footer>
+            <a href="https://github.com/erkannt/tools.rknt.de/printable-year">Source code</a>
+        </footer>
+    </body>
 </html>
