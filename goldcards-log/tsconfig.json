@@ -1,0 +1,18 @@
+{
+	"compilerOptions": {
+		"target": "ES2020",
+		"rewriteRelativeImportExtensions": true,
+		"allowJs": true,
+		"checkJs": true,
+		"esModuleInterop": true,
+		"forceConsistentCasingInFileNames": true,
+		"resolveJsonModule": true,
+		"skipLibCheck": true,
+		"sourceMap": true,
+		"strict": true,
+		"moduleResolution": "bundler",
+		"baseUrl": "."
+	},
+	"include": ["src/**/*.ts", "src/**/*.svelte"],
+	"exclude": ["node_modules/**"]
+}

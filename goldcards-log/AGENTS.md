@@ -1,0 +1,212 @@
+# AGENTS.md
+
+This file contains guidelines and commands for agentic coding agents working in this repository.
+
+## Project Overview
+
+This is a Vite + Svelte application called "goldcards‑log" built with:
+
+- **Framework**: Vite + Svelte 5 with TypeScript
+- **Package Manager**: pnpm
+- **Styling**: Pico CSS via CDN
+- **Build Target**: Static site generation (Vite build)
+- **State Management**: Svelte 5 runes ($state, $derived, $effect)
+
+## Development Commands
+
+### Core Development
+
+```bash
+# Ensure ~/mise/shims is in PATH for all commands
+export PATH="$HOME/mise/shims:$PATH"
+
+# Install dependencies
+pnpm install
+
+# Start development server
+pnpm run dev
+pnpm run dev -- --open    # Opens browser automatically
+
+# Build for production
+pnpm run build
+
+# Preview production build
+pnpm run preview
+```
+
+### Code Quality & Type Checking
+
+```bash
+# Ensure ~/mise/shims is in PATH for all commands
+export PATH="$HOME/mise/shims:$PATH"
+
+make check # runs eslint, prettier and svelte checks
+```
+
+## Code Style Guidelines
+
+### Formatting (Prettier Configuration)
+
+- **Indentation**: Tabs (useTabs: true)
+- **Quotes**: Single quotes (singleQuote: true)
+- **Trailing Commas**: None (trailingComma: "none")
+- **Line Width**: 100 characters (printWidth: 100)
+- **Svelte Files**: Uses svelte parser via prettier-plugin-svelte
+
+### TypeScript Configuration
+
+- **Strict Mode**: Enabled
+- **Module Resolution**: Bundler
+- **Path Aliases**: None (uses relative imports)
+- **Import Extensions**: Automatic rewriting enabled
+
+### ESLint Rules
+
+- Extends: TypeScript recommended, Svelte recommended, Prettier
+- `no-undef`: Disabled (TypeScript handles this)
+- Files: `**/*.svelte`, `**/*.svelte.ts`, `**/*.svelte.js` have special parsing
+
+### Naming Conventions
+
+- **Files**: kebab-case for files, camelCase for variables/functions
+- **Components**: PascalCase for Svelte components
+- **Interfaces/Types**: PascalCase, descriptive names (e.g., `GoldCard`)
+- **Constants**: UPPER_SNAKE_CASE for true constants
+- **Private Members**: Use `#` prefix for private class fields
+
+### Import/Export Patterns
+
+```typescript
+// Use relative imports for internal modules
+import { getISOWeekInfo } from './lib/isoweek';
+import { LocalStorage } from './lib/localStorage.svelte';
+
+// External imports grouped separately
+import { tick } from 'svelte';
+import type { Article } from './lib/types';
+```
+
+### Svelte 5 Patterns
+
+- Use `$state()` for reactive state
+- Use `$derived()` for computed values
+- Use `$derived.by()` for complex derived computations
+- Use `$effect()` for side effects
+- Use `$props()` for component props
+- Prefer class‑based utilities with Svelte reactivity
+
+### Error Handling
+
+- Use TypeScript for compile‑time error prevention
+- Validate user input before processing (see `addGoldCard()` function)
+- Use conditional rendering for empty/loading states
+- Handle async operations with proper error boundaries
+
+### File Organization
+
+```
+src/
+├── lib/           # Shared utilities, types, components
+├── App.svelte     # Main application component
+├── Layout.svelte  # Layout wrapper component
+├── main.ts        # Vite entry point
+└── vite.d.ts      # Vite type declarations
+```
+
+```
+public/
+├── robots.txt # SEO robots file
+└── favicon.svg # (moved from src/lib/assets/ if needed)
+```
+
+index.html # Root HTML template (Vite standard)
+
+### CSS/Styling
+
+- External Pico CSS via CDN in layout
+- Scoped `<style>` blocks in Svelte components when needed
+- Utility classes from Pico CSS framework
+- Minimal custom styling
+
+### Testing
+
+- **Framework**: Vitest is configured with Node.js environment
+- **Running Tests**: Use `make test` (runs `npx vitest run`) - integrated in `make check`
+- **Test Files**: Place alongside source files as `*.test.ts` (e.g., `budget.ts` → `budget.test.ts`)
+- **Vitest Config**: Available in `vite.config.ts` with `/// <reference types="vitest" />`
+
+#### Test Structure Pattern
+
+```typescript
+import { describe, it, expect } from 'vitest';
+import { functionToTest } from './module';
+import type { TypeUsed } from './types';
+
+// Helper functions for test data creation
+function createTestData(...params): TypeUsed {
+    return { /* test data construction */ };
+}
+
+interface TestCase {
+    input: TypeInput;
+    expected: TypeExpected;
+    purpose: string;
+}
+
+const testCases: TestCase[] = [
+    // Group by requirements with comment headers
+    {
+        input: createTestData(...), // inline comments explain scenarios
+        expected: ...,
+        purpose: 'descriptive explanation of expected behavior'
+    }
+];
+
+describe('functionName', () => {
+    it.each(testCases)('$purpose', ({ input, expected }) => {
+        expect(functionToTest(input)).toBe(expected);
+    });
+});
+```
+
+#### Test Style Guidelines
+
+- **Helper Functions**: Create utility functions for test data (e.g., `cardOn()`)
+- **Inline Comments**: Use comments in test cases to explain test scenarios
+- **Requirement Grouping**: Organize test cases by business requirements with comment headers
+- **Concise Names**: Use `$purpose` pattern without "should" prefix
+- **Descriptive Purposes**: Make purpose strings explain the expected behavior/calculation
+
+## Development Workflow
+
+1. **Use pnpm** for package management
+2. **Run checks to validate changes** before commits: `make check`
+3. **Test in development** regularly: `pnpm run dev`
+4. **Build verification**: Ensure `make build` succeeds before PRs
+
+## Build & Deployment
+
+- **Static Generation**: Uses Vite build
+- **Output Directory**: `dist/`
+- **Deployment**: Can be deployed to any static hosting service
+- **Environment Variables**: Use .env files (gitignored except .env.example, .env.test)
+
+## Browser Compatibility
+
+- Modern browsers with ES2022+ support
+- Uses Svelte 5 which requires modern JavaScript features
+- localStorage API required for data persistence
+
+## Special Notes
+
+- This is a goldcard logging application with CSV import/export functionality
+- Data is stored in browser localStorage using a custom reactive wrapper
+- Uses ISO week calculations for organizing entries
+- No server‑side dependencies – purely client‑side application
+
+## Common Gotchas
+
+- Always check `typeof localStorage !== 'undefined'` before using it
+- Use `crypto.randomUUID()` for unique IDs (available in modern browsers)
+- Date handling uses ISO format strings consistently
+- File uploads use FileReader API – ensure proper error handling
