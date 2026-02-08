@@ -8,8 +8,32 @@
     let quarterPerPage = $state(false);
 </script>
 
-<main>
+<main class="stack">
     <h1><span>Chunked</span><input type="number" bind:value={year} /></h1>
+
+    <details>
+        <summary>what is this</summary>
+        <p>
+            Weeks are great but too short for certain routines or goals. Years
+            are too long. Quarters are great but being built from months they
+            are rubbish. Months have different lengths and don't start on
+            Mondays.
+        </p>
+        <p>ISO Weeks to the rescue. We this calendar splits the year into:</p>
+        <ul>
+            <li>four quarters</li>
+            <li>each quarter into three chunks of four weeks</li>
+            <li>quarters end with a reset week</li>
+        </ul>
+        <p>
+            Every couple of years we get a year with 53 ISO weeks. The extra
+            week becomes a second reset week in the fourth quarter.
+        </p>
+        <p>
+            The calender comes in two print friendly forms and should adapt to
+            whatever papersize you select when printing.
+        </p>
+    </details>
 
     <section>
         <label>
@@ -20,7 +44,6 @@
             <input type="checkbox" bind:checked={quarterPerPage} />
             One Quarter per Page
         </label>
-        <p>Simply print this page.</p>
     </section>
 
     {#if quarterPerPage}

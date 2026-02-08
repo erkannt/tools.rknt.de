@@ -13,3 +13,5 @@ ISO Weeks to the rescue. We this calendar splits the year into:
 Every couple of years we get a year with 53 ISO weeks. The extra week becomes a second reset week in the fourth quarter.
 
 The calender comes in two print friendly forms and should adapt to whatever papersize you select when printing.
+
+Simply print this page. All controls will be hidden when printing.
