@@ -1,14 +1,30 @@
 import { describe, it, expect } from 'vitest';
 import { calculateBudget } from './budget';
-import type { GoldCard } from './types';
+import type { GoldCard, BudgetAdjustment } from './types';
 import { v4 as uuidv4 } from 'uuid';
 
 function cardOn(date: string, time: string = '12:00:00.000Z', comment: string = 'test'): GoldCard {
 	return { id: uuidv4(), date: `${date}T${time}`, comment };
 }
 
+function adjustmentOn(
+	date: string,
+	adjustment: number,
+	comment: string = 'test'
+): BudgetAdjustment {
+	return { id: uuidv4(), adjustment, comment, date: `${date}T12:00:00.000Z` };
+}
+
 interface CalculateBudgetTestCase {
 	cards: GoldCard[];
+	currentDate: string;
+	expected: number;
+	purpose: string;
+}
+
+interface CalculateBudgetWithAdjustmentsTestCase {
+	cards: GoldCard[];
+	adjustments: BudgetAdjustment[];
 	currentDate: string;
 	expected: number;
 	purpose: string;
@@ -82,8 +98,54 @@ const calculateBudgetTestCases: CalculateBudgetTestCase[] = [
 	}
 ];
 
+const calculateBudgetWithAdjustmentsTestCases: CalculateBudgetWithAdjustmentsTestCase[] = [
+	// Requirement 4: Budget adjustments directly affect the budget
+	{
+		cards: [],
+		adjustments: [adjustmentOn('2024-01-15', 3, 'bonus')],
+		currentDate: '2024-01-15',
+		expected: 8,
+		purpose: 'no cards, +3 adjustment (5 + 3)'
+	},
+	{
+		cards: [],
+		adjustments: [adjustmentOn('2024-01-15', -2, 'deduction')],
+		currentDate: '2024-01-15',
+		expected: 3,
+		purpose: 'no cards, -2 adjustment (5 - 2)'
+	},
+	{
+		cards: [cardOn('2024-01-15')],
+		adjustments: [adjustmentOn('2024-01-15', 5, 'extra')],
+		currentDate: '2024-01-15',
+		expected: 9,
+		purpose: 'one card taken, +5 adjustment (5 - 1 + 5)'
+	},
+	{
+		cards: [cardOn('2024-01-15')],
+		adjustments: [adjustmentOn('2024-01-15', -3, 'penalty')],
+		currentDate: '2024-01-15',
+		expected: 1,
+		purpose: 'one card taken, -3 adjustment (5 - 1 - 3)'
+	},
+	{
+		cards: [cardOn('2024-01-15')],
+		adjustments: [adjustmentOn('2024-01-15', 2, 'first'), adjustmentOn('2024-01-16', 3, 'second')],
+		currentDate: '2024-01-17',
+		expected: 9,
+		purpose: 'one card, +2 and +3 adjustments (5 - 1 + 5)'
+	}
+];
+
 describe('calculateBudget', () => {
 	it.each(calculateBudgetTestCases)('$purpose', ({ cards, currentDate, expected }) => {
 		expect(calculateBudget(cards, currentDate)).toBe(expected);
 	});
+
+	it.each(calculateBudgetWithAdjustmentsTestCases)(
+		'$purpose',
+		({ cards, adjustments, currentDate, expected }) => {
+			expect(calculateBudget(cards, adjustments, currentDate)).toBe(expected);
+		}
+	);
 });

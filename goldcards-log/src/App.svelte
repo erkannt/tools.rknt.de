@@ -15,7 +15,7 @@
 	);
 	const byIsoWeek = $derived(groupByIsoWeek(sortedByDate));
 
-	const goldcardBudget = $derived(calculateBudget(goldcards.current));
+	const goldcardBudget = $derived(calculateBudget(goldcards.current, budgetAdjustments.current));
 
 	function addGoldCard(cardData: { date: string; comment: string }) {
 		const newId = crypto.randomUUID();

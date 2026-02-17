@@ -1,4 +1,4 @@
-import type { GoldCard } from './types';
+import type { GoldCard, BudgetAdjustment } from './types';
 
 function calculateWeeksPassed(firstDate: string, currentDate: string | Date = new Date()): number {
 	const start = new Date(firstDate);
@@ -8,9 +8,25 @@ function calculateWeeksPassed(firstDate: string, currentDate: string | Date = ne
 	return Math.max(0, Math.floor(diff / msPerWeek));
 }
 
-export function calculateBudget(cards: GoldCard[], currentDate?: string | Date): number {
+export function calculateBudget(
+	cards: GoldCard[],
+	adjustmentsOrDate?: BudgetAdjustment[] | string | Date,
+	currentDate?: string | Date
+): number {
+	let adjustments: BudgetAdjustment[] = [];
+	let effectiveCurrentDate: string | Date | undefined;
+
+	if (Array.isArray(adjustmentsOrDate)) {
+		adjustments = adjustmentsOrDate;
+		effectiveCurrentDate = currentDate;
+	} else {
+		effectiveCurrentDate = adjustmentsOrDate;
+	}
+
+	const totalAdjustment = adjustments.reduce((sum, adj) => sum + adj.adjustment, 0);
+
 	if (cards.length === 0) {
-		return 5; // Initial budget when no cards exist
+		return 5 + totalAdjustment;
 	}
 
 	// Get the earliest date (last in sorted array)
@@ -19,7 +35,7 @@ export function calculateBudget(cards: GoldCard[], currentDate?: string | Date):
 
 	// For budget calculation, use only the date portion (ignore time)
 	const firstDateOnly = firstDate.split('T')[0];
-	const weeksPassed = calculateWeeksPassed(firstDateOnly, currentDate);
+	const weeksPassed = calculateWeeksPassed(firstDateOnly, effectiveCurrentDate);
 
-	return 5 + weeksPassed * 5 - cards.length;
+	return 5 + weeksPassed * 5 - cards.length + totalAdjustment;
 }
