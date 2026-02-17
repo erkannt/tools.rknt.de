@@ -20,6 +20,10 @@ check: node_modules test
 	npx prettier --check .
 	npx eslint .
 
+.PHONY: fix
+fix: node_modules
+	npx prettier --write .
+
 .PHONY: test
 test: node_modules
 	npx vitest run
