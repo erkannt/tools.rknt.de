@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { LocalStorage } from './lib/localStorage.svelte';
-	import type { GoldCard } from './lib/types';
+	import type { GoldCard, BudgetAdjustment } from './lib/types';
 	import { calculateBudget } from './lib/budget';
 	import { groupByIsoWeek } from './lib/weekGrouping';
 	import BudgetDisplay from './lib/components/BudgetDisplay.svelte';
@@ -9,6 +9,7 @@
 	import GoldcardLog from './lib/components/GoldcardLog.svelte';
 
 	const goldcards = new LocalStorage<GoldCard[]>('goldcards', []);
+	const budgetAdjustments = new LocalStorage<BudgetAdjustment[]>('budgetAdjustments', []);
 	const sortedByDate: GoldCard[] = $derived(
 		[...goldcards.current].sort((a, b) => b.date.localeCompare(a.date))
 	);
@@ -43,13 +44,43 @@
 	function handleImport(importedCards: GoldCard[]) {
 		goldcards.current = importedCards;
 	}
+
+	function addBudgetAdjustment(data: { adjustment: number; comment: string }) {
+		const newId = crypto.randomUUID();
+		const now = new Date(Date.now());
+		const dateStr =
+			now.getFullYear() +
+			'-' +
+			String(now.getMonth() + 1).padStart(2, '0') +
+			'-' +
+			String(now.getDate()).padStart(2, '0') +
+			'T' +
+			String(now.getHours()).padStart(2, '0') +
+			':' +
+			String(now.getMinutes()).padStart(2, '0') +
+			':' +
+			String(now.getSeconds()).padStart(2, '0') +
+			'.' +
+			String(now.getMilliseconds()).padStart(3, '0') +
+			'Z';
+		budgetAdjustments.current.push({
+			id: newId,
+			date: dateStr,
+			...data
+		});
+	}
 </script>
 
 <main class="stack">
 	<section class="stack">
 		<h1>Log Goldcards</h1>
 		<CardLogger onAddCard={addGoldCard} />
-		<BudgetDisplay loggedCount={goldcards.current.length} budget={goldcardBudget} />
+		<BudgetDisplay
+			loggedCount={goldcards.current.length}
+			budget={goldcardBudget}
+			adjustments={budgetAdjustments.current}
+			onAddAdjustment={addBudgetAdjustment}
+		/>
 	</section>
 
 	<section>
