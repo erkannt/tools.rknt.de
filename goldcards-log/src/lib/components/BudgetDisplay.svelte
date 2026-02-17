@@ -25,6 +25,16 @@
 		newAdjustment = 0;
 		newComment = '';
 	}
+
+	function formatDate(isoDate: string): string {
+		const d = new Date(isoDate);
+		return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+	}
+
+	function formatTime(isoDate: string): string {
+		const d = new Date(isoDate);
+		return d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+	}
 </script>
 
 <div class="budget-wrapper">
@@ -49,6 +59,18 @@
 
 		<button type="submit" class="btn">Add Adjustment</button>
 	</form>
+
+	{#if adjustments.length > 0}
+		<ul class="adjustment-list">
+			{#each adjustments as adj (adj.id)}
+				<li>
+					<span class="adj-value">{adj.adjustment >= 0 ? '+' : ''}{adj.adjustment}</span>
+					<span class="adj-comment">{adj.comment}</span>
+					<span class="adj-date">{formatDate(adj.date)} {formatTime(adj.date)}</span>
+				</li>
+			{/each}
+		</ul>
+	{/if}
 </details>
 
 <style>
@@ -117,5 +139,32 @@
 	.btn:focus-visible {
 		outline: 2px solid lightslategrey;
 		outline-offset: 2px;
+	}
+
+	.adjustment-list {
+		list-style: none;
+		padding: 0;
+		margin-top: var(--space-s);
+		font-size: var(--step--1);
+	}
+
+	.adjustment-list li {
+		display: flex;
+		gap: var(--space-xs);
+		padding-block: var(--space-2xs);
+		border-bottom: 1px solid #eee;
+	}
+
+	.adj-value {
+		font-weight: bold;
+		min-width: 3ch;
+	}
+
+	.adj-comment {
+		flex-grow: 1;
+	}
+
+	.adj-date {
+		color: #666;
 	}
 </style>
