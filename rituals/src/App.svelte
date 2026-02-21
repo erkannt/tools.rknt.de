@@ -1,5 +1,6 @@
 <script lang="ts">
   import { marked } from "marked";
+  import { LocalStorage } from "./lib/localStorage.svelte";
 
   interface Ritual {
     id: string;
@@ -7,7 +8,7 @@
     markdown: string;
   }
 
-  let rituals: Ritual[] = $state([]);
+  let rituals = new LocalStorage<Ritual[]>("rituals", []);
   let view: "home" | "add" | "view" | "edit" = $state("home");
   let currentRitual: Ritual | null = $state(null);
   let name = $state("");
@@ -33,11 +34,13 @@
 
   function saveRitual() {
     if (editingId) {
-      rituals = rituals.map((r) =>
+      const updated = rituals.current.map((r: Ritual) =>
         r.id === editingId ? { ...r, name, markdown } : r,
       );
+      rituals.current.length = 0;
+      rituals.current.push(...updated);
     } else {
-      rituals = [...rituals, { id: crypto.randomUUID(), name, markdown }];
+      rituals.current.push({ id: crypto.randomUUID(), name, markdown });
     }
     name = "";
     markdown = "";
@@ -56,7 +59,10 @@
 
   function deleteRitual() {
     if (editingId) {
-      rituals = rituals.filter((r) => r.id !== editingId);
+      const index = rituals.current.findIndex((r: Ritual) => r.id === editingId);
+      if (index !== -1) {
+        rituals.current.splice(index, 1);
+      }
       name = "";
       markdown = "";
       editingId = null;
@@ -101,9 +107,9 @@
     <h1>{currentRitual.name}</h1>
     <div>{@html renderMarkdown(currentRitual.markdown)}</div>
   {:else}
-    {#if rituals.length > 0}
+    {#if rituals.current.length > 0}
       <ul>
-        {#each rituals as ritual (ritual.id)}
+        {#each rituals.current as ritual (ritual.id)}
           <li>
             <a href="#" onclick={() => viewRitual(ritual)}>{ritual.name}</a>
           </li>
