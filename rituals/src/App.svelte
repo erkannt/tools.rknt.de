@@ -2,19 +2,22 @@
   import { marked } from "marked";
 
   interface Ritual {
-    id: number;
+    id: string;
     name: string;
     markdown: string;
   }
 
   let rituals: Ritual[] = $state([]);
-  let view: "home" | "add" | "view" = $state("home");
+  let view: "home" | "add" | "view" | "edit" = $state("home");
   let currentRitual: Ritual | null = $state(null);
   let name = $state("");
   let markdown = $state("");
-  let nextId = $state(1);
+  let editingId: string | null = $state(null);
 
   function goToAdd() {
+    name = "";
+    markdown = "";
+    editingId = null;
     view = "add";
   }
 
@@ -29,11 +32,26 @@
   }
 
   function saveRitual() {
-    rituals = [...rituals, { id: nextId, name, markdown }];
-    nextId += 1;
+    if (editingId) {
+      rituals = rituals.map((r) =>
+        r.id === editingId ? { ...r, name, markdown } : r,
+      );
+    } else {
+      rituals = [...rituals, { id: crypto.randomUUID(), name, markdown }];
+    }
     name = "";
     markdown = "";
+    editingId = null;
     view = "home";
+  }
+
+  function goToEdit() {
+    if (currentRitual) {
+      name = currentRitual.name;
+      markdown = currentRitual.markdown;
+      editingId = currentRitual.id;
+      view = "edit";
+    }
   }
 
   function renderMarkdown(content: string): string {
@@ -46,7 +64,7 @@
     <h1>Rituals</h1>
   {/if}
 
-  {#if view === "add"}
+  {#if view === "add" || view === "edit"}
     <form
       onsubmit={(e) => {
         e.preventDefault();
@@ -56,7 +74,7 @@
       <div>
         <label>
           Name:
-          <input type="text" bind:value={name} />
+          <input type="text" bind:value={name} required />
         </label>
       </div>
       <div>
@@ -66,6 +84,7 @@
     </form>
   {:else if view === "view" && currentRitual}
     <a href="#" onclick={goToHome}>Back to Home</a>
+    <a href="#" onclick={goToEdit}>Edit</a>
     <h1>{currentRitual.name}</h1>
     <div>{@html renderMarkdown(currentRitual.markdown)}</div>
   {:else}
