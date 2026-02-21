@@ -14,6 +14,31 @@
   let name = $state("");
   let markdown = $state("");
   let editingId: string | null = $state(null);
+  let deferredPrompt: any = $state(null);
+  let canInstall = $state(false);
+
+  if (typeof window !== "undefined") {
+    console.log("in window");
+    window.addEventListener("beforeinstallprompt", (e: Event) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      canInstall = true;
+      console.log("before install");
+    });
+
+    window.addEventListener("appinstalled", () => {
+      canInstall = false;
+      deferredPrompt = null;
+    });
+  }
+
+  async function handleInstall() {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      await deferredPrompt.userChoice;
+      deferredPrompt = null;
+    }
+  }
 
   function goToAdd() {
     name = "";
@@ -79,7 +104,12 @@
 
 <main>
   {#if view !== "view"}
-    <h1>Rituals</h1>
+    <h1>
+      Rituals {#if canInstall}<button
+          class="install-btn"
+          onclick={handleInstall}>Install as App</button
+        >{/if}
+    </h1>
   {/if}
 
   {#if view === "add" || view === "edit"}
@@ -129,5 +159,16 @@
   nav {
     display: flex;
     justify-content: space-between;
+  }
+
+  h1 {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .install-btn {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
   }
 </style>
