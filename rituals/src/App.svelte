@@ -59,7 +59,9 @@
 
   function deleteRitual() {
     if (editingId) {
-      const index = rituals.current.findIndex((r: Ritual) => r.id === editingId);
+      const index = rituals.current.findIndex(
+        (r: Ritual) => r.id === editingId,
+      );
       if (index !== -1) {
         rituals.current.splice(index, 1);
       }
@@ -102,8 +104,10 @@
       {/if}
     </form>
   {:else if view === "view" && currentRitual}
-    <a href="#" onclick={goToHome}>Back to Home</a>
-    <a href="#" onclick={goToEdit}>Edit</a>
+    <nav>
+      <a href="#" onclick={goToHome}>Home</a>
+      <a href="#" onclick={goToEdit}>Edit</a>
+    </nav>
     <h1>{currentRitual.name}</h1>
     <div>{@html renderMarkdown(currentRitual.markdown)}</div>
   {:else}
@@ -120,3 +124,10 @@
     <button onclick={goToAdd}>Add Ritual</button>
   {/if}
 </main>
+
+<style>
+  nav {
+    display: flex;
+    justify-content: space-between;
+  }
+</style>
