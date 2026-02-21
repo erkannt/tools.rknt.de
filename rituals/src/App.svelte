@@ -54,6 +54,16 @@
     }
   }
 
+  function deleteRitual() {
+    if (editingId) {
+      rituals = rituals.filter((r) => r.id !== editingId);
+      name = "";
+      markdown = "";
+      editingId = null;
+      view = "home";
+    }
+  }
+
   function renderMarkdown(content: string): string {
     return marked.parse(content) as string;
   }
@@ -80,7 +90,10 @@
       <div>
         <textarea bind:value={markdown}></textarea>
       </div>
-      <button type="submit">Save</button>
+      <button type="submit">{editingId ? "Update" : "Save"}</button>
+      {#if editingId}
+        <button type="button" onclick={deleteRitual}>Delete</button>
+      {/if}
     </form>
   {:else if view === "view" && currentRitual}
     <a href="#" onclick={goToHome}>Back to Home</a>
