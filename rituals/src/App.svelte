@@ -17,8 +17,49 @@
   let deferredPrompt: any = $state(null);
   let canInstall = $state(false);
 
+  function parseUrl(pathname: string): {
+    view: typeof view;
+    id: string | null;
+  } {
+    const segments = pathname.split("/").filter(Boolean);
+    if (segments.length === 0 || pathname === "/") {
+      return { view: "home", id: null };
+    }
+    if (segments[0] === "add") {
+      return { view: "add", id: null };
+    }
+    if (segments[0] === "ritual" && segments[1]) {
+      return { view: "view", id: segments[1] };
+    }
+    if (segments[0] === "edit" && segments[1]) {
+      return { view: "edit", id: segments[1] };
+    }
+    return { view: "home", id: null };
+  }
+
+  function syncFromUrl() {
+    const { view: urlView, id } = parseUrl(window.location.pathname);
+    view = urlView;
+    if (urlView === "view" && id) {
+      currentRitual = rituals.current.find((r: Ritual) => r.id === id) || null;
+    } else if (urlView === "edit" && id) {
+      editingId = id;
+      const ritual = rituals.current.find((r: Ritual) => r.id === id) || null;
+      if (ritual) {
+        name = ritual.name;
+        markdown = ritual.markdown;
+      }
+    }
+  }
+
+  function pushState(path: string) {
+    window.history.pushState({}, "", path);
+  }
+
   if (typeof window !== "undefined") {
-    console.log("in window");
+    window.addEventListener("popstate", syncFromUrl);
+    syncFromUrl();
+
     window.addEventListener("beforeinstallprompt", (e: Event) => {
       e.preventDefault();
       deferredPrompt = e;
@@ -45,16 +86,19 @@
     markdown = "";
     editingId = null;
     view = "add";
+    pushState("/add");
   }
 
   function goToHome() {
     view = "home";
     currentRitual = null;
+    pushState("/");
   }
 
   function viewRitual(ritual: Ritual) {
     currentRitual = ritual;
     view = "view";
+    pushState(`/ritual/${ritual.id}`);
   }
 
   function saveRitual() {
@@ -71,6 +115,7 @@
     markdown = "";
     editingId = null;
     view = "home";
+    pushState("/");
   }
 
   function goToEdit() {
@@ -79,6 +124,7 @@
       markdown = currentRitual.markdown;
       editingId = currentRitual.id;
       view = "edit";
+      pushState(`/edit/${currentRitual.id}`);
     }
   }
 
@@ -94,6 +140,7 @@
       markdown = "";
       editingId = null;
       view = "home";
+      pushState("/");
     }
   }
 
@@ -135,8 +182,20 @@
     </form>
   {:else if view === "view" && currentRitual}
     <nav>
-      <a href="#" onclick={goToHome}>Home</a>
-      <a href="#" onclick={goToEdit}>Edit</a>
+      <a
+        href="/"
+        onclick={(e) => {
+          e.preventDefault();
+          goToHome();
+        }}>Home</a
+      >
+      <a
+        href="/edit/{currentRitual.id}"
+        onclick={(e) => {
+          e.preventDefault();
+          goToEdit();
+        }}>Edit</a
+      >
     </nav>
     <h1>{currentRitual.name}</h1>
     <div>{@html renderMarkdown(currentRitual.markdown)}</div>
@@ -145,13 +204,27 @@
       <ul class="rituals-list" role="list">
         {#each rituals.current as ritual (ritual.id)}
           <li>
-            <button onclick={() => viewRitual(ritual)}>{ritual.name}</button>
+            <a
+              class="button"
+              href="/ritual/{ritual.id}"
+              onclick={(e) => {
+                e.preventDefault();
+                viewRitual(ritual);
+              }}>{ritual.name}</a
+            >
           </li>
         {/each}
       </ul>
     {/if}
 
-    <button onclick={goToAdd}>add ritual</button>
+    <a
+      href="/add"
+      onclick={(e) => {
+        e.preventDefault();
+        goToAdd();
+      }}
+      class="button">add ritual</a
+    >
   {/if}
 </main>
 
@@ -178,11 +251,23 @@
 
   .rituals-list {
     list-style: none;
-    padding-inline: 0;
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-2xs);
-    margin-block-end: var(--space-l);
+    padding: 0;
+
+    li {
+      margin-block-end: var(--space-2xs);
+    }
+  }
+
+  .button {
+    display: block;
+    width: 100%;
+    padding-block: var(--space-xs);
+    border-radius: 3px;
+    border: 0;
+    background: cornsilk;
+    text-align: center;
+    text-decoration: none;
+    color: inherit;
   }
 
   button {
