@@ -142,16 +142,16 @@
     <div>{@html renderMarkdown(currentRitual.markdown)}</div>
   {:else}
     {#if rituals.current.length > 0}
-      <ul>
+      <ul class="rituals-list" role="list">
         {#each rituals.current as ritual (ritual.id)}
           <li>
-            <a href="#" onclick={() => viewRitual(ritual)}>{ritual.name}</a>
+            <button onclick={() => viewRitual(ritual)}>{ritual.name}</button>
           </li>
         {/each}
       </ul>
     {/if}
 
-    <button onclick={goToAdd}>Add Ritual</button>
+    <button onclick={goToAdd}>add ritual</button>
   {/if}
 </main>
 
@@ -174,5 +174,22 @@
   .install-btn {
     font-size: 0.75rem;
     padding: 0.25rem 0.5rem;
+  }
+
+  .rituals-list {
+    list-style: none;
+    padding-inline: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2xs);
+    margin-block-end: var(--space-l);
+  }
+
+  button {
+    display: block;
+    width: 100%;
+    padding-block: var(--space-xs);
+    border-radius: 3px;
+    border: 0;
   }
 </style>
