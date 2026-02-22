@@ -204,7 +204,9 @@
       >
     </nav>
     <h1>{currentRitual.name}</h1>
-    <div>{@html renderMarkdown(currentRitual.markdown)}</div>
+    <div class="rendered-ritual">
+      {@html renderMarkdown(currentRitual.markdown)}
+    </div>
   {:else}
     {#if rituals.current.length > 0}
       <ul class="rituals-list" role="list">
