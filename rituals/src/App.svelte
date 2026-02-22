@@ -172,19 +172,23 @@
         saveRitual();
       }}
     >
-      <div>
-        <label>
-          Name:
-          <input type="text" bind:value={name} required />
-        </label>
+      <div class="edit-ritual-inputs">
+        <label for="name-input">name</label>
+        <input id="name-input" type="text" bind:value={name} required />
+
+        <label for="markdown-textarea">ritual in markdown</label>
+        <textarea
+          id="markdown-textarea"
+          bind:value={markdown}
+          style="resize: vertical;"
+        ></textarea>
       </div>
-      <div>
-        <textarea bind:value={markdown}></textarea>
+      <div class="edit-actions">
+        {#if editingId}
+          <button type="button" onclick={deleteRitual}>delete</button>
+        {/if}
+        <button type="submit">{editingId ? "update" : "save"}</button>
       </div>
-      <button type="submit">{editingId ? "Update" : "Save"}</button>
-      {#if editingId}
-        <button type="button" onclick={deleteRitual}>Delete</button>
-      {/if}
     </form>
   {:else if view === "view" && currentRitual}
     <nav>
@@ -286,5 +290,24 @@
   .button:hover,
   button:hover {
     background-color: oklch(from cornsilk calc(l * 0.95) c h);
+  }
+
+  .edit-ritual-inputs {
+    display: flex;
+    flex-direction: column;
+    margin-block-end: var(--space-l);
+
+    label {
+      margin-block-end: var(--space-3xs);
+    }
+    input,
+    textarea {
+      margin-block-end: var(--space-m);
+    }
+  }
+
+  .edit-actions {
+    display: flex;
+    gap: var(--space-m);
   }
 </style>
