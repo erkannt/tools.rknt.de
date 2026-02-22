@@ -144,6 +144,12 @@
     }
   }
 
+  const customCheckboxRenderer = new marked.Renderer();
+  customCheckboxRenderer.checkbox = (checked) => {
+    return `<input type="checkbox">`;
+  };
+  marked.use({ renderer: customCheckboxRenderer });
+
   function renderMarkdown(content: string): string {
     return marked.parse(content) as string;
   }
