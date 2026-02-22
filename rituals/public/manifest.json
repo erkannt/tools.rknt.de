@@ -5,8 +5,8 @@
   "id": "/rituals",
   "start_url": "/rituals",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#7c3aed",
+  "background_color": "#FFF8DC",
+  "theme_color": "#B0C4DE",
   "orientation": "portrait-primary",
   "icons": [
     {
