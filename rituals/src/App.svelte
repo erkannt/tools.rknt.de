@@ -260,12 +260,14 @@
   .rituals-list {
     list-style: none;
     padding: 0;
+    margin-block-end: var(--space-l);
 
     li {
       margin-block-end: var(--space-2xs);
     }
   }
 
+  button,
   .button {
     display: block;
     width: 100%;
@@ -273,16 +275,16 @@
     border-radius: 3px;
     border: 0;
     background: cornsilk;
+  }
+
+  .button {
     text-align: center;
     text-decoration: none;
     color: inherit;
   }
 
-  button {
-    display: block;
-    width: 100%;
-    padding-block: var(--space-xs);
-    border-radius: 3px;
-    border: 0;
+  .button:hover,
+  button:hover {
+    background-color: oklch(from cornsilk calc(l * 0.95) c h);
   }
 </style>
