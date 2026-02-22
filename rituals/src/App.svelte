@@ -105,7 +105,7 @@
 <main>
   {#if view !== "view"}
     <h1>
-      Rituals {#if canInstall}<button
+      rituals {#if canInstall}<button
           class="install-btn"
           onclick={handleInstall}>Install as App</button
         >{/if}
@@ -156,15 +156,19 @@
 </main>
 
 <style>
+  main {
+    max-width: 70ch;
+    padding-inline: var(--space-m);
+    margin-inline: auto;
+  }
+
   nav {
     display: flex;
     justify-content: space-between;
   }
 
   h1 {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
+    text-align: center;
   }
 
   .install-btn {
