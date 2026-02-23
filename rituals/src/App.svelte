@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { marked } from "marked";
   import { LocalStorage } from "./lib/localStorage.svelte";
 
   interface Ritual {
@@ -143,16 +142,6 @@
       pushState("/");
     }
   }
-
-  const customCheckboxRenderer = new marked.Renderer();
-  customCheckboxRenderer.checkbox = (checked) => {
-    return `<input type="checkbox">`;
-  };
-  marked.use({ renderer: customCheckboxRenderer });
-
-  function renderMarkdown(content: string): string {
-    return marked.parse(content) as string;
-  }
 </script>
 
 <main>
@@ -176,11 +165,8 @@
         <label for="name-input">name</label>
         <input id="name-input" type="text" bind:value={name} required />
 
-        <label for="markdown-textarea">ritual in markdown</label>
-        <textarea
-          id="markdown-textarea"
-          bind:value={markdown}
-          style="resize: vertical;"
+        <label for="text">ritual</label>
+        <textarea id="text" bind:value={markdown} style="resize: vertical;"
         ></textarea>
       </div>
       <div class="edit-actions">
@@ -209,7 +195,7 @@
     </nav>
     <h1>{currentRitual.name}</h1>
     <div class="rendered-ritual">
-      {@html renderMarkdown(currentRitual.markdown)}
+      {currentRitual.markdown}
     </div>
   {:else}
     {#if rituals.current.length > 0}
