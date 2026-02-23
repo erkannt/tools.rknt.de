@@ -10,12 +10,12 @@
     display: flex;
     gap: var(--space-xs);
     align-items: center;
-    accent-color: cornsilk;
     margin-block-end: var(--space-2xs);
   }
 
   input[type="checkbox"] {
     width: 1em;
     height: 1em;
+    accent-color: cornsilk;
   }
 }
