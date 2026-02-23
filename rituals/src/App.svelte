@@ -21,39 +21,40 @@
   let importData = $state<Ritual[]>([]);
   let selectedForImport = $state<Set<string>>(new Set());
 
-  function parseUrl(pathname: string): {
+  function parseUrl(searchParams: URLSearchParams): {
     view: typeof view;
     id: string | null;
     importData?: Ritual[];
   } {
-    const segments = pathname.split("/").filter(Boolean);
-    if (segments.length === 0 || pathname === "/") {
-      return { view: "home", id: null };
-    }
-    if (segments[0] === "add") {
+    const viewParam = searchParams.get("view");
+    const id = searchParams.get("id");
+    const importParam = searchParams.get("data");
+
+    if (viewParam === "add") {
       return { view: "add", id: null };
     }
-    if (segments[0] === "share") {
+    if (viewParam === "share") {
       return { view: "share", id: null };
     }
-    if (segments[0] === "import-rituals" && segments[1]) {
+    if (viewParam === "import" && importParam) {
       return { view: "import", id: null, importData: [] };
     }
-    if (segments[0] === "ritual" && segments[1]) {
-      return { view: "view", id: segments[1] };
+    if (viewParam === "view" && id) {
+      return { view: "view", id };
     }
-    if (segments[0] === "edit" && segments[1]) {
-      return { view: "edit", id: segments[1] };
+    if (viewParam === "edit" && id) {
+      return { view: "edit", id };
     }
     return { view: "home", id: null };
   }
 
   function syncFromUrl() {
+    const params = new URLSearchParams(window.location.search);
     const {
       view: urlView,
       id,
       importData: urlImportData,
-    } = parseUrl(window.location.pathname);
+    } = parseUrl(params);
     view = urlView;
     if (urlView === "view" && id) {
       currentRitual = rituals.current.find((r: Ritual) => r.id === id) || null;
@@ -65,7 +66,7 @@
         markdown = ritual.markdown;
       }
     } else if (urlView === "import" && urlImportData !== undefined) {
-      const encoded = window.location.pathname.split("/import-rituals/")[1];
+      const encoded = params.get("data");
       if (encoded) {
         decodeRituals(encoded).then((decoded) => {
           importData = decoded;
@@ -169,7 +170,7 @@
     markdown = "";
     editingId = null;
     view = "add";
-    pushState("/add");
+    pushState("/?view=add");
   }
 
   function goToHome() {
@@ -181,7 +182,7 @@
   function viewRitual(ritual: Ritual) {
     currentRitual = ritual;
     view = "view";
-    pushState(`/ritual/${ritual.id}`);
+    pushState(`/?view=view&id=${ritual.id}`);
   }
 
   function saveRitual() {
@@ -207,7 +208,7 @@
       markdown = currentRitual.markdown;
       editingId = currentRitual.id;
       view = "edit";
-      pushState(`/edit/${currentRitual.id}`);
+      pushState(`/?view=edit&id=${currentRitual.id}`);
     }
   }
 
@@ -230,7 +231,7 @@
   function goToShare() {
     selectedForShare = new Set();
     view = "share";
-    pushState("/share");
+    pushState("/?view=share");
   }
 
   function toggleShareSelection(id: string) {
@@ -248,7 +249,7 @@
       selectedForShare.has(r.id),
     );
     const encoded = await encodeRituals(selectedRituals);
-    const url = `${window.location.origin}/import-rituals/${encoded}`;
+    const url = `${window.location.origin}/?view=import&data=${encoded}`;
     await navigator.clipboard.writeText(url);
     view = "share-success";
   }
@@ -336,7 +337,7 @@
         }}>home</a
       >
       <a
-        href="/edit/{currentRitual.id}"
+        href="/?view=edit&id={currentRitual.id}"
         onclick={(e) => {
           e.preventDefault();
           goToEdit();
@@ -428,7 +429,7 @@
           <li>
             <a
               class="button"
-              href="/ritual/{ritual.id}"
+              href="/?view=view&id={ritual.id}"
               onclick={(e) => {
                 e.preventDefault();
                 viewRitual(ritual);
@@ -441,7 +442,7 @@
 
     <div class="actions">
       <a
-        href="/share"
+        href="/?view=share"
         onclick={(e) => {
           e.preventDefault();
           goToShare();
@@ -449,7 +450,7 @@
         class="button">share</a
       >
       <a
-        href="/add"
+        href="/?view=add"
         onclick={(e) => {
           e.preventDefault();
           goToAdd();
