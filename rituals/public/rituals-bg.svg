@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="26.511999mm"
+   height="26.511999mm"
+   viewBox="0 0 26.511999 26.511999"
+   version="1.1"
+   id="svg1"
+   inkscape:version="1.4.2 (ebf0e940d0, 2025-05-08)"
+   sodipodi:docname="rituals-bg.svg"
+   inkscape:export-filename="icon-512.png"
+   inkscape:export-xdpi="490.52505"
+   inkscape:export-ydpi="490.52505"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="mm"
+     inkscape:zoom="5.6568543"
+     inkscape:cx="69.650017"
+     inkscape:cy="92.984541"
+     inkscape:window-width="2538"
+     inkscape:window-height="1387"
+     inkscape:window-x="8"
+     inkscape:window-y="8"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="g6"
+     showgrid="false" />
+  <defs
+     id="defs1">
+    <rect
+       x="279.23376"
+       y="230.83324"
+       width="242.00259"
+       height="244.79492"
+       id="rect1" />
+  </defs>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(-99.067155,-140.92215)">
+    <g
+       id="g6"
+       style="fill:#fff8dc;fill-opacity:1"
+       transform="translate(4.4244977,75.123428)">
+      <rect
+         style="fill:#fff8dc;fill-opacity:1;stroke-width:2.28756;stroke-linecap:round;stroke-miterlimit:10"
+         id="rect2"
+         width="28.843714"
+         height="28.422766"
+         x="93.981117"
+         y="65.377769" />
+      <g
+         id="g2"
+         transform="matrix(2.3706222,0,0,2.3706222,-131.88663,-95.473393)">
+        <path
+           id="text1"
+           style="font-weight:bold;font-size:40px;line-height:1.25;font-family:'Yanone Kaffeesatz';-inkscape-font-specification:'Yanone Kaffeesatz Bold';text-align:center;text-orientation:upright;text-anchor:middle;white-space:pre;fill:#b0c4de;fill-opacity:1;stroke-width:0.264583"
+           d="m 101.40053,69.496016 c -1.05747,0.06074 -2.558961,0.462189 -3.401343,1.422652 -0.958408,1.092755 -1.119209,2.940907 -0.775147,4.229199 0.418374,1.566543 0.79493,2.200098 2.586628,2.095051 -0.27663,-0.955625 -1.195378,-2.451829 -1.244464,-2.247839 -0.05769,0.23973 0.256411,0.756917 0.125591,1.266124 -0.01231,0.0479 -0.522372,-0.192639 -0.745265,-1.682293 -0.140763,-0.940774 -4.32e-4,-2.147789 0.696082,-2.941939 0.550976,-0.628209 1.766328,-1.143248 2.609148,-1.191659 0.23184,-0.01331 1.2722,-0.11466 1.67122,0.510046 0.0304,0.0476 0.0392,0.110236 0.0512,0.174149 0.0185,0.06117 0.0268,0.134393 0.0248,0.219625 0.14269,-0.0072 0.27504,-0.02927 0.39739,-0.06615 0.12237,-0.03687 0.21626,-0.06945 0.28112,-0.09715 0.1687,-0.07203 0.27388,-0.166621 0.31575,-0.284221 0.0418,-0.117599 0.006,-0.309631 -0.10749,-0.575675 -0.0335,-0.07845 -0.0699,-0.153817 -0.10956,-0.225826 -0.21964,-0.338149 -0.53394,-0.389543 -0.94619,-0.490926 -0.41225,-0.101383 -0.90063,-0.143543 -1.42937,-0.113172 z"
+           sodipodi:nodetypes="ssscssssssccsscccsss" />
+        <path
+           style="font-weight:bold;font-size:10.5833px;line-height:1.25;font-family:'Yanone Kaffeesatz';-inkscape-font-specification:'Yanone Kaffeesatz Bold';text-align:center;text-orientation:upright;text-anchor:middle;fill:#241f31;fill-opacity:1;stroke-width:0.264583"
+           d="m 104.07619,77.055126 q 0,0.08467 -0.0212,0.127 -0.0212,0.04233 -0.13758,0.0635 -0.10583,0.01058 -0.35983,0.02117 -0.24342,0 -0.68792,0 v -4.773068 q 0,-0.190499 0.0529,-0.296332 0.0529,-0.105833 0.17992,-0.148166 0.13758,-0.05292 0.37041,-0.0635 0.23283,-0.01058 0.60325,-0.01058 z"
+           id="path5" />
+        <path
+           style="font-weight:bold;font-size:10.5833px;line-height:1.25;font-family:'Yanone Kaffeesatz';-inkscape-font-specification:'Yanone Kaffeesatz Bold';text-align:center;text-orientation:upright;text-anchor:middle;fill:#241f31;fill-opacity:1;stroke-width:0.264583"
+           d="m 100.23445,72.345558 q 0.27516,-0.190499 0.64558,-0.328082 0.381,-0.148167 0.82549,-0.148167 0.43392,0 0.5715,0.127 0.13759,0.127 0.13759,0.402165 0,0.105833 -0.0212,0.296333 -0.0212,0.190499 -0.0952,0.391582 -0.11642,-0.05292 -0.21167,-0.0635 -0.0952,-0.02117 -0.17991,-0.02117 -0.0953,0 -0.22225,0.04233 -0.127,0.04233 -0.23283,0.126999 l -0.0106,3.884071 q 0,0.08467 -0.0212,0.127 -0.0212,0.04233 -0.13759,0.0635 -0.10583,0.01058 -0.34925,0.02117 -0.24341,0 -0.69849,0 z"
+           id="text2" />
+      </g>
+    </g>
+  </g>
+</svg>
