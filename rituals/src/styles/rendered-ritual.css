@@ -1,5 +1,3 @@
 .rendered-ritual {
-  ul {
-    list-style-type: "-";
-  }
+  font-size: var(--step-2);
 }
