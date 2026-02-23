@@ -201,7 +201,10 @@
     <div class="rendered-ritual">
       <ul>
         {#each renderRitualLines(currentRitual.markdown) as line}
-          <li><input type="checkbox" /><span>{line}</span></li>
+          <li>
+            <input type="checkbox" id="cb-{line}" />
+            <label for="cb-{line}">{line}</label>
+          </li>
         {/each}
       </ul>
     </div>
