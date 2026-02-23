@@ -8,7 +8,7 @@
   }
 
   let rituals = new LocalStorage<Ritual[]>("rituals", []);
-  let view: "home" | "add" | "view" | "edit" | "share" | "import" =
+  let view: "home" | "add" | "view" | "edit" | "share" | "import" | "share-success" =
     $state("home");
   let currentRitual: Ritual | null = $state(null);
   let name = $state("");
@@ -250,6 +250,7 @@
     const encoded = await encodeRituals(selectedRituals);
     const url = `${window.location.origin}/import-rituals/${encoded}`;
     await navigator.clipboard.writeText(url);
+    view = "share-success";
   }
 
   function getExistingRitualName(id: string): string | null {
@@ -417,6 +418,9 @@
       >
       <button onclick={importSelected}>import</button>
     </div>
+  {:else if view === "share-success"}
+    <h1>sharable link copied to clipboard</h1>
+    <button onclick={goToHome}>home</button>
   {:else}
     {#if rituals.current.length > 0}
       <ul class="rituals-button-list" role="list">
