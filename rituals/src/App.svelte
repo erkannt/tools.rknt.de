@@ -470,6 +470,7 @@
 
   h1 {
     text-align: center;
+    margin-block-end: var(--space-xl);
   }
 
   .actions {
@@ -485,16 +486,17 @@
   .rituals-button-list {
     list-style: none;
     padding: 0;
-    margin-block-end: var(--space-l);
+    margin-block-end: var(--space-2xl);
 
     li {
-      margin-block-end: var(--space-2xs);
+      margin-block-end: var(--space-xs);
     }
   }
 
   .rituals-checkbox-list {
     font-size: var(--step-2);
     padding: 0;
+    margin-block-end: var(--space-2xl);
 
     li {
       display: flex;
