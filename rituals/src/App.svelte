@@ -240,7 +240,7 @@
 <style>
   main {
     max-width: 70ch;
-    padding-inline: var(--space-m);
+    padding: var(--space-m);
     margin-inline: auto;
   }
 
