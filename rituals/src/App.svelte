@@ -142,6 +142,10 @@
       pushState("/");
     }
   }
+
+  function renderRitualLines(content: string): string[] {
+    return content.split("\n").filter((line) => line.trim() !== "");
+  }
 </script>
 
 <main>
@@ -195,7 +199,11 @@
     </nav>
     <h1>{currentRitual.name}</h1>
     <div class="rendered-ritual">
-      {currentRitual.markdown}
+      <ul>
+        {#each renderRitualLines(currentRitual.markdown) as line}
+          <li><input type="checkbox" /><span>{line}</span></li>
+        {/each}
+      </ul>
     </div>
   {:else}
     {#if rituals.current.length > 0}
