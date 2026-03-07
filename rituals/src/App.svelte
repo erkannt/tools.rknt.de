@@ -304,6 +304,19 @@
           onclick={handleInstall}>Install as App</button
         >{/if}
     </h1>
+    <details>
+      <summary>what is this?</summary>
+      <p>
+        Create simple checklists that you can keep coming back to. Checkboxes
+        are reset each time you open the checklist.
+      </p>
+      <p>This is a purely local application. No data leaves your device.</p>
+      <p>
+        This is a Progressive Web App, which means you can install it on your
+        device without using an app store
+      </p>
+      <a href="https://github.com/erkannt/tools.rknt.de/rituals">source code</a>
+    </details>
   {/if}
 
   {#if view === "add" || view === "edit"}
