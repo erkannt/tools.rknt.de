@@ -8,8 +8,14 @@
   }
 
   let rituals = new LocalStorage<Ritual[]>("rituals", []);
-  let view: "home" | "add" | "view" | "edit" | "share" | "import" | "share-success" =
-    $state("home");
+  let view:
+    | "home"
+    | "add"
+    | "view"
+    | "edit"
+    | "share"
+    | "import"
+    | "share-success" = $state("home");
   let currentRitual: Ritual | null = $state(null);
   let name = $state("");
   let markdown = $state("");
@@ -50,11 +56,7 @@
 
   function syncFromUrl() {
     const params = new URLSearchParams(window.location.search);
-    const {
-      view: urlView,
-      id,
-      importData: urlImportData,
-    } = parseUrl(params);
+    const { view: urlView, id, importData: urlImportData } = parseUrl(params);
     view = urlView;
     if (urlView === "view" && id) {
       currentRitual = rituals.current.find((r: Ritual) => r.id === id) || null;
@@ -508,12 +510,6 @@
       gap: var(--space-xs);
       align-items: center;
       margin-block-end: var(--space-2xs);
-    }
-
-    input[type="checkbox"] {
-      width: 1em;
-      height: 1em;
-      accent-color: cornsilk;
     }
   }
 

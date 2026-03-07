@@ -42,3 +42,9 @@ a:valid {
 :link:hover {
   text-decoration-thickness: max(3px, 0.1875rem, 0.12em);
 }
+
+input[type="checkbox"] {
+  width: 1em;
+  height: 1em;
+  accent-color: rebeccapurple;
+}

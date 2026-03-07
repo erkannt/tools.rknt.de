@@ -12,10 +12,4 @@
     align-items: center;
     margin-block-end: var(--space-2xs);
   }
-
-  input[type="checkbox"] {
-    width: 1em;
-    height: 1em;
-    accent-color: rebeccapurple;
-  }
 }
