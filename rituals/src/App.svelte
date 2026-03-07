@@ -1,6 +1,9 @@
 <script lang="ts">
   import { LocalStorage } from "./lib/localStorage.svelte";
 
+  // Base path for subdirectory deployments (e.g., /rituals)
+  const BASE_PATH = "/rituals";
+
   interface Ritual {
     id: string;
     name: string;
@@ -79,7 +82,7 @@
   }
 
   function pushState(path: string) {
-    window.history.pushState({}, "", path);
+    window.history.pushState({}, "", BASE_PATH + path);
   }
 
   async function encodeRituals(ritualsToEncode: Ritual[]): Promise<string> {
@@ -251,7 +254,7 @@
       selectedForShare.has(r.id),
     );
     const encoded = await encodeRituals(selectedRituals);
-    const url = `${window.location.origin}/?view=import&data=${encoded}`;
+    const url = `${window.location.origin}/rituals/?view=import&data=${encoded}`;
     await navigator.clipboard.writeText(url);
     view = "share-success";
   }
@@ -345,14 +348,14 @@
   {:else if view === "view" && currentRitual}
     <nav>
       <a
-        href="/"
+        href="${BASE_PATH}/"
         onclick={(e) => {
           e.preventDefault();
           goToHome();
         }}>home</a
       >
       <a
-        href="/?view=edit&id={currentRitual.id}"
+        href="${BASE_PATH}/?view=edit&id={currentRitual.id}"
         onclick={(e) => {
           e.preventDefault();
           goToEdit();
@@ -390,7 +393,7 @@
     <div class="actions">
       <button onclick={copyShareLink}>copy sharable link</button>
       <a
-        href="/"
+        href="${BASE_PATH}/"
         onclick={(e) => {
           e.preventDefault();
           goToHome();
@@ -425,7 +428,7 @@
     {/if}
     <div class="actions">
       <a
-        href="/"
+        href="${BASE_PATH}/"
         onclick={(e) => {
           e.preventDefault();
           cancelImport();
@@ -444,7 +447,7 @@
           <li>
             <a
               class="button"
-              href="/?view=view&id={ritual.id}"
+              href="${BASE_PATH}/?view=view&id={ritual.id}"
               onclick={(e) => {
                 e.preventDefault();
                 viewRitual(ritual);
@@ -457,7 +460,7 @@
 
     <div class="actions">
       <a
-        href="/?view=share"
+        href="${BASE_PATH}/?view=share"
         onclick={(e) => {
           e.preventDefault();
           goToShare();
@@ -465,7 +468,7 @@
         class="button">share</a
       >
       <a
-        href="/?view=add"
+        href="${BASE_PATH}/?view=add"
         onclick={(e) => {
           e.preventDefault();
           goToAdd();
