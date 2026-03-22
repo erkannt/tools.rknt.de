@@ -294,8 +294,34 @@
     goToHome();
   }
 
-  function renderRitualLines(content: string): string[] {
-    return content.split("\n").filter((line) => line.trim() !== "");
+  function renderRitualLines(
+    content: string,
+  ): Array<{ type: "checkbox" | "pre"; content: string }> {
+    const lines = content.split("\n").filter((line) => line.trim() !== "");
+    const result: Array<{ type: "checkbox" | "pre"; content: string }> = [];
+    let inPreBlock = false;
+    let preContent = "";
+
+    for (const line of lines) {
+      if (line.trim() === "---") {
+        if (inPreBlock && preContent.trim()) {
+          result.push({ type: "pre", content: preContent.trim() });
+          preContent = "";
+        }
+        inPreBlock = !inPreBlock;
+      } else if (inPreBlock) {
+        preContent += line + "\n";
+      } else {
+        result.push({ type: "checkbox", content: line });
+      }
+    }
+
+    // Add any remaining pre content
+    if (inPreBlock && preContent.trim()) {
+      result.push({ type: "pre", content: preContent.trim() });
+    }
+
+    return result;
   }
 </script>
 
@@ -364,14 +390,18 @@
     </nav>
     <h1>{currentRitual.name}</h1>
     <div class="rendered-ritual">
-      <ul>
-        {#each renderRitualLines(currentRitual.markdown) as line}
-          <li>
-            <input type="checkbox" id="cb-{line}" />
-            <label for="cb-{line}">{line}</label>
-          </li>
-        {/each}
-      </ul>
+      {#each renderRitualLines(currentRitual.markdown) as line (line)}
+        {#if line.type === "checkbox"}
+          <ul>
+            <li>
+              <input type="checkbox" id="cb-{line.content}" />
+              <label for="cb-{line.content}">{line.content}</label>
+            </li>
+          </ul>
+        {:else if line.type === "pre"}
+          <pre><code>{line.content}</code></pre>
+        {/if}
+      {/each}
     </div>
   {:else if view === "share"}
     <h1>share rituals</h1>
@@ -567,5 +597,16 @@
   .edit-actions {
     display: flex;
     gap: var(--space-m);
+  }
+
+  pre {
+    font-family: monospace;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    font-size: var(--step-1);
+  }
+
+  code {
+    font-family: inherit;
   }
 </style>
