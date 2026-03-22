@@ -363,6 +363,14 @@
         <label for="text">ritual</label>
         <textarea id="text" bind:value={markdown} style="resize: vertical;"
         ></textarea>
+        <details>
+          <summary>formatting tips</summary>
+          <p>
+            each line becomes a checkbox item<br />
+            if you add a line with only <code>---</code> everything below it will
+            appear as is
+          </p>
+        </details>
       </div>
       <div class="edit-actions">
         {#if editingId}
