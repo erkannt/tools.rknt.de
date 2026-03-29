@@ -30,5 +30,5 @@ clean:
 
 .PHONY: release
 release: build
-	mc mirror --overwrite --remove ./dist rknt/tools/constrast-matrix
+	mc mirror --overwrite --remove ./dist rknt/tools/contrast-matrix
 
