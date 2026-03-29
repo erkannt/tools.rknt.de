@@ -122,11 +122,7 @@ export function categorizePairs(pairs: ColorPair[]): WcagCategory[] {
       pairs: pairs.filter(p => p.ratio >= 7)
     },
     {
-      name: 'AA Normal',
-      pairs: pairs.filter(p => p.ratio >= 4.5 && p.ratio < 7)
-    },
-    {
-      name: 'AAA Large',
+      name: 'AA Normal / AAA Large',
       pairs: pairs.filter(p => p.ratio >= 4.5 && p.ratio < 7)
     },
     {

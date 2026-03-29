@@ -13,27 +13,17 @@
 `;
 
   let input = $state(exampleInput);
-  let colors: ParsedColor[] = $state([]);
-  let categories: WcagCategory[] = $state([]);
-
-  function handleInput() {
-    colors = parseCssVariables(input);
-    const pairs = generateCombinations(colors);
-    categories = categorizePairs(pairs);
-  }
+  let colors = $derived(parseCssVariables(input));
+  let categories = $derived(categorizePairs(generateCombinations(colors)));
 
   async function copyToClipboard(text: string) {
     await navigator.clipboard.writeText(text);
   }
-
-  $effect(() => {
-    handleInput();
-  });
 </script>
 
 <h1>Contrast Matrix</h1>
 <form onsubmit={(e) => e.preventDefault()}>
-  <textarea bind:value={input} oninput={handleInput}></textarea>
+  <textarea bind:value={input}></textarea>
 </form>
 
 <h2>Your Colours</h2>
