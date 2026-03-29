@@ -38,3 +38,7 @@ main {
     max-width: 80ch;
     margin-top: var(--space-3xl);
 }
+
+:root {
+    --radius: 0.25rem;
+}

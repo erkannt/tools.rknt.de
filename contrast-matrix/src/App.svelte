@@ -79,39 +79,39 @@
 <style>
   textarea {
     width: 100%;
-    height: 200px;
+    height: 12.5rem;
     font-family: monospace;
-    padding: 1rem;
+    padding: var(--space-s);
     border: 1px solid #ccc;
-    border-radius: 4px;
+    border-radius: var(--radius);
   }
 
   .color-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-    gap: 1rem;
-    margin-bottom: 2rem;
+    gap: var(--space-s);
+    margin-bottom: var(--space-l);
   }
 
   .color-swatch {
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
+    gap: var(--space-2xs);
   }
 
   .swatch {
     width: 100%;
-    height: 60px;
-    border-radius: 4px;
+    height: 3.75rem;
+    border-radius: var(--radius);
   }
 
   .color-name {
     font-weight: bold;
-    font-size: 0.875rem;
+    font-size: var(--step--1);
   }
 
   .color-value {
-    font-size: 0.75rem;
+    font-size: var(--step--2);
     color: #666;
     font-family: monospace;
   }
@@ -119,18 +119,18 @@
   .pair-list {
     list-style: none;
     padding: 0;
-    margin: 0 0 1rem 0;
+    margin: 0 0 var(--space-s) 0;
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 0.5rem;
+    gap: var(--space-xs);
   }
 
   .pair-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0.75rem 1rem;
-    border-radius: 4px;
+    padding: var(--space-xs) var(--space-s);
+    border-radius: var(--radius);
   }
 
   .pair-names {
@@ -143,8 +143,8 @@
   }
 
   button {
-    margin-bottom: 1.5rem;
-    padding: 0.5rem 1rem;
+    margin-bottom: var(--space-m);
+    padding: var(--space-2xs) var(--space-s);
     cursor: pointer;
   }
 </style>
