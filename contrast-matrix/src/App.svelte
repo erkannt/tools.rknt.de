@@ -1,5 +1,12 @@
 <script lang="ts">
-  import { parseCssVariables, generateCombinations, categorizePairs, generateUtilityClassesForCategory, type ParsedColor, type WcagCategory } from './lib/contrast';
+  import {
+    parseCssVariables,
+    generateCombinations,
+    categorizePairs,
+    generateUtilityClassesForCategory,
+    type ParsedColor,
+    type WcagCategory,
+  } from "./lib/contrast";
 
   const exampleInput = `--red: #cc4c19;
 --green: #365a31;
@@ -48,13 +55,22 @@
   {#if category.pairs.length > 0}
     <ul class="pair-list">
       {#each category.pairs as pair}
-        <li class="pair-item" style="background-color: {pair.background.value}; color: {pair.foreground.value};">
-          <span class="pair-names">{pair.foreground.name} on {pair.background.name}</span>
+        <li
+          class="pair-item"
+          style="background-color: {pair.background.value}; color: {pair
+            .foreground.value};"
+        >
+          <span class="pair-names"
+            >{pair.foreground.name}<br /> on {pair.background.name}</span
+          >
           <span class="pair-ratio">{pair.ratio.toFixed(2)}:1</span>
         </li>
       {/each}
     </ul>
-    <button onclick={() => copyToClipboard(generateUtilityClassesForCategory(category))}>
+    <button
+      onclick={() =>
+        copyToClipboard(generateUtilityClassesForCategory(category))}
+    >
       Copy {category.name} utility classes
     </button>
   {/if}
@@ -87,7 +103,6 @@
     width: 100%;
     height: 60px;
     border-radius: 4px;
-    border: 1px solid rgba(0,0,0,0.1);
   }
 
   .color-name {
@@ -106,7 +121,7 @@
     padding: 0;
     margin: 0 0 1rem 0;
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap: 0.5rem;
   }
 
@@ -116,16 +131,15 @@
     align-items: center;
     padding: 0.75rem 1rem;
     border-radius: 4px;
-    border: 1px solid rgba(0,0,0,0.1);
   }
 
   .pair-names {
-    font-size: 0.875rem;
+    font-size: var(--step-1);
+    font-weight: bold;
   }
 
   .pair-ratio {
-    font-size: 0.75rem;
-    opacity: 0.8;
+    font-size: var(--step-1);
   }
 
   button {
