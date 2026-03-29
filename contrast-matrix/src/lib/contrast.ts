@@ -69,19 +69,19 @@ export function sortPairsByBackgroundOrder(pairs: ColorPair[], colors: ParsedCol
 export function categorizePairs(pairs: ColorPair[], colors?: ParsedColor[]): WcagCategory[] {
   const categories: WcagCategory[] = [
     {
-      name: 'AAA Normal',
+      name: 'AAA',
       pairs: pairs.filter(p => p.ratio >= 7)
     },
     {
-      name: 'AA Normal / AAA Large',
+      name: 'AA',
       pairs: pairs.filter(p => p.ratio >= 4.5 && p.ratio < 7)
     },
     {
-      name: 'AA Large',
+      name: 'AA-large',
       pairs: pairs.filter(p => p.ratio >= 3 && p.ratio < 4.5)
     },
     {
-      name: 'Insufficient Contrast',
+      name: 'bad-contrast',
       pairs: pairs.filter(p => p.ratio < 3)
     }
   ].filter(cat => cat.pairs.length > 0);
