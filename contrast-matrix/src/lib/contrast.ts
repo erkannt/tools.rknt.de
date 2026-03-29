@@ -54,8 +54,20 @@ export function generateCombinations(colors: ParsedColor[]): ColorPair[] {
   return pairs;
 }
 
-export function categorizePairs(pairs: ColorPair[]): WcagCategory[] {
-  return [
+export function sortPairsByBackgroundOrder(pairs: ColorPair[], colors: ParsedColor[]): ColorPair[] {
+  const colorOrder = new Map(colors.map((c, i) => [c.name, i]));
+  return [...pairs].sort((a, b) => {
+    const aBg = colorOrder.get(a.background.name) ?? Infinity;
+    const bBg = colorOrder.get(b.background.name) ?? Infinity;
+    if (aBg !== bBg) return aBg - bBg;
+    const aFg = colorOrder.get(a.foreground.name) ?? Infinity;
+    const bFg = colorOrder.get(b.foreground.name) ?? Infinity;
+    return aFg - bFg;
+  });
+}
+
+export function categorizePairs(pairs: ColorPair[], colors?: ParsedColor[]): WcagCategory[] {
+  const categories: WcagCategory[] = [
     {
       name: 'AAA Normal',
       pairs: pairs.filter(p => p.ratio >= 7)
@@ -73,6 +85,14 @@ export function categorizePairs(pairs: ColorPair[]): WcagCategory[] {
       pairs: pairs.filter(p => p.ratio < 3)
     }
   ].filter(cat => cat.pairs.length > 0);
+
+  if (colors) {
+    for (const cat of categories) {
+      cat.pairs = sortPairsByBackgroundOrder(cat.pairs, colors);
+    }
+  }
+
+  return categories;
 }
 
 export function generateUtilityClass(pair: ColorPair, category: string): string {

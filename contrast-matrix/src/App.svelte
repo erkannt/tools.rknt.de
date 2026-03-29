@@ -21,7 +21,7 @@
 
   let input = $state(exampleInput);
   let colors = $derived(parseCssVariables(input));
-  let categories = $derived(categorizePairs(generateCombinations(colors)));
+  let categories = $derived(categorizePairs(generateCombinations(colors), colors));
 
   async function copyToClipboard(text: string) {
     await navigator.clipboard.writeText(text);
