@@ -76,7 +76,8 @@ export function categorizePairs(pairs: ColorPair[]): WcagCategory[] {
 }
 
 export function generateUtilityClass(pair: ColorPair, category: string): string {
-  const className = `${pair.foreground.name}-on-${pair.background.name}-${category.split(' ')[0]}`;
+  const suffix = category.replace(/ /g, '-');
+  const className = `${pair.foreground.name}-on-${pair.background.name}-${suffix}`;
   return `.${className} {
   color: var(--${pair.foreground.name});
   background-color: var(--${pair.background.name});
