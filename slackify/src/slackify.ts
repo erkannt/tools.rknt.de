@@ -13,16 +13,28 @@ function isListItem(line: string): boolean {
 }
 
 /**
- * Convert leading tabs to spaces for list items (2 spaces per tab)
- * Also convert 4+ leading spaces to 2 spaces for nested list items
+ * Convert leading tabs to spaces for list items (4 spaces per tab)
+ * Also convert 2+ leading spaces to 4 spaces per nesting level for nested list items
  */
 function processListItem(line: string): string {
   if (!isListItem(line)) {
     return line;
   }
-  let processed = line.replace(/^\t+/g, (tabs) => "  ".repeat(tabs.length));
-  processed = processed.replace(/^(\s{4})([-*+]|\d+\.)\s/, "  $2 ");
-  return processed;
+  
+  const leadingWhitespace = line.match(/^(\s*)/)?.[1] || '';
+  const content = line.slice(leadingWhitespace.length);
+  
+  if (!isListItem(content)) {
+    return line;
+  }
+  
+  const tabCount = (leadingWhitespace.match(/\t/g) || []).length;
+  const spaceCount = (leadingWhitespace.match(/ /g) || []).length;
+  
+  const totalNestingLevel = tabCount + Math.ceil(spaceCount / 4);
+  const newIndentation = ' '.repeat(totalNestingLevel * 4);
+  
+  return newIndentation + content;
 }
 
 /**

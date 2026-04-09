@@ -325,24 +325,49 @@ describe('slackify', () => {
         expected: '- First item\n- Second item\n\n1. Numbered item\n2. Another numbered'
       },
       {
-        message: 'should convert leading tabs to spaces in unordered list items',
+        message: 'should convert leading tabs to 4 spaces per nesting level in unordered list items',
         input: '- First item\n\t- Nested item',
-        expected: '- First item\n  - Nested item'
+        expected: '- First item\n    - Nested item'
       },
       {
-        message: 'should convert leading tabs to spaces in ordered list items',
+        message: 'should convert leading tabs to 4 spaces per nesting level in ordered list items',
         input: '1. First item\n\t2. Nested item',
-        expected: '1. First item\n  2. Nested item'
+        expected: '1. First item\n    2. Nested item'
       },
       {
-        message: 'should convert 4-space indentation to 2 spaces in nested unordered lists',
+        message: 'should convert 4-space indentation to 4 spaces in nested unordered lists',
         input: '- First item\n    - Nested item',
-        expected: '- First item\n  - Nested item'
+        expected: '- First item\n    - Nested item'
       },
       {
-        message: 'should convert 4-space indentation to 2 spaces in nested ordered lists',
+        message: 'should convert 4-space indentation to 4 spaces in nested ordered lists',
         input: '1. First item\n    2. Nested item',
-        expected: '1. First item\n  2. Nested item'
+        expected: '1. First item\n    2. Nested item'
+      },
+      {
+        message: 'should use 4 spaces per nesting level for deeply nested unordered lists',
+        input: '- Item 1\n    - Item 2\n        - Item 3',
+        expected: '- Item 1\n    - Item 2\n        - Item 3'
+      },
+      {
+        message: 'should use 4 spaces per nesting level for deeply nested ordered lists',
+        input: '1. Item 1\n    2. Item 1.1\n        3. Item 1.1.1',
+        expected: '1. Item 1\n    2. Item 1.1\n        3. Item 1.1.1'
+      },
+      {
+        message: 'should convert leading tabs to 4 spaces per nesting level',
+        input: '- Item 1\n\t- Nested item',
+        expected: '- Item 1\n    - Nested item'
+      },
+      {
+        message: 'should convert double tabs to 8 spaces (two nesting levels)',
+        input: '- Item 1\n\t\t- Deep nested item',
+        expected: '- Item 1\n        - Deep nested item'
+      },
+      {
+        message: 'should convert 2-space markdown indentation to 4 spaces in slack',
+        input: '- Item 1\n  - Nested item',
+        expected: '- Item 1\n    - Nested item'
       },
       {
         message: 'should handle blockquotes',
