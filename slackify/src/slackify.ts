@@ -50,14 +50,23 @@ function processHeading(line: string): string | null {
 }
 
 /**
- * Convert markdown links to Slack format
+ * Convert markdown links to Slack format with numbered references
  */
-function processLinks(line: string): string {
+function processLinks(line: string, urlRegistry: Map<string, number>): string {
   return line.replace(/\[([^\]]*)\]\(([^)]+)\)/g, (match, text, url) => {
+    const encodedUrl = encodeURI(decodeURI(url));
+    
     if (text === '') {
-      return `<${url}>`;
+      return `<${encodedUrl}>`;
     }
-    return `<${url}|${text}>`;
+    
+    let index = urlRegistry.get(encodedUrl);
+    if (index === undefined) {
+      index = urlRegistry.size + 1;
+      urlRegistry.set(encodedUrl, index);
+    }
+    
+    return `${text}[${index}]`;
   });
 }
 
@@ -89,7 +98,7 @@ function processFormatting(line: string, originalLine: string): string {
 /**
  * Process table lines and return processed lines with new index
  */
-function processTableLines(lines: string[], startIndex: number): [string[], number] {
+function processTableLines(lines: string[], startIndex: number, urlRegistry: Map<string, number>): [string[], number] {
   const tableLines: string[] = [];
   let currentIndex = startIndex;
   
@@ -108,7 +117,7 @@ function processTableLines(lines: string[], startIndex: number): [string[], numb
     }
     
     // Only process links in tables, leave other markdown as-is
-    return processLinks(tableLine);
+    return processLinks(tableLine, urlRegistry);
   });
   
   // Wrap table in code blocks
@@ -129,13 +138,14 @@ export const slackify = (input: string): string => {
   
   const lines = input.split("\n");
   const processedLines: string[] = [];
+  const urlRegistry = new Map<string, number>();
   
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
     
     // Check if this line starts a table
     if (isTableRow(line)) {
-      const [tableResult, nextIndex] = processTableLines(lines, i);
+      const [tableResult, nextIndex] = processTableLines(lines, i, urlRegistry);
       processedLines.push(...tableResult);
       i = nextIndex - 1; // -1 because for loop will increment
     } else {
@@ -146,6 +156,13 @@ export const slackify = (input: string): string => {
       const headingResult = processHeading(processedLine);
       if (headingResult) {
         processedLine = headingResult;
+        // Add empty line before heading if not first line and previous line not empty
+        if (processedLines.length > 0) {
+          const lastLine = processedLines[processedLines.length - 1];
+          if (lastLine !== '') {
+            processedLines.push('');
+          }
+        }
       } else {
         // Store original line for formatting context checks
         const originalLine = processedLine;
@@ -154,7 +171,7 @@ export const slackify = (input: string): string => {
         processedLine = processListItem(processedLine);
 
         // Convert links
-        processedLine = processLinks(processedLine);
+        processedLine = processLinks(processedLine, urlRegistry);
 
         // Convert formatting (bold/italic)
         processedLine = processFormatting(processedLine, originalLine);
@@ -164,7 +181,16 @@ export const slackify = (input: string): string => {
     }
   }
   
-  return processedLines.join("\n");
+  let result = processedLines.join("\n");
+  
+  // Append numbered URLs if any were found
+  if (urlRegistry.size > 0) {
+    const urlEntries = Array.from(urlRegistry.entries()).sort((a, b) => a[1] - b[1]);
+    const urlList = urlEntries.map(([url, index]) => `[${index}] ${url}`).join("\n");
+    result = result + "\n\n" + urlList;
+  }
+  
+  return result;
 };
 
 /**

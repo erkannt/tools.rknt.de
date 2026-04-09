@@ -16,6 +16,26 @@ describe('slackify', () => {
         expected: '*Hello World*'
       },
       {
+        message: 'should add empty line before heading when not first line',
+        input: 'Some text\n# Hello World',
+        expected: 'Some text\n\n*Hello World*'
+      },
+      {
+        message: 'should add empty line before heading after other headings',
+        input: '# First heading\n# Second heading',
+        expected: '*First heading*\n\n*Second heading*'
+      },
+      {
+        message: 'should not add empty line before first heading',
+        input: '# First heading\nSome text',
+        expected: '*First heading*\nSome text'
+      },
+      {
+        message: 'should not add extra empty line if already present before heading',
+        input: 'Some text\n\n# Heading',
+        expected: 'Some text\n\n*Heading*'
+      },
+      {
         message: 'should convert h2 heading to bold text',
         input: '## Hello World',
         expected: '*Hello World*'
@@ -188,42 +208,52 @@ describe('slackify', () => {
     });
   });
 
-  describe('link conversion', () => {
+  describe('numbered link references', () => {
     it.each<TestCase>([
       {
-        message: 'should convert markdown links to slack format',
-        input: 'This is [link text](https://example.com)',
-        expected: 'This is <https://example.com|link text>'
+        message: 'should convert links to numbered references',
+        input: '[link text](https://example.com)',
+        expected: 'link text[1]\n\n[1] https://example.com'
       },
       {
-        message: 'should handle links with spaces in text',
-        input: '[Link with spaces](https://example.com)',
-        expected: '<https://example.com|Link with spaces>'
+        message: 'should reuse same number for duplicate URLs',
+        input: '[first](https://example.com) and [second](https://example.com)',
+        expected: 'first[1] and second[1]\n\n[1] https://example.com'
       },
       {
-        message: 'should handle multiple links',
-        input: '[First](https://first.com) and [second](https://second.com)',
-        expected: '<https://first.com|First> and <https://second.com|second>'
+        message: 'should keep empty link text as angle bracket format',
+        input: '[](https://example.com)',
+        expected: '<https://example.com>'
+      },
+      {
+        message: 'should handle multiple links with different URLs',
+        input: '[first link](https://first.com) and [second link](https://second.com)',
+        expected: 'first link[1] and second link[2]\n\n[1] https://first.com\n[2] https://second.com'
       },
       {
         message: 'should handle link at start of line',
         input: '[Start](https://start.com) link',
-        expected: '<https://start.com|Start> link'
+        expected: 'Start[1] link\n\n[1] https://start.com'
       },
       {
         message: 'should handle link at end of line',
         input: 'End with [link](https://end.com)',
-        expected: 'End with <https://end.com|link>'
+        expected: 'End with link[1]\n\n[1] https://end.com'
       },
       {
-        message: 'should handle empty link text',
-        input: '[](/empty)',
-        expected: '</empty>'
+        message: 'should handle links with spaces in text',
+        input: '[Link with spaces](https://example.com)',
+        expected: 'Link with spaces[1]\n\n[1] https://example.com'
       },
       {
-        message: 'should handle complex URLs',
-        input: '[API](https://api.example.com/v1/users/123?query=test)',
-        expected: '<https://api.example.com/v1/users/123?query=test|API>'
+        message: 'should handle link in middle of text with surrounding content',
+        input: 'See the [documentation](https://docs.example.com) for details',
+        expected: 'See the documentation[1] for details\n\n[1] https://docs.example.com'
+      },
+      {
+        message: 'should handle multiple links on same line',
+        input: '[Google](https://google.com) and [GitHub](https://github.com)',
+        expected: 'Google[1] and GitHub[2]\n\n[1] https://google.com\n[2] https://github.com'
       }
     ])('$message', ({ input, expected }) => {
       expect(slackify(input)).toBe(expected);
@@ -245,7 +275,7 @@ describe('slackify', () => {
       {
         message: 'should handle table with links',
         input: '| Name | Link |\n|------|------|\n| Site | [Google](https://google.com) |',
-        expected: '```\n| Name | Link |\n|------|------|\n| Site | <https://google.com|Google> |\n```'
+        expected: '```\n| Name | Link |\n|------|------|\n| Site | Google[1] |\n```\n\n[1] https://google.com'
       },
       {
         message: 'should preserve empty lines around tables',
@@ -287,7 +317,7 @@ describe('slackify', () => {
       {
         message: 'should handle mixed content with multiple formatting types',
         input: '# Title\n\nThis has **bold** and *italic* and [links](http://example.com)\n\n| Name | Link |\n|------|------|\n| Site | [Example](http://example.com) |',
-        expected: '*Title*\n\nThis has *bold* and _italic_ and <http://example.com|links>\n\n```\n| Name | Link |\n|------|------|\n| Site | <http://example.com|Example> |\n```'
+        expected: '*Title*\n\nThis has *bold* and _italic_ and links[1]\n\n```\n| Name | Link |\n|------|------|\n| Site | Example[1] |\n```\n\n[1] http://example.com'
       },
       {
         message: 'should handle nested formatting in headings',
