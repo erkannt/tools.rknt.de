@@ -325,6 +325,26 @@ describe('slackify', () => {
         expected: '- First item\n- Second item\n\n1. Numbered item\n2. Another numbered'
       },
       {
+        message: 'should convert leading tabs to spaces in unordered list items',
+        input: '- First item\n\t- Nested item',
+        expected: '- First item\n  - Nested item'
+      },
+      {
+        message: 'should convert leading tabs to spaces in ordered list items',
+        input: '1. First item\n\t2. Nested item',
+        expected: '1. First item\n  2. Nested item'
+      },
+      {
+        message: 'should convert 4-space indentation to 2 spaces in nested unordered lists',
+        input: '- First item\n    - Nested item',
+        expected: '- First item\n  - Nested item'
+      },
+      {
+        message: 'should convert 4-space indentation to 2 spaces in nested ordered lists',
+        input: '1. First item\n    2. Nested item',
+        expected: '1. First item\n  2. Nested item'
+      },
+      {
         message: 'should handle blockquotes',
         input: '> This is a quote\n> That continues',
         expected: '> This is a quote\n> That continues'

@@ -1,4 +1,31 @@
 /**
+ * Check if a line is a list item (unordered or ordered)
+ */
+function isListItem(line: string): boolean {
+  const trimmed = line.trimStart();
+  const unorderedPattern = /^[-*+]\s/;
+  const orderedPattern = /^\d+\.\s/;
+  if (unorderedPattern.test(trimmed) || orderedPattern.test(trimmed)) {
+    return true;
+  }
+  const spaceIndentedPattern = /^(\s{4,})([-*+]|\d+\.)\s/;
+  return spaceIndentedPattern.test(line);
+}
+
+/**
+ * Convert leading tabs to spaces for list items (2 spaces per tab)
+ * Also convert 4+ leading spaces to 2 spaces for nested list items
+ */
+function processListItem(line: string): string {
+  if (!isListItem(line)) {
+    return line;
+  }
+  let processed = line.replace(/^\t+/g, (tabs) => "  ".repeat(tabs.length));
+  processed = processed.replace(/^(\s{4})([-*+]|\d+\.)\s/, "  $2 ");
+  return processed;
+}
+
+/**
  * Convert markdown headings to Slack bold format
  */
 function processHeading(line: string): string | null {
@@ -102,7 +129,7 @@ export const slackify = (input: string): string => {
     } else {
       // Process regular line
       let processedLine = line;
-      
+
       // Handle headings first
       const headingResult = processHeading(processedLine);
       if (headingResult) {
@@ -110,14 +137,17 @@ export const slackify = (input: string): string => {
       } else {
         // Store original line for formatting context checks
         const originalLine = processedLine;
-        
+
+        // Convert leading tabs to spaces for list items
+        processedLine = processListItem(processedLine);
+
         // Convert links
         processedLine = processLinks(processedLine);
-        
+
         // Convert formatting (bold/italic)
         processedLine = processFormatting(processedLine, originalLine);
       }
-      
+
       processedLines.push(processedLine);
     }
   }
