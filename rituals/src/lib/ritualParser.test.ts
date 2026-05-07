@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { parseDuration, renderRitualLines } from "../ritualParser";
+import { parseDuration, renderRitualLines } from "./ritualParser";
 
 describe("parseDuration", () => {
   it("returns null for content without trailing number", () => {

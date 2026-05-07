@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { encodeRituals, decodeRituals } from "../shareCodec";
-import type { Ritual } from "../types";
+import { encodeRituals, decodeRituals } from "./shareCodec";
+import type { Ritual } from "./types";
 
 describe("shareCodec round-trip", () => {
   it("encodes and decodes a single ritual", async () => {
