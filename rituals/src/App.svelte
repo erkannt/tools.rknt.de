@@ -30,6 +30,12 @@
   let importData = $state<Ritual[]>([]);
   let selectedForImport = $state<Set<string>>(new Set());
 
+  let checkedItems = $state<Set<number>>(new Set());
+  let countdown: { index: number; duration: number; remaining: number } | null = $state(null);
+  let countdownInterval: number | null = $state(null);
+
+  let previousViewedRitualId: string | null = null;
+
   function parseUrl(searchParams: URLSearchParams): {
     view: typeof view;
     id: string | null;
@@ -62,7 +68,12 @@
     const { view: urlView, id, importData: urlImportData } = parseUrl(params);
     view = urlView;
     if (urlView === "view" && id) {
-      currentRitual = rituals.current.find((r: Ritual) => r.id === id) || null;
+      const ritual = rituals.current.find((r: Ritual) => r.id === id) || null;
+      if (ritual && ritual.id !== previousViewedRitualId) {
+        resetView();
+        previousViewedRitualId = ritual.id;
+      }
+      currentRitual = ritual;
     } else if (urlView === "edit" && id) {
       editingId = id;
       const ritual = rituals.current.find((r: Ritual) => r.id === id) || null;
@@ -185,6 +196,10 @@
   }
 
   function viewRitual(ritual: Ritual) {
+    if (ritual.id !== previousViewedRitualId) {
+      resetView();
+      previousViewedRitualId = ritual.id;
+    }
     currentRitual = ritual;
     view = "view";
     pushState(`/?view=view&id=${ritual.id}`);
@@ -294,11 +309,93 @@
     goToHome();
   }
 
+  function parseDuration(content: string): number | null {
+    const match = content.trim().match(/(\d+)\s*$/);
+    return match ? parseInt(match[1], 10) : null;
+  }
+
+  function getDisplayContent(content: string): string {
+    return content.replace(/\s*\d+\s*$/, '').trimEnd();
+  }
+
+  function startCountdown(index: number, duration: number) {
+    if (countdownInterval) {
+      clearInterval(countdownInterval);
+    }
+    countdown = { index, duration, remaining: duration };
+    countdownInterval = setInterval(() => {
+      if (countdown && countdown.remaining > 0) {
+        countdown.remaining--;
+        if (countdown.remaining === 0) {
+          clearInterval(countdownInterval!);
+          countdownInterval = null;
+        }
+      }
+    }, 1000) as unknown as number;
+  }
+
+  function clearCountdown() {
+    if (countdownInterval) {
+      clearInterval(countdownInterval);
+      countdownInterval = null;
+    }
+    countdown = null;
+  }
+
+  function toggleItem(index: number) {
+    const newSet = new Set(checkedItems);
+    if (newSet.has(index)) {
+      newSet.delete(index);
+    } else {
+      newSet.add(index);
+    }
+    checkedItems = newSet;
+
+    // Clear countdown if this item was checked
+    if (countdown && newSet.has(index)) {
+      clearCountdown();
+    }
+
+    // Check if a new countdown should start
+    checkAndStartCountdown();
+  }
+
+  function checkAndStartCountdown() {
+    const lines = renderRitualLines(currentRitual?.markdown || '');
+    console.log('lines:', lines.map(l => ({ index: l.index, type: l.type, duration: l.duration })));
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      if (line.type === 'checkbox' && line.duration !== null) {
+        let allAboveChecked = true;
+        for (let j = 0; j < i; j++) {
+          const aboveLine = lines[j];
+          if (aboveLine.type === 'checkbox' && !checkedItems.has(aboveLine.index)) {
+            allAboveChecked = false;
+            break;
+          }
+        }
+        const thisChecked = checkedItems.has(line.index);
+        if (allAboveChecked && !thisChecked) {
+          startCountdown(line.index, line.duration!);
+          return;
+        }
+      }
+    }
+    if (countdown && !checkedItems.has(countdown.index)) {
+      clearCountdown();
+    }
+  }
+
+  function resetView() {
+    checkedItems = new Set();
+    clearCountdown();
+  }
+
   function renderRitualLines(
     content: string,
-  ): Array<{ type: "checkbox" | "pre"; content: string; index: number }> {
+  ): Array<{ type: "checkbox" | "pre"; content: string; displayContent: string; duration: number | null; index: number }> {
     const lines = content.split("\n").filter((line) => line.trim() !== "");
-    const result: Array<{ type: "checkbox" | "pre"; content: string; index: number }> = [];
+    const result: Array<{ type: "checkbox" | "pre"; content: string; displayContent: string; duration: number | null; index: number }> = [];
     let inPreBlock = false;
     let preContent = "";
     let checkboxCount = 0;
@@ -313,7 +410,8 @@
       } else if (inPreBlock) {
         preContent += line + "\n";
       } else {
-        result.push({ type: "checkbox", content: line, index: checkboxCount++ });
+        const duration = parseDuration(line);
+        result.push({ type: "checkbox", content: line, displayContent: getDisplayContent(line), duration, index: checkboxCount++ });
       }
     }
 
@@ -369,7 +467,8 @@
           <p>
             each line becomes a checkbox item<br />
             if you add a line with only <code>---</code> everything below it will
-            appear as is
+            appear as is<br />
+            lines ending with a number (e.g. <code>breathe 60</code>) trigger a countdown timer
           </p>
         </details>
       </div>
@@ -398,13 +497,21 @@
       >
     </nav>
     <h1>{currentRitual.name}</h1>
+    {#if countdown}
+      <div class="countdown-bar">{countdown.remaining}s</div>
+    {/if}
     <div class="rendered-ritual">
       {#each renderRitualLines(currentRitual.markdown) as line (line.index)}
         {#if line.type === "checkbox"}
           <ul>
             <li>
-              <input type="checkbox" id="cb-{line.index}" />
-              <label for="cb-{line.index}">{line.content}</label>
+              <input
+                type="checkbox"
+                id="cb-{line.index}"
+                checked={checkedItems.has(line.index)}
+                onchange={() => toggleItem(line.index)}
+              />
+              <label for="cb-{line.index}">{line.displayContent}</label>
             </li>
           </ul>
         {:else if line.type === "pre"}
@@ -613,6 +720,16 @@
     white-space: pre-wrap;
     word-wrap: break-word;
     font-size: var(--step-1);
+  }
+
+  .countdown-bar {
+    background: cornsilk;
+    padding: var(--space-m);
+    text-align: center;
+    font-size: var(--step-3);
+    font-weight: bold;
+    margin-block-end: var(--space-l);
+    border-radius: 4px;
   }
 
   code {
