@@ -1,8 +1,9 @@
 <script lang="ts">
   import { LocalStorage } from "./lib/localStorage.svelte";
   import type { Ritual } from "./lib/types";
-  import { renderRitualLines, parseDuration } from "./lib/ritualParser";
+  import { renderRitualLines } from "./lib/ritualParser";
   import { encodeRituals, decodeRituals } from "./lib/shareCodec";
+  import { CountdownService } from "./lib/countdown";
 
   // Base path for subdirectory deployments (e.g., /rituals)
   const BASE_PATH = "/rituals";
@@ -28,39 +29,14 @@
   let selectedForImport = $state<Set<string>>(new Set());
 
   let checkedItems = $state<Set<number>>(new Set());
-  let countdown: { index: number; duration: number; remaining: number } | null =
-    $state(null);
-  let countdownInterval: number | null = $state(null);
+  let countdown = $state<{ index: number; duration: number; remaining: number } | null>(null);
 
   let previousViewedRitualId: string | null = null;
 
-  // Audio for countdown notification
-  let audioCtx: AudioContext | null = null;
-
-  function playBeep(duration: number) {
-    if (!audioCtx) return;
-    if (audioCtx.state === "suspended") {
-      audioCtx.resume();
-    }
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    osc.connect(gain);
-    gain.connect(audioCtx.destination);
-    osc.frequency.value = 880;
-    osc.type = "sine";
-    gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration / 1000);
-    osc.start();
-    osc.stop(audioCtx.currentTime + duration / 1000);
-  }
-
-  function initAudio(markdown: string) {
-    const lines = renderRitualLines(markdown);
-    const hasTimer = lines.some((l) => l.type === "checkbox" && l.duration !== null);
-    if (hasTimer && !audioCtx) {
-      audioCtx = new AudioContext();
-    }
-  }
+  const countdownService = new CountdownService(
+    () => new AudioContext(),
+    (state) => { countdown = state; },
+  );
 
   function parseUrl(searchParams: URLSearchParams): {
     view: typeof view;
@@ -275,39 +251,6 @@
     goToHome();
   }
 
-  function startCountdown(index: number, duration: number) {
-    if (countdownInterval) {
-      clearInterval(countdownInterval);
-    }
-    countdown = { index, duration, remaining: duration };
-    countdownInterval = setInterval(() => {
-      if (countdown && countdown.remaining > 0) {
-        const newRemaining = countdown.remaining - 1;
-        countdown.remaining = newRemaining;
-
-        // Play beeps for countdown notification
-        if (newRemaining === 2 || newRemaining === 1) {
-          playBeep(100);
-        } else if (newRemaining === 0) {
-          playBeep(400);
-        }
-
-        if (newRemaining === 0) {
-          clearInterval(countdownInterval!);
-          countdownInterval = null;
-        }
-      }
-    }, 1000) as unknown as number;
-  }
-
-  function clearCountdown() {
-    if (countdownInterval) {
-      clearInterval(countdownInterval);
-      countdownInterval = null;
-    }
-    countdown = null;
-  }
-
   function toggleItem(index: number) {
     const newSet = new Set(checkedItems);
     if (newSet.has(index)) {
@@ -319,7 +262,7 @@
 
     // Clear countdown if this item was checked
     if (countdown && newSet.has(index)) {
-      clearCountdown();
+      countdownService.clear();
     }
 
     // Check if a new countdown should start
@@ -352,21 +295,22 @@
         }
         const thisChecked = checkedItems.has(line.index);
         if (allAboveChecked && !thisChecked) {
-          startCountdown(line.index, line.duration!);
+          countdownService.start(line.index, line.duration!);
           return;
         }
       }
     }
     if (countdown && !checkedItems.has(countdown.index)) {
-      clearCountdown();
+      countdownService.clear();
     }
   }
 
   function resetView() {
     checkedItems = new Set();
-    clearCountdown();
+    countdownService.clear();
     if (currentRitual) {
-      initAudio(currentRitual.markdown);
+      const lines = renderRitualLines(currentRitual.markdown);
+      countdownService.initAudio(lines.some((l) => l.type === "checkbox" && l.duration !== null));
     }
   }
 
