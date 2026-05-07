@@ -9,8 +9,15 @@
   // Base path for subdirectory deployments (e.g., /rituals)
   const BASE_PATH = "/rituals";
 
+  // ── Stores & Services ─────────────────────────────────────────────
   const ritualStore = createRitualStore();
   const router = createRouter(syncFromUrl);
+  const countdownService = new CountdownService(
+    () => new AudioContext(),
+    (state) => { countdown = state; },
+  );
+
+  // ── View State ────────────────────────────────────────────────────
   let view:
     | "home"
     | "add"
@@ -35,11 +42,7 @@
 
   let previousViewedRitualId: string | null = null;
 
-  const countdownService = new CountdownService(
-    () => new AudioContext(),
-    (state) => { countdown = state; },
-  );
-
+  // ── Routing ───────────────────────────────────────────────────────
   function syncFromUrl() {
     const route = parseUrl(window.location.search);
     view = route.view;
@@ -81,6 +84,7 @@
     });
   }
 
+  // ── PWA Install ───────────────────────────────────────────────────
   async function handleInstall() {
     if (deferredPrompt) {
       deferredPrompt.prompt();
@@ -89,6 +93,7 @@
     }
   }
 
+  // ── Navigation ────────────────────────────────────────────────────
   function goToAdd() {
     name = "";
     markdown = "";
@@ -200,6 +205,7 @@
     goToHome();
   }
 
+  // ── Countdown / Checkbox Logic ────────────────────────────────────
   function toggleItem(index: number) {
     const newSet = new Set(checkedItems);
     if (newSet.has(index)) {

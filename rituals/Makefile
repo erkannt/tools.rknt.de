@@ -21,6 +21,10 @@ test: node_modules
 .PHONY: check
 check: svelte-check test
 
+.PHONY: e2e
+e2e:
+	./scripts/e2e.sh
+
 node_modules: package.json pnpm-lock.yaml
 	pnpm install --frozen-lockfile
 
