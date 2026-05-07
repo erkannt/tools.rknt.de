@@ -296,11 +296,12 @@
 
   function renderRitualLines(
     content: string,
-  ): Array<{ type: "checkbox" | "pre"; content: string }> {
+  ): Array<{ type: "checkbox" | "pre"; content: string; index: number }> {
     const lines = content.split("\n").filter((line) => line.trim() !== "");
-    const result: Array<{ type: "checkbox" | "pre"; content: string }> = [];
+    const result: Array<{ type: "checkbox" | "pre"; content: string; index: number }> = [];
     let inPreBlock = false;
     let preContent = "";
+    let checkboxCount = 0;
 
     for (const line of lines) {
       if (line.trim() === "---") {
@@ -312,7 +313,7 @@
       } else if (inPreBlock) {
         preContent += line + "\n";
       } else {
-        result.push({ type: "checkbox", content: line });
+        result.push({ type: "checkbox", content: line, index: checkboxCount++ });
       }
     }
 
@@ -398,12 +399,12 @@
     </nav>
     <h1>{currentRitual.name}</h1>
     <div class="rendered-ritual">
-      {#each renderRitualLines(currentRitual.markdown) as line (line)}
+      {#each renderRitualLines(currentRitual.markdown) as line (line.index)}
         {#if line.type === "checkbox"}
           <ul>
             <li>
-              <input type="checkbox" id="cb-{line.content}" />
-              <label for="cb-{line.content}">{line.content}</label>
+              <input type="checkbox" id="cb-{line.index}" />
+              <label for="cb-{line.index}">{line.content}</label>
             </li>
           </ul>
         {:else if line.type === "pre"}
