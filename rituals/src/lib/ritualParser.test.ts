@@ -7,6 +7,12 @@ describe("parseDuration", () => {
     expect(parseDuration("step one")).toBeNull();
   });
 
+  it("returns null when number is not preceded by whitespace", () => {
+    expect(parseDuration("foo60")).toBeNull();
+    expect(parseDuration("foo 5+5")).toBeNull();
+    expect(parseDuration("foo 60bar")).toBeNull();
+  });
+
   it("parses trailing number as seconds", () => {
     expect(parseDuration("breathe 60")).toBe(60);
     expect(parseDuration("hold 10")).toBe(10);
@@ -20,8 +26,9 @@ describe("parseDuration", () => {
     expect(parseDuration("wait 120")).toBe(120);
   });
 
-  it("returns the last number only", () => {
+  it("returns the last space-separated number only", () => {
     expect(parseDuration("step 2 3")).toBe(3);
+    expect(parseDuration("hold for 10 then 20")).toBe(20);
   });
 });
 

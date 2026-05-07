@@ -36,10 +36,12 @@ uvx rodney start --local
 
 echo "→ Opening app..."
 uvx rodney open http://127.0.0.1:8080/rituals/
+uvx rodney wait 'h1'
 
 echo "→ Clearing localStorage..."
 uvx rodney js 'localStorage.clear()'
-uvx rodney reload
+uvx rodney open http://127.0.0.1:8080/rituals/
+uvx rodney wait 'h1'
 
 echo "→ Creating ritual with timer..."
 uvx rodney click '.actions a:last-child'

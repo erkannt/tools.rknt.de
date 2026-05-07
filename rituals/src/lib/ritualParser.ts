@@ -1,7 +1,7 @@
 import type { RitualLine } from "./types";
 
 export function parseDuration(content: string): number | null {
-  const match = content.trim().match(/(\d+)\s*$/);
+  const match = content.trim().match(/(?:^|\s)(\d+)\s*$/);
   return match ? parseInt(match[1], 10) : null;
 }
 
