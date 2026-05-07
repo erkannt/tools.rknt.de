@@ -14,8 +14,12 @@ prod: node_modules build
 svelte-check: node_modules
 	npx svelte-check --tsconfig ./tsconfig.app.json && npx tsc -p tsconfig.node.json
 
+.PHONY: test
+test: node_modules
+	pnpm test
+
 .PHONY: check
-check: svelte-check
+check: svelte-check test
 
 node_modules: package.json pnpm-lock.yaml
 	pnpm install --frozen-lockfile
