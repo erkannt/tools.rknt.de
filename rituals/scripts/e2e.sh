@@ -73,6 +73,42 @@ echo "→ Asserting audio was played..."
 uvx rodney assert 'window.oscCreated'
 echo "✓ Countdown audio test passed"
 
+echo "→ Testing checkbox reset on navigation away..."
+uvx rodney click 'nav a:first-child'
+uvx rodney wait 'h1'
+
+# Create a ritual with two checkboxes
+uvx rodney click '.actions a:last-child'
+uvx rodney wait '#name-input'
+uvx rodney input '#name-input' 'Reset Test'
+uvx rodney js $'(function(el){ el.value="item A\\nitem B"; el.dispatchEvent(new Event("input",{bubbles:true})); return el.value })(document.querySelector("#text"))'
+uvx rodney click 'button[type="submit"]'
+
+# Open ritual and check both boxes
+uvx rodney click '.rituals-button-list a:last-child'
+uvx rodney click '#cb-0'
+uvx rodney click '#cb-1'
+
+# Verify both are checked
+CHECKED=$(uvx rodney js 'document.querySelectorAll("input[type=checkbox]:checked").length')
+if [ "$CHECKED" != "2" ]; then
+  echo "✗ Expected 2 checked boxes, got $CHECKED"
+  exit 1
+fi
+
+# Navigate to home and back
+uvx rodney click 'nav a:first-child'
+uvx rodney wait 'h1'
+uvx rodney click '.rituals-button-list a:last-child'
+
+# Verify both are unchecked after returning
+CHECKED=$(uvx rodney js 'document.querySelectorAll("input[type=checkbox]:checked").length')
+if [ "$CHECKED" != "0" ]; then
+  echo "✗ Expected 0 checked boxes after returning, got $CHECKED"
+  exit 1
+fi
+echo "✓ Checkbox reset test passed"
+
 echo "→ Testing share flow..."
 uvx rodney click 'nav a:first-child'
 uvx rodney click '.actions a:first-child'

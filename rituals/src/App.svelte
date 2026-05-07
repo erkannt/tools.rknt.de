@@ -40,19 +40,19 @@
   let checkedItems = $state<Set<number>>(new Set());
   let countdown = $state<{ index: number; duration: number; remaining: number } | null>(null);
 
-  let previousViewedRitualId: string | null = null;
-
   // ── Routing ───────────────────────────────────────────────────────
   function syncFromUrl() {
     const route = parseUrl(window.location.search);
     view = route.view;
+    if (route.view !== "view") {
+      checkedItems = new Set();
+      countdownService.clear();
+      currentRitual = null;
+    }
     if (route.view === "view" && route.id) {
       const ritual = ritualStore.findById(route.id);
       currentRitual = ritual;
-      if (ritual && ritual.id !== previousViewedRitualId) {
-        resetView();
-        previousViewedRitualId = ritual.id;
-      }
+      resetView();
     } else if (route.view === "edit" && route.id) {
       editingId = route.id;
       const ritual = ritualStore.findById(route.id);
@@ -103,6 +103,8 @@
   }
 
   function goToHome() {
+    checkedItems = new Set();
+    countdownService.clear();
     view = "home";
     currentRitual = null;
     router.push("/");
@@ -110,10 +112,7 @@
 
   function viewRitual(ritual: Ritual) {
     currentRitual = ritual;
-    if (ritual.id !== previousViewedRitualId) {
-      resetView();
-      previousViewedRitualId = ritual.id;
-    }
+    resetView();
     view = "view";
     router.push(`/?view=view&id=${ritual.id}`);
   }
@@ -133,6 +132,8 @@
 
   function goToEdit() {
     if (currentRitual) {
+      checkedItems = new Set();
+      countdownService.clear();
       name = currentRitual.name;
       markdown = currentRitual.markdown;
       editingId = currentRitual.id;
