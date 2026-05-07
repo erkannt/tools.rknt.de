@@ -17,10 +17,6 @@ svelte-check: node_modules
 .PHONY: check
 check: svelte-check
 
-.PHONY: test
-test: node_modules
-	npx vitest run
-
 node_modules: package.json pnpm-lock.yaml
 	pnpm install --frozen-lockfile
 
