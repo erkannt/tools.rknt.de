@@ -37,6 +37,34 @@
 
   let previousViewedRitualId: string | null = null;
 
+  // Audio for countdown notification
+  let audioCtx: AudioContext | null = null;
+
+  function playBeep(duration: number) {
+    if (!audioCtx) return;
+    if (audioCtx.state === "suspended") {
+      audioCtx.resume();
+    }
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.frequency.value = 880;
+    osc.type = "sine";
+    gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration / 1000);
+    osc.start();
+    osc.stop(audioCtx.currentTime + duration / 1000);
+  }
+
+  function initAudio(markdown: string) {
+    const lines = renderRitualLines(markdown);
+    const hasTimer = lines.some((l) => l.type === "checkbox" && l.duration !== null);
+    if (hasTimer && !audioCtx) {
+      audioCtx = new AudioContext();
+    }
+  }
+
   function parseUrl(searchParams: URLSearchParams): {
     view: typeof view;
     id: string | null;
@@ -70,11 +98,11 @@
     view = urlView;
     if (urlView === "view" && id) {
       const ritual = rituals.current.find((r: Ritual) => r.id === id) || null;
+      currentRitual = ritual;
       if (ritual && ritual.id !== previousViewedRitualId) {
         resetView();
         previousViewedRitualId = ritual.id;
       }
-      currentRitual = ritual;
     } else if (urlView === "edit" && id) {
       editingId = id;
       const ritual = rituals.current.find((r: Ritual) => r.id === id) || null;
@@ -197,11 +225,11 @@
   }
 
   function viewRitual(ritual: Ritual) {
+    currentRitual = ritual;
     if (ritual.id !== previousViewedRitualId) {
       resetView();
       previousViewedRitualId = ritual.id;
     }
-    currentRitual = ritual;
     view = "view";
     pushState(`/?view=view&id=${ritual.id}`);
   }
@@ -322,8 +350,17 @@
     countdown = { index, duration, remaining: duration };
     countdownInterval = setInterval(() => {
       if (countdown && countdown.remaining > 0) {
-        countdown.remaining--;
-        if (countdown.remaining === 0) {
+        const newRemaining = countdown.remaining - 1;
+        countdown.remaining = newRemaining;
+
+        // Play beeps for countdown notification
+        if (newRemaining === 2 || newRemaining === 1) {
+          playBeep(100);
+        } else if (newRemaining === 0) {
+          playBeep(400);
+        }
+
+        if (newRemaining === 0) {
           clearInterval(countdownInterval!);
           countdownInterval = null;
         }
@@ -396,6 +433,9 @@
   function resetView() {
     checkedItems = new Set();
     clearCountdown();
+    if (currentRitual) {
+      initAudio(currentRitual.markdown);
+    }
   }
 
   function renderRitualLines(
