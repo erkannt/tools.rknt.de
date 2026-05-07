@@ -1,14 +1,16 @@
 <script lang="ts">
-  import { LocalStorage } from "./lib/localStorage.svelte";
   import type { Ritual } from "./lib/types";
   import { renderRitualLines } from "./lib/ritualParser";
   import { encodeRituals, decodeRituals } from "./lib/shareCodec";
   import { CountdownService } from "./lib/countdown";
+  import { parseUrl, createRouter } from "./lib/router";
+  import { createRitualStore } from "./stores/ritualStore";
 
   // Base path for subdirectory deployments (e.g., /rituals)
   const BASE_PATH = "/rituals";
 
-  let rituals = new LocalStorage<Ritual[]>("rituals", []);
+  const ritualStore = createRitualStore();
+  const router = createRouter(syncFromUrl);
   let view:
     | "home"
     | "add"
@@ -38,68 +40,32 @@
     (state) => { countdown = state; },
   );
 
-  function parseUrl(searchParams: URLSearchParams): {
-    view: typeof view;
-    id: string | null;
-    importData?: Ritual[];
-  } {
-    const viewParam = searchParams.get("view");
-    const id = searchParams.get("id");
-    const importParam = searchParams.get("data");
-
-    if (viewParam === "add") {
-      return { view: "add", id: null };
-    }
-    if (viewParam === "share") {
-      return { view: "share", id: null };
-    }
-    if (viewParam === "import" && importParam) {
-      return { view: "import", id: null, importData: [] };
-    }
-    if (viewParam === "view" && id) {
-      return { view: "view", id };
-    }
-    if (viewParam === "edit" && id) {
-      return { view: "edit", id };
-    }
-    return { view: "home", id: null };
-  }
-
   function syncFromUrl() {
-    const params = new URLSearchParams(window.location.search);
-    const { view: urlView, id, importData: urlImportData } = parseUrl(params);
-    view = urlView;
-    if (urlView === "view" && id) {
-      const ritual = rituals.current.find((r: Ritual) => r.id === id) || null;
+    const route = parseUrl(window.location.search);
+    view = route.view;
+    if (route.view === "view" && route.id) {
+      const ritual = ritualStore.findById(route.id);
       currentRitual = ritual;
       if (ritual && ritual.id !== previousViewedRitualId) {
         resetView();
         previousViewedRitualId = ritual.id;
       }
-    } else if (urlView === "edit" && id) {
-      editingId = id;
-      const ritual = rituals.current.find((r: Ritual) => r.id === id) || null;
+    } else if (route.view === "edit" && route.id) {
+      editingId = route.id;
+      const ritual = ritualStore.findById(route.id);
       if (ritual) {
         name = ritual.name;
         markdown = ritual.markdown;
       }
-    } else if (urlView === "import" && urlImportData !== undefined) {
-      const encoded = params.get("data");
-      if (encoded) {
-        decodeRituals(encoded).then((decoded) => {
-          importData = decoded;
-          selectedForImport = new Set();
-        });
-      }
+    } else if (route.view === "import" && route.data) {
+      decodeRituals(route.data).then((decoded) => {
+        importData = decoded;
+        selectedForImport = new Set();
+      });
     }
   }
 
-  function pushState(path: string) {
-    window.history.pushState({}, "", BASE_PATH + path);
-  }
-
   if (typeof window !== "undefined") {
-    window.addEventListener("popstate", syncFromUrl);
     syncFromUrl();
 
     window.addEventListener("beforeinstallprompt", (e: Event) => {
@@ -128,13 +94,13 @@
     markdown = "";
     editingId = null;
     view = "add";
-    pushState("/?view=add");
+    router.push("/?view=add");
   }
 
   function goToHome() {
     view = "home";
     currentRitual = null;
-    pushState("/");
+    router.push("/");
   }
 
   function viewRitual(ritual: Ritual) {
@@ -144,24 +110,20 @@
       previousViewedRitualId = ritual.id;
     }
     view = "view";
-    pushState(`/?view=view&id=${ritual.id}`);
+    router.push(`/?view=view&id=${ritual.id}`);
   }
 
   function saveRitual() {
     if (editingId) {
-      const updated = rituals.current.map((r: Ritual) =>
-        r.id === editingId ? { ...r, name, markdown } : r,
-      );
-      rituals.current.length = 0;
-      rituals.current.push(...updated);
+      ritualStore.update(editingId, name, markdown);
     } else {
-      rituals.current.push({ id: crypto.randomUUID(), name, markdown });
+      ritualStore.add(name, markdown);
     }
     name = "";
     markdown = "";
     editingId = null;
     view = "home";
-    pushState("/");
+    router.push("/");
   }
 
   function goToEdit() {
@@ -170,30 +132,25 @@
       markdown = currentRitual.markdown;
       editingId = currentRitual.id;
       view = "edit";
-      pushState(`/?view=edit&id=${currentRitual.id}`);
+      router.push(`/?view=edit&id=${currentRitual.id}`);
     }
   }
 
   function deleteRitual() {
     if (editingId) {
-      const index = rituals.current.findIndex(
-        (r: Ritual) => r.id === editingId,
-      );
-      if (index !== -1) {
-        rituals.current.splice(index, 1);
-      }
+      ritualStore.remove(editingId);
       name = "";
       markdown = "";
       editingId = null;
       view = "home";
-      pushState("/");
+      router.push("/");
     }
   }
 
   function goToShare() {
     selectedForShare = new Set();
     view = "share";
-    pushState("/?view=share");
+    router.push("/?view=share");
   }
 
   function toggleShareSelection(id: string) {
@@ -207,7 +164,7 @@
   }
 
   async function copyShareLink() {
-    const selectedRituals = rituals.current.filter((r: Ritual) =>
+    const selectedRituals = ritualStore.current.filter((r: Ritual) =>
       selectedForShare.has(r.id),
     );
     const encoded = await encodeRituals(selectedRituals);
@@ -217,8 +174,7 @@
   }
 
   function getExistingRitualName(id: string): string | null {
-    const existing = rituals.current.find((r: Ritual) => r.id === id);
-    return existing ? existing.name : null;
+    return ritualStore.getExistingName(id);
   }
 
   function toggleImportSelection(id: string) {
@@ -234,14 +190,7 @@
   function importSelected() {
     for (const ritual of importData) {
       if (selectedForImport.has(ritual.id)) {
-        const index = rituals.current.findIndex(
-          (r: Ritual) => r.id === ritual.id,
-        );
-        if (index !== -1) {
-          rituals.current[index] = ritual;
-        } else {
-          rituals.current.push(ritual);
-        }
+        ritualStore.importRitual(ritual);
       }
     }
     goToHome();
@@ -419,9 +368,9 @@
     </div>
   {:else if view === "share"}
     <h1>share rituals</h1>
-    {#if rituals.current.length > 0}
+    {#if ritualStore.current.length > 0}
       <ul class="rituals-checkbox-list" role="list">
-        {#each rituals.current as ritual (ritual.id)}
+        {#each ritualStore.current as ritual (ritual.id)}
           <li>
             <input
               type="checkbox"
@@ -485,9 +434,9 @@
     <h1>sharable link copied to clipboard</h1>
     <button onclick={goToHome}>home</button>
   {:else}
-    {#if rituals.current.length > 0}
+    {#if ritualStore.current.length > 0}
       <ul class="rituals-button-list" role="list">
-        {#each rituals.current as ritual (ritual.id)}
+        {#each ritualStore.current as ritual (ritual.id)}
           <li>
             <a
               class="button"
