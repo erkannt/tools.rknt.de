@@ -31,7 +31,8 @@
   let selectedForImport = $state<Set<string>>(new Set());
 
   let checkedItems = $state<Set<number>>(new Set());
-  let countdown: { index: number; duration: number; remaining: number } | null = $state(null);
+  let countdown: { index: number; duration: number; remaining: number } | null =
+    $state(null);
   let countdownInterval: number | null = $state(null);
 
   let previousViewedRitualId: string | null = null;
@@ -314,10 +315,6 @@
     return match ? parseInt(match[1], 10) : null;
   }
 
-  function getDisplayContent(content: string): string {
-    return content.replace(/\s*\d+\s*$/, '').trimEnd();
-  }
-
   function startCountdown(index: number, duration: number) {
     if (countdownInterval) {
       clearInterval(countdownInterval);
@@ -361,15 +358,25 @@
   }
 
   function checkAndStartCountdown() {
-    const lines = renderRitualLines(currentRitual?.markdown || '');
-    console.log('lines:', lines.map(l => ({ index: l.index, type: l.type, duration: l.duration })));
+    const lines = renderRitualLines(currentRitual?.markdown || "");
+    console.log(
+      "lines:",
+      lines.map((l) => ({
+        index: l.index,
+        type: l.type,
+        duration: l.duration,
+      })),
+    );
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
-      if (line.type === 'checkbox' && line.duration !== null) {
+      if (line.type === "checkbox" && line.duration !== null) {
         let allAboveChecked = true;
         for (let j = 0; j < i; j++) {
           const aboveLine = lines[j];
-          if (aboveLine.type === 'checkbox' && !checkedItems.has(aboveLine.index)) {
+          if (
+            aboveLine.type === "checkbox" &&
+            !checkedItems.has(aboveLine.index)
+          ) {
             allAboveChecked = false;
             break;
           }
@@ -393,9 +400,19 @@
 
   function renderRitualLines(
     content: string,
-  ): Array<{ type: "checkbox" | "pre"; content: string; displayContent: string; duration: number | null; index: number }> {
+  ): Array<{
+    type: "checkbox" | "pre";
+    content: string;
+    duration: number | null;
+    index: number;
+  }> {
     const lines = content.split("\n").filter((line) => line.trim() !== "");
-    const result: Array<{ type: "checkbox" | "pre"; content: string; displayContent: string; duration: number | null; index: number }> = [];
+    const result: Array<{
+      type: "checkbox" | "pre";
+      content: string;
+      duration: number | null;
+      index: number;
+    }> = [];
     let inPreBlock = false;
     let preContent = "";
     let checkboxCount = 0;
@@ -411,7 +428,12 @@
         preContent += line + "\n";
       } else {
         const duration = parseDuration(line);
-        result.push({ type: "checkbox", content: line, displayContent: getDisplayContent(line), duration, index: checkboxCount++ });
+        result.push({
+          type: "checkbox",
+          content: line,
+          duration,
+          index: checkboxCount++,
+        });
       }
     }
 
@@ -466,9 +488,10 @@
           <summary>formatting tips</summary>
           <p>
             each line becomes a checkbox item<br />
-            if you add a line with only <code>---</code> everything below it will
-            appear as is<br />
-            lines ending with a number (e.g. <code>breathe 60</code>) trigger a countdown timer
+            if you add a line with only <code>---</code> everything below it
+            will appear as is<br />
+            lines ending with a number (e.g. <code>breathe 60</code>) start a
+            countdown timer when all items above are checked
           </p>
         </details>
       </div>
@@ -496,10 +519,15 @@
         }}>edit</a
       >
     </nav>
-    <h1>{currentRitual.name}</h1>
-    {#if countdown}
-      <div class="countdown-bar">{countdown.remaining}s</div>
-    {/if}
+    <h1 class="ritual-title">{currentRitual.name}</h1>
+    <div class="countdown-container">
+      <div
+        class="countdown-bar"
+        style="width: {countdown
+          ? (countdown.remaining / countdown.duration) * 100
+          : 0}%"
+      ></div>
+    </div>
     <div class="rendered-ritual">
       {#each renderRitualLines(currentRitual.markdown) as line (line.index)}
         {#if line.type === "checkbox"}
@@ -511,7 +539,7 @@
                 checked={checkedItems.has(line.index)}
                 onchange={() => toggleItem(line.index)}
               />
-              <label for="cb-{line.index}">{line.displayContent}</label>
+              <label for="cb-{line.index}">{line.content}</label>
             </li>
           </ul>
         {:else if line.type === "pre"}
@@ -642,6 +670,10 @@
     margin-block-end: var(--space-xl);
   }
 
+  .ritual-title {
+    margin-block-end: var(--space-l);
+  }
+
   .actions {
     display: flex;
     gap: var(--space-m);
@@ -722,14 +754,16 @@
     font-size: var(--step-1);
   }
 
-  .countdown-bar {
-    background: cornsilk;
-    padding: var(--space-m);
-    text-align: center;
-    font-size: var(--step-3);
-    font-weight: bold;
+  .countdown-container {
+    height: 2rem;
     margin-block-end: var(--space-l);
-    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .countdown-bar {
+    height: 100%;
+    background: cornsilk;
+    transition: width 0.2s ease-out;
   }
 
   code {
