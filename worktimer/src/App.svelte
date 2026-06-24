@@ -8,10 +8,10 @@
     updateEventAt,
     type WorkEvent,
   } from './events'
-  import { deriveSessions, elapsedToday, elapsedOnDay, validateEdit, type Session } from './sessions'
+  import { deriveSessions, validateEdit, type Session } from './sessions'
   import { generateSampleEvents } from './seed'
   import { parseHHMM, formatHHMM } from './time'
-  import { activeTargets, activeTargetEvent, dailyTarget, flexBudget, weekStartLocal, weeklyTarget } from './targets'
+  import { activeTargets, activeTargetEvent, dailyTarget, weekStartLocal, weeklyTarget } from './targets'
   import { WEEKDAYS } from './events'
 
   let events = $state<WorkEvent[]>(loadEvents())
@@ -23,47 +23,84 @@
   let editStopAnchor = $state(0)
   let editError = $state<string | null>(null)
 
+  const DAY = 24 * 3600_000
   const sessions = $derived(deriveSessions(events))
   const running = $derived(events.at(-1)?.type === 'WorkStarted')
-  const elapsedMs = $derived(elapsedToday(sessions, now))
-  const todayTargetMin = $derived(dailyTarget(events, startOfDayMs(now)))
+  const today = $derived(startOfDayMs(now))
+  const thisWeekStart = $derived(weekStartLocal(today))
+
+  // Per-day worked time from completed sessions and from running-session
+  // chunks on days strictly before today. Recomputes on events change or
+  // midnight rollover, not on each 1Hz tick.
+  const workedPerDay = $derived.by(() => {
+    const m = new Map<number, number>()
+    for (const s of sessions) {
+      const end = s.stoppedAt ?? today
+      let d = startOfDayMs(s.startedAt)
+      while (d < end) {
+        const dayEnd = d + DAY
+        const overlap = Math.min(end, dayEnd) - Math.max(s.startedAt, d)
+        if (overlap > 0) m.set(d, (m.get(d) ?? 0) + overlap)
+        d = dayEnd
+      }
+    }
+    return m
+  })
+
+  // Sessions grouped by start day, newest-first within each day.
+  const sessionsByDay = $derived.by(() => {
+    const m = new Map<number, Session[]>()
+    for (const s of sessions) {
+      const d = startOfDayMs(s.startedAt)
+      const arr = m.get(d) ?? []
+      arr.push(s)
+      m.set(d, arr)
+    }
+    for (const arr of m.values()) arr.sort((a, b) => b.startedAt - a.startedAt)
+    return m
+  })
+
+  const runningSession = $derived(sessions.find(s => s.stoppedAt === null) ?? null)
+
+  const elapsedMs = $derived.by(() => {
+    let total = workedPerDay.get(today) ?? 0
+    if (runningSession !== null && runningSession.startedAt < today + DAY) {
+      const tipStart = Math.max(runningSession.startedAt, today)
+      const overlap = Math.min(now, today + DAY) - tipStart
+      if (overlap > 0) total += overlap
+    }
+    return total
+  })
+
+  const todayTargetMin = $derived(dailyTarget(events, today))
   const todayDeltaMs = $derived(
     todayTargetMin === null ? null : elapsedMs - todayTargetMin * 60_000,
   )
-  const todaySessions = $derived(
-    [...sessions]
-      .filter(s => startOfDayMs(s.startedAt) === startOfDayMs(now))
-      .reverse(),
-  )
-
-  const DAY = 24 * 3600_000
-  const thisWeekStart = $derived(weekStartLocal(now))
+  const todaySessions = $derived(sessionsByDay.get(today) ?? [])
 
   type DayBlock = { dayStart: number; sessions: Session[]; total: number; delta: number | null }
 
+  // Static across the 1Hz tick: only depends on workedPerDay, sessionsByDay,
+  // events (for targets) and thisWeekStart/today (which only change at midnight).
   const pastDaysThisWeek = $derived.by<DayBlock[]>(() => {
-    const todayStart = startOfDayMs(now)
     const days: DayBlock[] = []
-    for (let d = thisWeekStart; d < todayStart; d += DAY) {
-      const daySessions = [...sessions]
-        .filter(s => startOfDayMs(s.startedAt) === d)
-        .reverse()
-      const total = elapsedOnDay(sessions, d, now)
+    for (let d = thisWeekStart; d < today; d += DAY) {
+      const total = workedPerDay.get(d) ?? 0
       const tgt = dailyTarget(events, d)
       const delta = tgt === null ? null : total - tgt * 60_000
-      days.push({ dayStart: d, sessions: daySessions, total, delta })
+      days.push({ dayStart: d, sessions: sessionsByDay.get(d) ?? [], total, delta })
     }
     return days.reverse()
   })
 
-  const weekTotalMs = $derived.by(() => {
+  const weekPastDaysTotal = $derived.by(() => {
     let sum = 0
-    const todayStart = startOfDayMs(now)
-    for (let d = thisWeekStart; d <= todayStart; d += DAY) {
-      sum += elapsedOnDay(sessions, d, now)
+    for (let d = thisWeekStart; d < today; d += DAY) {
+      sum += workedPerDay.get(d) ?? 0
     }
     return sum
   })
+  const weekTotalMs = $derived(weekPastDaysTotal + elapsedMs)
 
   const weekTargetInfo = $derived(weeklyTarget(events, thisWeekStart))
   const weekDeltaMs = $derived(
@@ -96,7 +133,7 @@
     const blocks: WeekBlock[] = []
     for (const [ws, arr] of buckets) {
       let total = 0
-      for (let i = 0; i < 7; i++) total += elapsedOnDay(sessions, ws + i * DAY, now)
+      for (let i = 0; i < 7; i++) total += workedPerDay.get(ws + i * DAY) ?? 0
       const wt = weeklyTarget(events, ws)
       const delta = wt.hasAny ? total - wt.mins * 60_000 : null
       blocks.push({
@@ -108,10 +145,41 @@
     }
     return blocks.sort((a, b) => b.weekStart - a.weekStart)
   })
-  const budgetMs = $derived(flexBudget(events, now))
 
-  const currentTargets = $derived(activeTargets(events, startOfDayMs(now)))
-  const currentTargetEvent = $derived(activeTargetEvent(events, startOfDayMs(now)))
+  // Budget split into static-past and live-today parts so the per-second
+  // tick only re-derives the today contribution.
+  const flexAdjustmentsTotal = $derived.by(() => {
+    let total = 0
+    for (const ev of events) if (ev.type === 'FlexAdjusted') total += ev.deltaMs
+    return total
+  })
+  const budgetEarliestDay = $derived.by(() => {
+    let earliest = Infinity
+    for (const ev of events) {
+      if (ev.type === 'WorkTargetsSet' && ev.effectiveFrom < earliest) earliest = ev.effectiveFrom
+      if (ev.type === 'TargetOverride' && ev.startDay < earliest) earliest = ev.startDay
+    }
+    return earliest === Infinity ? null : startOfDayMs(earliest)
+  })
+  const budgetPast = $derived.by(() => {
+    let total = flexAdjustmentsTotal
+    if (budgetEarliestDay === null) return total
+    for (let d = budgetEarliestDay; d < today; d += DAY) {
+      const tgt = dailyTarget(events, d)
+      if (tgt === null) continue
+      const worked = workedPerDay.get(d) ?? 0
+      total += worked - tgt * 60_000
+    }
+    return total
+  })
+  const budgetMs = $derived.by(() => {
+    let total = budgetPast
+    if (todayTargetMin !== null) total += elapsedMs - todayTargetMin * 60_000
+    return total
+  })
+
+  const currentTargets = $derived(activeTargets(events, today))
+  const currentTargetEvent = $derived(activeTargetEvent(events, today))
   const targetsHistory = $derived(
     events
       .filter((e): e is Extract<WorkEvent, { type: 'WorkTargetsSet' }> => e.type === 'WorkTargetsSet')
