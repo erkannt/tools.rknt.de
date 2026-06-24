@@ -12,7 +12,7 @@ prod: node_modules
 
 .PHONY: check
 check: node_modules
-	npx svelte-check --tsconfig ./tsconfig.app.json && npx tsc -p tsconfig.node.json
+	npx svelte-check --tsconfig ./tsconfig.app.json && npx tsc -p tsconfig.node.json && npx vitest run
 
 node_modules: package.json pnpm-lock.yaml
 	pnpm install --frozen-lockfile
