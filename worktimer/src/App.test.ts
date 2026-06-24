@@ -76,7 +76,7 @@ describe('App', () => {
     expect(details.open).toBe(false)
   })
 
-  it('lists past days with |worked-target| > 2h in the Analysis section', () => {
+  it('lists past days with |worked-target| > 2h30m in the Analysis section', () => {
     vi.useFakeTimers()
     vi.setSystemTime(new Date(2026, 5, 24, 12, 0, 0)) // Wed
     try {
@@ -93,7 +93,7 @@ describe('App', () => {
           // Mon: worked 11h vs target 8h → +3h (outlier).
           { type: 'WorkStarted', id: 'a', at: monStart + 9 * 3600_000 },
           { type: 'WorkStopped', id: 'b', at: monStart + 20 * 3600_000 },
-          // Tue: worked 10h vs target 8h → +2h (NOT outlier — threshold is strictly >2h).
+          // Tue: worked 10h vs target 8h → +2h (NOT outlier — threshold is strictly >2h30m).
           { type: 'WorkStarted', id: 'c', at: tueStart + 9 * 3600_000 },
           { type: 'WorkStopped', id: 'd', at: tueStart + 19 * 3600_000 },
         ]),

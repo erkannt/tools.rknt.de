@@ -181,7 +181,7 @@
   type OutlierDay = { day: number; worked: number; targetMs: number; delta: number }
   const outlierDays = $derived.by<OutlierDay[]>(() => {
     if (budgetEarliestDay === null) return []
-    const threshold = 2 * 3600_000
+    const threshold = (2 * 60 + 30) * 60_000
     const days: OutlierDay[] = []
     for (let d = budgetEarliestDay; d < today; d = nextDay(d)) {
       const tgt = dailyTarget(events, d)
@@ -688,7 +688,7 @@
 <details>
   <summary>Analysis</summary>
   {#if outlierDays.length === 0}
-    <p>No past days with |delta| above 02:00.</p>
+    <p>No past days with |delta| above 02:30.</p>
   {:else}
     <ul data-testid="analysis-outliers">
       {#each outlierDays as d (d.day)}
