@@ -112,6 +112,11 @@
 
   const currentTargets = $derived(activeTargets(events, startOfDayMs(now)))
   const currentTargetEvent = $derived(activeTargetEvent(events, startOfDayMs(now)))
+  const targetsHistory = $derived(
+    events
+      .filter((e): e is Extract<WorkEvent, { type: 'WorkTargetsSet' }> => e.type === 'WorkTargetsSet')
+      .sort((a, b) => b.effectiveFrom - a.effectiveFrom),
+  )
   const adjustmentHistory = $derived(
     events
       .filter((e): e is Extract<WorkEvent, { type: 'FlexAdjusted' }> => e.type === 'FlexAdjusted')
@@ -316,9 +321,8 @@
     events = []
   }
 
-  function deleteActiveTargets() {
-    if (currentTargetEvent === null) return
-    removeEvents([currentTargetEvent.id])
+  function deleteTargets(id: string) {
+    removeEvents([id])
     events = loadEvents()
   }
 
@@ -388,15 +392,19 @@
     {#if targetsError !== null}
       <p role="alert">{targetsError}</p>
     {/if}
-    {#if currentTargets !== null}
-      <p data-testid="active-targets">
-        Active:
-        {#each WEEKDAYS as day, i}
-          {day} {targetsToInputs(currentTargets)[day]}{i < WEEKDAYS.length - 1 ? ', ' : ''}
+    {#if targetsHistory.length > 0}
+      <ul data-testid="targets-history">
+        {#each targetsHistory as t (t.id)}
+          <li>
+            <time datetime={iso(t.effectiveFrom)}>{toDateInput(t.effectiveFrom)}</time>:
+            {#each WEEKDAYS as day, i}
+              {day} {targetsToInputs(t.targets)[day]}{i < WEEKDAYS.length - 1 ? ', ' : ''}
+            {/each}
+            — Week: {hhmm((t.targets.Mo + t.targets.Tu + t.targets.We + t.targets.Th + t.targets.Fr) * 60_000)}
+            <button onclick={() => deleteTargets(t.id)}>Delete</button>
+          </li>
         {/each}
-        — Week: <span data-testid="active-targets-weekly">{hhmm((currentTargets.Mo + currentTargets.Tu + currentTargets.We + currentTargets.Th + currentTargets.Fr) * 60_000)}</span>
-        <button onclick={deleteActiveTargets}>Delete active targets</button>
-      </p>
+      </ul>
     {/if}
   </fieldset>
   <fieldset>

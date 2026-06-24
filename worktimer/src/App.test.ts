@@ -360,8 +360,40 @@ describe('App', () => {
     }
   })
 
-  it('displays the currently active targets below the form', () => {
+  it('lists all target sets, newest effectiveFrom first', () => {
     const today = new Date(2026, 5, 24, 0, 0, 0).getTime()
+    localStorage.setItem(
+      'worktimer.events',
+      JSON.stringify([
+        {
+          type: 'WorkTargetsSet',
+          id: 'jan',
+          at: 1,
+          effectiveFrom: new Date(2026, 0, 1).getTime(),
+          targets: { Mo: 480, Tu: 480, We: 480, Th: 480, Fr: 480 },
+        },
+        {
+          type: 'WorkTargetsSet',
+          id: 'apr',
+          at: 2,
+          effectiveFrom: new Date(2026, 3, 1).getTime(),
+          targets: { Mo: 510, Tu: 480, We: 0, Th: 480, Fr: 240 },
+        },
+      ]),
+    )
+    const { getByTestId } = render(App)
+    const items = getByTestId('targets-history').querySelectorAll('li')
+    expect(items).toHaveLength(2)
+    // Newest first.
+    expect(items[0].textContent).toMatch(/2026-04-01/)
+    expect(items[0].textContent).toMatch(/Mo.*0830/)
+    expect(items[1].textContent).toMatch(/2026-01-01/)
+    expect(items[1].textContent).toMatch(/Mo.*0800/)
+  })
+
+  it('shows weekly total per target set row', () => {
+    const today = new Date(2026, 5, 24, 0, 0, 0).getTime()
+    // 510 + 480 + 0 + 480 + 240 = 1710 min = 28h30m
     localStorage.setItem(
       'worktimer.events',
       JSON.stringify([
@@ -375,13 +407,11 @@ describe('App', () => {
       ]),
     )
     const { getByTestId } = render(App)
-    const txt = getByTestId('active-targets').textContent ?? ''
-    expect(txt).toMatch(/Mo.*0830/)
-    expect(txt).toMatch(/We.*0000/)
-    expect(txt).toMatch(/Fr.*0400/)
+    const item = getByTestId('targets-history').querySelector('li')!
+    expect(item.textContent).toMatch(/28:30/)
   })
 
-  it('deletes the active target set on Delete', async () => {
+  it('deletes a target set via its Delete button', async () => {
     const today = new Date(2026, 5, 24, 0, 0, 0).getTime()
     localStorage.setItem(
       'worktimer.events',
@@ -402,40 +432,19 @@ describe('App', () => {
         },
       ]),
     )
-    const { getByRole, getByTestId } = render(App)
-    expect(getByTestId('active-targets').textContent).toMatch(/Mo.*0400/) // newer active
+    const { getByTestId } = render(App)
+    // First (newest) row should be the 'new' one — delete it.
+    const firstRowDelete = getByTestId('targets-history').querySelector('li button') as HTMLButtonElement
+    await fireEvent.click(firstRowDelete)
 
-    await fireEvent.click(getByRole('button', { name: /delete active targets/i }))
-
-    // Older event should now be active.
-    expect(getByTestId('active-targets').textContent).toMatch(/Mo.*0800/)
     const remaining = loadEvents().filter(e => e.type === 'WorkTargetsSet')
     expect(remaining).toHaveLength(1)
     expect(remaining[0].id).toBe('old')
   })
 
-  it('shows the weekly total next to the active targets', () => {
-    const today = new Date(2026, 5, 24, 0, 0, 0).getTime()
-    // 510 + 480 + 0 + 480 + 240 = 1710 min = 28h30m
-    localStorage.setItem(
-      'worktimer.events',
-      JSON.stringify([
-        {
-          type: 'WorkTargetsSet',
-          id: 't',
-          at: 1,
-          effectiveFrom: today,
-          targets: { Mo: 510, Tu: 480, We: 0, Th: 480, Fr: 240 },
-        },
-      ]),
-    )
-    const { getByTestId } = render(App)
-    expect(getByTestId('active-targets-weekly').textContent).toMatch(/28:30/)
-  })
-
-  it('hides the active targets display when none are set', () => {
+  it('hides the target sets list when none are set', () => {
     const { queryByTestId } = render(App)
-    expect(queryByTestId('active-targets')).toBeNull()
+    expect(queryByTestId('targets-history')).toBeNull()
   })
 
   it('prefills the targets form from the currently active target set', () => {
