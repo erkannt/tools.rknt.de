@@ -112,6 +112,11 @@
 
   const currentTargets = $derived(activeTargets(events, startOfDayMs(now)))
   const currentTargetEvent = $derived(activeTargetEvent(events, startOfDayMs(now)))
+  const adjustmentHistory = $derived(
+    events
+      .filter((e): e is Extract<WorkEvent, { type: 'FlexAdjusted' }> => e.type === 'FlexAdjusted')
+      .sort((a, b) => b.at - a.at),
+  )
   let targetInputs = $state<Record<string, string>>({ Mo: '', Tu: '', We: '', Th: '', Fr: '' })
   let effectiveFromInput = $state('')
   let targetsError = $state<string | null>(null)
@@ -317,6 +322,17 @@
     events = loadEvents()
   }
 
+  function deleteAdjustment(id: string) {
+    removeEvents([id])
+    events = loadEvents()
+  }
+
+  function formatAdjustmentTime(ms: number): string {
+    const d = new Date(ms)
+    const pad = (n: number) => String(n).padStart(2, '0')
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`
+  }
+
   async function importJson(e: Event) {
     const input = e.target as HTMLInputElement
     const file = input.files?.[0]
@@ -404,6 +420,18 @@
     <button onclick={() => applyAdjust(-1)}>Decrease</button>
     {#if adjustError !== null}
       <p role="alert">{adjustError}</p>
+    {/if}
+    {#if adjustmentHistory.length > 0}
+      <ul data-testid="adjustment-history">
+        {#each adjustmentHistory as adj (adj.id)}
+          <li>
+            <time datetime={iso(adj.at)}>{formatAdjustmentTime(adj.at)}</time>
+            {formatBudget(adj.deltaMs)}
+            {#if adj.reason !== ''}— {adj.reason}{/if}
+            <button onclick={() => deleteAdjustment(adj.id)}>Delete</button>
+          </li>
+        {/each}
+      </ul>
     {/if}
   </fieldset>
 </details>

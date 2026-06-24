@@ -81,6 +81,40 @@ describe('App', () => {
     expect((adjusted[0] as any).deltaMs).toBe(-30 * 60_000)
   })
 
+  it('lists past adjustments under the form, newest first', () => {
+    localStorage.setItem(
+      'worktimer.events',
+      JSON.stringify([
+        { type: 'FlexAdjusted', id: 'a1', at: 1000, deltaMs: 3 * 3600_000, reason: 'TOIL' },
+        { type: 'FlexAdjusted', id: 'a2', at: 2000, deltaMs: -30 * 60_000, reason: 'oops' },
+      ]),
+    )
+    const { getByTestId } = render(App)
+    const items = getByTestId('adjustment-history').querySelectorAll('li')
+    expect(items).toHaveLength(2)
+    expect(items[0].textContent).toMatch(/-00:30/)
+    expect(items[0].textContent).toMatch(/oops/)
+    expect(items[1].textContent).toMatch(/\+03:00/)
+    expect(items[1].textContent).toMatch(/TOIL/)
+  })
+
+  it('deletes an adjustment when its Delete button is clicked', async () => {
+    localStorage.setItem(
+      'worktimer.events',
+      JSON.stringify([
+        { type: 'FlexAdjusted', id: 'a1', at: 1000, deltaMs: 3 * 3600_000, reason: 'TOIL' },
+      ]),
+    )
+    const { getByTestId } = render(App)
+    expect(getByTestId('flex-budget').textContent).toBe('+03:00')
+
+    const deleteBtn = getByTestId('adjustment-history').querySelector('button')!
+    await fireEvent.click(deleteBtn)
+
+    expect(loadEvents().filter(e => e.type === 'FlexAdjusted')).toHaveLength(0)
+    expect(getByTestId('flex-budget').textContent).toBe('+00:00')
+  })
+
   it('shows an error for invalid HHMM in the adjust form', async () => {
     const { getByLabelText, getByRole } = render(App)
     await fireEvent.input(getByLabelText(/amount/i), { target: { value: 'abcd' } })
