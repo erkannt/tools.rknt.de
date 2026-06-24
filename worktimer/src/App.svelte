@@ -75,6 +75,39 @@
     const wd = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'][d.getDay()]
     return `${wd} ${d.getDate()}`
   }
+
+  function weekLabel(ms: number): string {
+    const d = new Date(ms)
+    const month = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()]
+    return `Wk of ${d.getDate()} ${month}`
+  }
+
+  type WeekBlock = { weekStart: number; sessions: Session[]; total: number; delta: number | null }
+
+  const previousWeeks = $derived.by<WeekBlock[]>(() => {
+    const buckets = new Map<number, Session[]>()
+    for (const s of sessions) {
+      const ws = weekStartLocal(s.startedAt)
+      if (ws >= thisWeekStart) continue
+      const arr = buckets.get(ws) ?? []
+      arr.push(s)
+      buckets.set(ws, arr)
+    }
+    const blocks: WeekBlock[] = []
+    for (const [ws, arr] of buckets) {
+      let total = 0
+      for (let i = 0; i < 7; i++) total += elapsedOnDay(sessions, ws + i * DAY, now)
+      const wt = weeklyTarget(events, ws)
+      const delta = wt.hasAny ? total - wt.mins * 60_000 : null
+      blocks.push({
+        weekStart: ws,
+        sessions: [...arr].sort((a, b) => b.startedAt - a.startedAt),
+        total,
+        delta,
+      })
+    }
+    return blocks.sort((a, b) => b.weekStart - a.weekStart)
+  })
   const budgetMs = $derived(flexBudget(events, now))
 
   const today = $derived(activeTargets(events, startOfDayMs(now)))
@@ -387,4 +420,20 @@
 
 <section>
   <h2>Previous weeks</h2>
+  {#each previousWeeks as week (week.weekStart)}
+    <details data-week-start={week.weekStart}>
+      <summary>
+        {weekLabel(week.weekStart)}
+        <span>{hhmm(week.total)}</span>
+        {#if week.delta !== null}
+          <span>{formatBudget(week.delta)}</span>
+        {/if}
+      </summary>
+      <ul>
+        {#each week.sessions as session (session.startId)}
+          {@render sessionRow(session)}
+        {/each}
+      </ul>
+    </details>
+  {/each}
 </section>

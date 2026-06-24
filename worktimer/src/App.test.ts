@@ -124,6 +124,67 @@ describe('App', () => {
     }
   })
 
+  it('groups previous-week sessions under details, newest week first', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date(2026, 5, 24, 12, 0, 0)) // Wed
+    try {
+      const last1Wed = new Date(2026, 5, 17, 0, 0, 0).getTime()
+      const last2Wed = new Date(2026, 5, 10, 0, 0, 0).getTime()
+      const last1Mon = new Date(2026, 5, 15, 0, 0, 0).getTime()
+      const last2Mon = new Date(2026, 5, 8, 0, 0, 0).getTime()
+      localStorage.setItem(
+        'worktimer.events',
+        JSON.stringify([
+          { type: 'WorkStarted', id: '1a', at: last2Wed + 9 * 3600_000 },
+          { type: 'WorkStopped', id: '1b', at: last2Wed + 17 * 3600_000 },
+          { type: 'WorkStarted', id: '2a', at: last1Wed + 9 * 3600_000 },
+          { type: 'WorkStopped', id: '2b', at: last1Wed + 17 * 3600_000 },
+        ]),
+      )
+      const { getByText } = render(App)
+      const prev = getByText('Previous weeks', { selector: 'h2' }).closest('section')!
+      const weeks = prev.querySelectorAll('details')
+      expect(weeks).toHaveLength(2)
+      expect(weeks[0].getAttribute('data-week-start')).toBe(String(last1Mon))
+      expect(weeks[1].getAttribute('data-week-start')).toBe(String(last2Mon))
+      expect(weeks[0].querySelector('summary')!.textContent).toMatch(/08:00/)
+      expect(weeks[0].querySelectorAll('li')).toHaveLength(1)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('shows weekly delta on previous weeks when targets cover them', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date(2026, 5, 24, 12, 0, 0)) // Wed
+    try {
+      const lastMon = new Date(2026, 5, 15, 0, 0, 0).getTime()
+      const lastWed = lastMon + 2 * 24 * 3600_000
+      localStorage.setItem(
+        'worktimer.events',
+        JSON.stringify([
+          { type: 'WorkStarted', id: 'a', at: lastWed + 9 * 3600_000 },
+          { type: 'WorkStopped', id: 'b', at: lastWed + 17 * 3600_000 }, // 8h
+          {
+            type: 'WorkTargetsSet',
+            id: 't',
+            at: 1,
+            effectiveFrom: lastMon,
+            targets: { Mo: 480, Tu: 480, We: 480, Th: 480, Fr: 480 },
+          },
+        ]),
+      )
+      const { getByText } = render(App)
+      const prev = getByText('Previous weeks', { selector: 'h2' }).closest('section')!
+      const weeks = prev.querySelectorAll('details')
+      expect(weeks).toHaveLength(1)
+      // 8h worked - 40h target = -32h
+      expect(weeks[0].querySelector('summary')!.textContent).toMatch(/-32:00/)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
   it('omits the weekly delta when no targets are active', () => {
     const { queryByTestId } = render(App)
     expect(queryByTestId('week-delta')).toBeNull()
