@@ -954,11 +954,7 @@
   {#each previousWeeks as week (week.weekStart)}
     <details data-week-start={week.weekStart}>
       <summary>
-        {isoWeekNumber(week.weekStart)}
-        {#each week.dayItems as item}
-          {' '}<span data-day-item data-bg={item.color !== null ? '' : undefined} style:background-color={item.color}>{item.text}</span>
-        {/each}
-        {' '}<span>{formatHm(week.total)}</span>
+        {isoWeekNumber(week.weekStart)}{' '}{#each week.dayItems as item}<span data-day-item data-bg={item.color !== null ? '' : undefined} style:background-color={item.color}>{item.text}</span>{/each}{' '}<span>{formatHm(week.total)}</span>
         {#if week.delta !== null}
           <span>{formatBudget(week.delta)}</span>
         {/if}

@@ -436,8 +436,8 @@ describe('App', () => {
       const prev = getByText('Previous weeks', { selector: 'h2' }).closest('section')!
       const matching = Array.from(prev.querySelectorAll('details summary')).find(s => /W14/.test(s.textContent ?? ''))!
       const text = matching.textContent ?? ''
-      // Mo 30, Tu 31, We Ap (replacing "01"), Th 02, Fr 03
-      expect(text).toMatch(/30\s+31\s+Ap\s+02\s+03/)
+      // Mo 30, Tu 31, We Ap (replacing "01"), Th 02, Fr 03 — pills touch so no inter-day spaces.
+      expect(text).toMatch(/3031Ap0203/)
     } finally {
       vi.useRealTimers()
     }
