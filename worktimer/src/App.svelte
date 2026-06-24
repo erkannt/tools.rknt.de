@@ -124,7 +124,9 @@
     dayItems: DayItem[]
   }
 
-  const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+  // Two-letter, unique abbreviations so a month-transition week keeps the
+  // same column width as a regular two-digit day number.
+  const MONTHS = ['Ja','Fe','Mr','Ap','My','Jn','Jl','Au','Se','Oc','No','De']
 
   // Background colours chosen to hit WCAG AA (>=4.5:1) with white text:
   //   crimson  #dc143c -> 5.46:1
