@@ -20,6 +20,10 @@ export function appendEvent(ev: NewEvent): WorkEvent {
   return stored
 }
 
+export function replaceEvents(events: WorkEvent[]): void {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(events))
+}
+
 export function updateEventAt(id: string, at: number): WorkEvent {
   const events = loadEvents()
   const target = events.find(e => e.id === id)

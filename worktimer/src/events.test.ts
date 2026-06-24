@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { loadEvents, appendEvent, updateEventAt, STORAGE_KEY } from './events'
+import { loadEvents, appendEvent, updateEventAt, replaceEvents, STORAGE_KEY } from './events'
 
 beforeEach(() => {
   localStorage.clear()
@@ -58,5 +58,26 @@ describe('updateEventAt', () => {
   it('throws when the id is unknown', () => {
     appendEvent({ type: 'WorkStarted', at: 1 })
     expect(() => updateEventAt('nope', 5)).toThrow()
+  })
+})
+
+describe('replaceEvents', () => {
+  it('overwrites the persisted log', () => {
+    appendEvent({ type: 'WorkStarted', at: 1 })
+    appendEvent({ type: 'WorkStopped', at: 2 })
+
+    const next = [
+      { type: 'WorkStarted' as const, id: 'x', at: 100 },
+      { type: 'WorkStopped' as const, id: 'y', at: 200 },
+    ]
+    replaceEvents(next)
+
+    expect(loadEvents()).toEqual(next)
+  })
+
+  it('clears the log when given an empty array', () => {
+    appendEvent({ type: 'WorkStarted', at: 1 })
+    replaceEvents([])
+    expect(loadEvents()).toEqual([])
   })
 })
