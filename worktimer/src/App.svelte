@@ -115,7 +115,7 @@
   }
 
 
-  type DayItem = { text: string; color: string | null }
+  type DayItem = { text: string; color: string | null; isMonth: boolean }
   type WeekBlock = {
     weekStart: number
     sessions: Session[]
@@ -135,7 +135,8 @@
   function dayItemFor(day: number): DayItem {
     const date = new Date(day)
     const dom = date.getDate()
-    const text = dom === 1 ? MONTHS[date.getMonth()] : String(dom).padStart(2, '0')
+    const isMonth = dom === 1
+    const text = isMonth ? MONTHS[date.getMonth()] : String(dom).padStart(2, '0')
     let color: string | null = null
     if (hasOverride(events, day)) {
       color = '#345d8a'
@@ -147,7 +148,7 @@
         else if (delta < 0) color = 'crimson'
       }
     }
-    return { text, color }
+    return { text, color, isMonth }
   }
 
   const previousWeeks = $derived.by<WeekBlock[]>(() => {
@@ -954,7 +955,7 @@
   {#each previousWeeks as week (week.weekStart)}
     <details data-week-start={week.weekStart}>
       <summary>
-        {isoWeekNumber(week.weekStart)}{' '}{#each week.dayItems as item}<span data-day-item data-bg={item.color !== null ? '' : undefined} style:background-color={item.color}>{item.text}</span>{/each}{' '}<span>{formatHm(week.total)}</span>
+        {isoWeekNumber(week.weekStart)}{' '}{#each week.dayItems as item}<span data-day-item data-bg={item.color !== null ? '' : undefined} data-month={item.isMonth ? '' : undefined} style:background-color={item.color}>{item.text}</span>{/each}{' '}<span>{formatHm(week.total)}</span>
         {#if week.delta !== null}
           <span>{formatBudget(week.delta)}</span>
         {/if}

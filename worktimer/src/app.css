@@ -14,3 +14,6 @@ body {
 [data-day-item][data-bg] {
   color: white;
 }
+[data-day-item][data-month] {
+  font-weight: bold;
+}
