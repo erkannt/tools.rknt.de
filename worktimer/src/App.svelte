@@ -21,6 +21,17 @@
     return `${hh}:${mm}:${ss}`
   }
 
+  function timeOfDay(ms: number): string {
+    const d = new Date(ms)
+    return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
+  }
+
+  function iso(ms: number): string {
+    return new Date(ms).toISOString()
+  }
+
+  const newestFirst = $derived([...sessions].reverse())
+
   function start() {
     events = [...events, appendEvent({ type: 'WorkStarted', at: Date.now() })]
   }
@@ -39,3 +50,14 @@
 {/if}
 
 <p>Today: <time data-testid="elapsed-today">{format(elapsedMs)}</time></p>
+
+<ul>
+  {#each newestFirst as session (session.startId)}
+    <li>
+      <time datetime={iso(session.startedAt)}>{timeOfDay(session.startedAt)}</time>
+      {#if session.stoppedAt !== null}
+        – <time datetime={iso(session.stoppedAt)}>{timeOfDay(session.stoppedAt)}</time>
+      {/if}
+    </li>
+  {/each}
+</ul>

@@ -78,6 +78,41 @@ describe('App', () => {
     expect(getByTestId('elapsed-today').textContent).toBe('00:00:00')
   })
 
+  it('lists sessions newest-first with start and stop times', () => {
+    const today = new Date(2026, 5, 24, 0, 0, 0).getTime()
+    localStorage.setItem(
+      'worktimer.events',
+      JSON.stringify([
+        { type: 'WorkStarted', id: 'a', at: today + 9 * 3600_000 }, // 09:00
+        { type: 'WorkStopped', id: 'b', at: today + 10 * 3600_000 }, // 10:00
+        { type: 'WorkStarted', id: 'c', at: today + 13 * 3600_000 }, // 13:00
+        { type: 'WorkStopped', id: 'd', at: today + 14 * 3600_000 }, // 14:00
+      ]),
+    )
+    const { getAllByRole } = render(App)
+    const items = getAllByRole('listitem')
+    expect(items).toHaveLength(2)
+    // Newest first: 13:00–14:00 before 09:00–10:00.
+    expect(items[0].textContent).toMatch(/13:00.*14:00/)
+    expect(items[1].textContent).toMatch(/09:00.*10:00/)
+  })
+
+  it('shows only the start time for a running session', () => {
+    const today = new Date(2026, 5, 24, 0, 0, 0).getTime()
+    localStorage.setItem(
+      'worktimer.events',
+      JSON.stringify([
+        { type: 'WorkStarted', id: 'a', at: today + 9 * 3600_000 },
+      ]),
+    )
+    const { getAllByRole } = render(App)
+    const items = getAllByRole('listitem')
+    expect(items).toHaveLength(1)
+    expect(items[0].textContent).toMatch(/09:00/)
+    expect(items[0].textContent).not.toMatch(/—/)
+    expect(items[0].querySelectorAll('time')).toHaveLength(1)
+  })
+
   it('ticks the elapsed display while a session is running', async () => {
     const now = new Date(2026, 5, 24, 12, 0, 0).getTime()
     vi.useFakeTimers()
