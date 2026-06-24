@@ -347,6 +347,25 @@ describe('App', () => {
     expect(txt).toMatch(/Fr.*0400/)
   })
 
+  it('shows the weekly total next to the active targets', () => {
+    const today = new Date(2026, 5, 24, 0, 0, 0).getTime()
+    // 510 + 480 + 0 + 480 + 240 = 1710 min = 28h30m
+    localStorage.setItem(
+      'worktimer.events',
+      JSON.stringify([
+        {
+          type: 'WorkTargetsSet',
+          id: 't',
+          at: 1,
+          effectiveFrom: today,
+          targets: { Mo: 510, Tu: 480, We: 0, Th: 480, Fr: 240 },
+        },
+      ]),
+    )
+    const { getByTestId } = render(App)
+    expect(getByTestId('active-targets-weekly').textContent).toMatch(/28:30/)
+  })
+
   it('hides the active targets display when none are set', () => {
     const { queryByTestId } = render(App)
     expect(queryByTestId('active-targets')).toBeNull()

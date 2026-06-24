@@ -371,6 +371,7 @@
         {#each WEEKDAYS as day, i}
           {day} {targetsToInputs(currentTargets)[day]}{i < WEEKDAYS.length - 1 ? ', ' : ''}
         {/each}
+        — Week: <span data-testid="active-targets-weekly">{hhmm((currentTargets.Mo + currentTargets.Tu + currentTargets.We + currentTargets.Th + currentTargets.Fr) * 60_000)}</span>
       </p>
     {/if}
   </fieldset>
