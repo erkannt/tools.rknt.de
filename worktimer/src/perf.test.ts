@@ -34,13 +34,11 @@ function timeMs(fn: () => void): number {
   return performance.now() - t0
 }
 
-// Thresholds carry ~10x headroom over observed numbers so they won't flake
-// on slow machines but still catch the O(days × events) shape that the
-// original implementation had: a regression of that kind would push the
-// 60-call total well past a second.
+// Thresholds tightened to ~3-5x the observed numbers on a dev laptop, so
+// they trip on meaningful regressions (not just the catastrophic O(days ×
+// events) shape, but anything that quietly slows the hot path).
 describe('performance', () => {
-  // Observed: best-of-5 ~1.3ms on a developer laptop.
-  it('flexBudget on a 6-month dataset stays under 50ms per call', () => {
+  it('flexBudget on a 6-month dataset takes under 10ms (best of 5)', () => {
     const { events, now } = buildHeavyDataset()
 
     // Warmup so JIT doesn't pollute the measurement.
@@ -49,13 +47,11 @@ describe('performance', () => {
     const samples: number[] = []
     for (let i = 0; i < 5; i++) samples.push(timeMs(() => flexBudget(events, now)))
     const best = Math.min(...samples)
-    console.log(`flexBudget single-call best of 5: ${best.toFixed(2)}ms`)
 
-    expect(best).toBeLessThan(50)
+    expect(best).toBeLessThan(10)
   })
 
-  // Observed: ~60ms total. Stand-in for "can we hold a 1Hz tick for a minute".
-  it('60 flexBudget calls (a minute of ticks) complete under 500ms', () => {
+  it('60 flexBudget calls (a minute of ticks) complete under 200ms', () => {
     const { events, now } = buildHeavyDataset()
 
     for (let i = 0; i < 3; i++) flexBudget(events, now)
@@ -63,8 +59,7 @@ describe('performance', () => {
     const total = timeMs(() => {
       for (let i = 0; i < 60; i++) flexBudget(events, now + i * 1000)
     })
-    console.log(`flexBudget x60 total: ${total.toFixed(2)}ms`)
 
-    expect(total).toBeLessThan(500)
+    expect(total).toBeLessThan(200)
   })
 })
