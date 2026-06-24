@@ -157,6 +157,48 @@ describe('App', () => {
     }
   })
 
+  it('prefixes sessions in Previous weeks with the weekday code', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date(2026, 5, 24, 12, 0, 0)) // Wed
+    try {
+      const lastTue = new Date(2026, 5, 16, 0, 0, 0).getTime() // Tue prev week
+      localStorage.setItem(
+        'worktimer.events',
+        JSON.stringify([
+          { type: 'WorkStarted', id: 'a', at: lastTue + 9 * 3600_000 },
+          { type: 'WorkStopped', id: 'b', at: lastTue + 17 * 3600_000 },
+        ]),
+      )
+      const { getByText } = render(App)
+      const prev = getByText('Previous weeks', { selector: 'h2' }).closest('section')!
+      const li = prev.querySelector('li')!
+      expect(li.textContent?.trim().startsWith('Tu')).toBe(true)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('does not prefix today\'s sessions with the weekday code', () => {
+    const today = new Date(2026, 5, 24, 0, 0, 0).getTime()
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date(2026, 5, 24, 12, 0, 0))
+    try {
+      localStorage.setItem(
+        'worktimer.events',
+        JSON.stringify([
+          { type: 'WorkStarted', id: 'a', at: today + 9 * 3600_000 },
+          { type: 'WorkStopped', id: 'b', at: today + 10 * 3600_000 },
+        ]),
+      )
+      const { getByText } = render(App)
+      const todaySection = getByText('Today', { selector: 'h2' }).closest('section')!
+      const li = todaySection.querySelector('li')!
+      expect(li.textContent?.trim().startsWith('We')).toBe(false)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
   it('groups previous-week sessions under details, newest week first', () => {
     vi.useFakeTimers()
     vi.setSystemTime(new Date(2026, 5, 24, 12, 0, 0)) // Wed

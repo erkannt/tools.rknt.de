@@ -401,8 +401,9 @@
 
 <p>Flex budget: <span data-testid="flex-budget">{formatBudget(budgetMs)}</span></p>
 
-{#snippet sessionRow(session: Session)}
+{#snippet sessionRow(session: Session, showWeekday: boolean = false)}
   <li>
+    {#if showWeekday}{['Su','Mo','Tu','We','Th','Fr','Sa'][new Date(session.startedAt).getDay()]}{' '}{/if}
     {#if editingId === session.startId}
       <label>
         Start
@@ -486,7 +487,7 @@
       </summary>
       <ul>
         {#each week.sessions as session (session.startId)}
-          {@render sessionRow(session)}
+          {@render sessionRow(session, true)}
         {/each}
       </ul>
     </details>
