@@ -9,12 +9,15 @@
   } from './events'
   import { deriveSessions, elapsedToday, validateEdit } from './sessions'
   import { generateSampleEvents } from './seed'
+  import { parseHHMM, formatHHMM } from './time'
 
   let events = $state<WorkEvent[]>(loadEvents())
   let now = $state(Date.now())
   let editingId = $state<string | null>(null)
   let editStart = $state('')
   let editStop = $state('')
+  let editStartAnchor = $state(0)
+  let editStopAnchor = $state(0)
   let editError = $state<string | null>(null)
 
   const sessions = $derived(deriveSessions(events))
@@ -51,20 +54,12 @@
     return new Date(ms).toISOString()
   }
 
-  function toLocalInput(ms: number): string {
-    const d = new Date(ms)
-    const pad = (n: number) => String(n).padStart(2, '0')
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
-  }
-
-  function fromLocalInput(s: string): number {
-    return new Date(s).getTime()
-  }
-
   function startEdit(startId: string, startedAt: number, stoppedAt: number | null) {
     editingId = startId
-    editStart = toLocalInput(startedAt)
-    editStop = stoppedAt === null ? '' : toLocalInput(stoppedAt)
+    editStart = formatHHMM(startedAt)
+    editStop = stoppedAt === null ? '' : formatHHMM(stoppedAt)
+    editStartAnchor = startedAt
+    editStopAnchor = stoppedAt ?? 0
     editError = null
   }
 
@@ -74,8 +69,12 @@
   }
 
   function saveEdit(session: { startId: string; stopId: string | null }) {
-    const start = fromLocalInput(editStart)
-    const stop = session.stopId === null ? null : fromLocalInput(editStop)
+    const start = parseHHMM(editStart, editStartAnchor)
+    const stop = session.stopId === null ? null : parseHHMM(editStop, editStopAnchor)
+    if (start === null || (session.stopId !== null && stop === null)) {
+      editError = 'Use HHMM (e.g. 0930).'
+      return
+    }
     const result = validateEdit({ startId: session.startId, start, stop }, sessions, Date.now())
     if (!result.ok) {
       editError = result.reason
@@ -89,9 +88,9 @@
   }
 
   function editedLength(startedAt: number, stoppedAt: number): number {
-    const s = fromLocalInput(editStart)
-    const e = fromLocalInput(editStop)
-    if (Number.isNaN(s) || Number.isNaN(e)) return stoppedAt - startedAt
+    const s = parseHHMM(editStart, editStartAnchor)
+    const e = parseHHMM(editStop, editStopAnchor)
+    if (s === null || e === null) return stoppedAt - startedAt
     return e - s
   }
 
@@ -156,12 +155,12 @@
       {#if editingId === session.startId}
         <label>
           Start
-          <input type="datetime-local" bind:value={editStart} />
+          <input type="text" inputmode="numeric" pattern="\d{'{4}'}" maxlength="4" size="4" bind:value={editStart} />
         </label>
         {#if session.stoppedAt !== null}
           <label>
             Stop
-            <input type="datetime-local" bind:value={editStop} />
+            <input type="text" inputmode="numeric" pattern="\d{'{4}'}" maxlength="4" size="4" bind:value={editStop} />
           </label>
           (<span data-testid="session-length">{hhmm(editedLength(session.startedAt, session.stoppedAt))}</span>)
         {/if}
