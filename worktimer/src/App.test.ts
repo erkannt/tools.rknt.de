@@ -58,6 +58,39 @@ describe('App', () => {
     }
   })
 
+  it('increases the flex budget via the adjust form', async () => {
+    const { getByLabelText, getByRole, getByTestId } = render(App)
+    await fireEvent.input(getByLabelText(/amount/i), { target: { value: '0300' } })
+    await fireEvent.input(getByLabelText(/reason/i), { target: { value: 'TOIL' } })
+    await fireEvent.click(getByRole('button', { name: /^increase$/i }))
+
+    expect(getByTestId('flex-budget').textContent).toBe('+03:00')
+    const adjusted = loadEvents().filter(e => e.type === 'FlexAdjusted')
+    expect(adjusted).toHaveLength(1)
+    expect((adjusted[0] as any).deltaMs).toBe(3 * 3600_000)
+    expect((adjusted[0] as any).reason).toBe('TOIL')
+  })
+
+  it('decreases the flex budget via the adjust form', async () => {
+    const { getByLabelText, getByRole, getByTestId } = render(App)
+    await fireEvent.input(getByLabelText(/amount/i), { target: { value: '0030' } })
+    await fireEvent.click(getByRole('button', { name: /^decrease$/i }))
+
+    expect(getByTestId('flex-budget').textContent).toBe('-00:30')
+    const adjusted = loadEvents().filter(e => e.type === 'FlexAdjusted')
+    expect((adjusted[0] as any).deltaMs).toBe(-30 * 60_000)
+  })
+
+  it('shows an error for invalid HHMM in the adjust form', async () => {
+    const { getByLabelText, getByRole } = render(App)
+    await fireEvent.input(getByLabelText(/amount/i), { target: { value: 'abcd' } })
+    await fireEvent.click(getByRole('button', { name: /^increase$/i }))
+
+    expect(loadEvents().filter(e => e.type === 'FlexAdjusted')).toHaveLength(0)
+    const alerts = document.querySelectorAll('[role=alert]')
+    expect(Array.from(alerts).some(a => /hhmm/i.test(a.textContent ?? ''))).toBe(true)
+  })
+
   it('renders Today, This week, and Previous weeks sections', () => {
     const { getByText } = render(App)
     expect(getByText('Today', { selector: 'h2' })).toBeTruthy()

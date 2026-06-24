@@ -114,6 +114,9 @@
   let targetInputs = $state<Record<string, string>>({ Mo: '', Tu: '', We: '', Th: '', Fr: '' })
   let effectiveFromInput = $state('')
   let targetsError = $state<string | null>(null)
+  let adjustAmount = $state('')
+  let adjustReason = $state('')
+  let adjustError = $state<string | null>(null)
 
   function startOfDayMs(t: number): number {
     const d = new Date(t)
@@ -158,6 +161,31 @@
     const hh = String(Math.floor(total / 60)).padStart(2, '0')
     const mm = String(total % 60).padStart(2, '0')
     return `${sign}${hh}:${mm}`
+  }
+
+  function parseAdjustAmount(): number | null {
+    if (!/^\d{4}$/.test(adjustAmount)) return null
+    const hh = Number(adjustAmount.slice(0, 2))
+    const mm = Number(adjustAmount.slice(2, 4))
+    if (hh > 23 || mm > 59) return null
+    return (hh * 60 + mm) * 60_000
+  }
+
+  function applyAdjust(sign: 1 | -1) {
+    const amount = parseAdjustAmount()
+    if (amount === null) { adjustError = 'Use HHMM (e.g. 0030).'; return }
+    events = [
+      ...events,
+      appendEvent({
+        type: 'FlexAdjusted',
+        at: Date.now(),
+        deltaMs: sign * amount,
+        reason: adjustReason,
+      }),
+    ]
+    adjustAmount = ''
+    adjustReason = ''
+    adjustError = null
   }
 
   function saveTargets() {
@@ -331,6 +359,29 @@
     <button onclick={saveTargets}>Save targets</button>
     {#if targetsError !== null}
       <p role="alert">{targetsError}</p>
+    {/if}
+  </fieldset>
+  <fieldset>
+    <legend>Adjust budget</legend>
+    <label>
+      Amount
+      <input
+        type="text"
+        inputmode="numeric"
+        maxlength="4"
+        size="4"
+        pattern="\d{'{4}'}"
+        bind:value={adjustAmount}
+      />
+    </label>
+    <label>
+      Reason
+      <input type="text" bind:value={adjustReason} />
+    </label>
+    <button onclick={() => applyAdjust(1)}>Increase</button>
+    <button onclick={() => applyAdjust(-1)}>Decrease</button>
+    {#if adjustError !== null}
+      <p role="alert">{adjustError}</p>
     {/if}
   </fieldset>
 </details>
