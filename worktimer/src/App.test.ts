@@ -370,7 +370,7 @@ describe('App', () => {
     }
   })
 
-  it('prefixes sessions in Previous weeks with the weekday code', () => {
+  it('formats Previous weeks sessions as "Wd DD HH:MM - HH:MM (HH:MM)"', () => {
     vi.useFakeTimers()
     vi.setSystemTime(new Date(2026, 5, 24, 12, 0, 0)) // Wed
     try {
@@ -379,13 +379,100 @@ describe('App', () => {
         'worktimer.events',
         JSON.stringify([
           { type: 'WorkStarted', id: 'a', at: lastTue + 9 * 3600_000 },
-          { type: 'WorkStopped', id: 'b', at: lastTue + 17 * 3600_000 },
+          { type: 'WorkStopped', id: 'b', at: lastTue + 13 * 3600_000 + 15 * 60_000 }, // 4h15m
         ]),
       )
       const { getByText } = render(App)
       const prev = getByText('Previous weeks', { selector: 'h2' }).closest('section')!
       const li = prev.querySelector('li')!
-      expect(li.textContent?.trim().startsWith('Tu')).toBe(true)
+      expect(li.textContent).toMatch(/Tu 16 09:00 - 13:15 \(04:15\)/)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('Previous weeks summary uses W## prefix, day numbers, and Hh:Mm total', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date(2026, 5, 24, 12, 0, 0)) // Wed
+    try {
+      const lastMon = new Date(2026, 5, 15, 0, 0, 0).getTime()
+      localStorage.setItem(
+        'worktimer.events',
+        JSON.stringify([
+          { type: 'WorkStarted', id: 'a', at: lastMon + 9 * 3600_000 },
+          { type: 'WorkStopped', id: 'b', at: lastMon + 17 * 3600_000 + 37 * 60_000 }, // 8h37m
+        ]),
+      )
+      const { getByText } = render(App)
+      const prev = getByText('Previous weeks', { selector: 'h2' }).closest('section')!
+      const sum = prev.querySelector('details summary')!.textContent ?? ''
+      // ISO week of Mon 2026-06-15 is W25.
+      expect(sum).toContain('W25')
+      // Mon's day is 15
+      expect(sum).toContain('15')
+      // Total format 8h37m
+      expect(sum).toContain('8h37m')
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('Previous weeks summary inserts month abbrev for day-of-month 01', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date(2026, 5, 24, 12, 0, 0))
+    try {
+      // Week of Mon Mar 30 2026 spans Mar/Apr; Apr 01 falls on Wed.
+      const monMar30 = new Date(2026, 2, 30, 0, 0, 0).getTime()
+      localStorage.setItem(
+        'worktimer.events',
+        JSON.stringify([
+          { type: 'WorkStarted', id: 'a', at: monMar30 + 9 * 3600_000 },
+          { type: 'WorkStopped', id: 'b', at: monMar30 + 17 * 3600_000 },
+        ]),
+      )
+      const { getByText } = render(App)
+      const prev = getByText('Previous weeks', { selector: 'h2' }).closest('section')!
+      const matching = Array.from(prev.querySelectorAll('details summary')).find(s => /W14/.test(s.textContent ?? ''))!
+      const text = matching.textContent ?? ''
+      // Mo 30, Tu 31, We Apr (replacing "01"), Th 02, Fr 03
+      expect(text).toMatch(/30\s+31\s+Apr\s+02\s+03/)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('Previous weeks day numbers are colorised by delta and override', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date(2026, 5, 24, 12, 0, 0))
+    try {
+      const lastMon = new Date(2026, 5, 15, 0, 0, 0).getTime()
+      const lastTue = new Date(2026, 5, 16, 0, 0, 0).getTime()
+      const lastFri = new Date(2026, 5, 19, 0, 0, 0).getTime()
+      localStorage.setItem(
+        'worktimer.events',
+        JSON.stringify([
+          {
+            type: 'WorkTargetsSet', id: 't', at: 1, effectiveFrom: lastMon,
+            targets: { Mo: 480, Tu: 480, We: 480, Th: 480, Fr: 480 },
+          },
+          // Mon: 10h worked, 8h target → positive
+          { type: 'WorkStarted', id: 'mA', at: lastMon + 9 * 3600_000 },
+          { type: 'WorkStopped', id: 'mB', at: lastMon + 19 * 3600_000 },
+          // Tue: 4h worked, 8h target → negative
+          { type: 'WorkStarted', id: 'tA', at: lastTue + 9 * 3600_000 },
+          { type: 'WorkStopped', id: 'tB', at: lastTue + 13 * 3600_000 },
+          // Fri: target overridden (holiday)
+          { type: 'TargetOverride', id: 'o', at: 2, startDay: lastFri, endDay: lastFri, targetMin: 0, reason: 'hols' },
+        ]),
+      )
+      const { getByText } = render(App)
+      const prev = getByText('Previous weeks', { selector: 'h2' }).closest('section')!
+      const sum = prev.querySelector('details summary')!
+      const dayItems = Array.from(sum.querySelectorAll('[data-day-item]')) as HTMLElement[]
+      expect(dayItems).toHaveLength(5) // Mo-Fr
+      expect(dayItems[0].style.color).toBe('seagreen') // Mon positive
+      expect(dayItems[1].style.color).toBe('crimson')  // Tue negative
+      expect(dayItems[4].style.color).toBe('steelblue') // Fri override
     } finally {
       vi.useRealTimers()
     }
@@ -435,7 +522,7 @@ describe('App', () => {
       expect(weeks).toHaveLength(2)
       expect(weeks[0].getAttribute('data-week-start')).toBe(String(last1Mon))
       expect(weeks[1].getAttribute('data-week-start')).toBe(String(last2Mon))
-      expect(weeks[0].querySelector('summary')!.textContent).toMatch(/08:00/)
+      expect(weeks[0].querySelector('summary')!.textContent).toMatch(/8h00m/)
       expect(weeks[0].querySelectorAll('li')).toHaveLength(1)
     } finally {
       vi.useRealTimers()

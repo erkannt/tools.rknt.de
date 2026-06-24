@@ -12,7 +12,7 @@
   import { deriveSessions, validateEdit, type Session } from './sessions'
   import { generateSampleEvents } from './seed'
   import { parseHHMM, formatHHMM, startOfDay as startOfDayMs, nextDay, isoWeekLabel } from './time'
-  import { activeTargets, activeTargetEvent, dailyTarget, weekStartLocal, weeklyTarget } from './targets'
+  import { activeTargets, activeTargetEvent, dailyTarget, hasOverride, weekStartLocal, weeklyTarget } from './targets'
   import { WEEKDAYS } from './events'
 
   let events = $state<WorkEvent[]>(loadEvents())
@@ -115,7 +115,34 @@
   }
 
 
-  type WeekBlock = { weekStart: number; sessions: Session[]; total: number; delta: number | null }
+  type DayItem = { text: string; color: string | null }
+  type WeekBlock = {
+    weekStart: number
+    sessions: Session[]
+    total: number
+    delta: number | null
+    dayItems: DayItem[]
+  }
+
+  const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+
+  function dayItemFor(day: number): DayItem {
+    const date = new Date(day)
+    const dom = date.getDate()
+    const text = dom === 1 ? MONTHS[date.getMonth()] : String(dom).padStart(2, '0')
+    let color: string | null = null
+    if (hasOverride(events, day)) {
+      color = 'steelblue'
+    } else {
+      const tgt = dailyTarget(events, day)
+      if (tgt !== null) {
+        const delta = (workedPerDay.get(day) ?? 0) - tgt * 60_000
+        if (delta > 0) color = 'seagreen'
+        else if (delta < 0) color = 'crimson'
+      }
+    }
+    return { text, color }
+  }
 
   const previousWeeks = $derived.by<WeekBlock[]>(() => {
     const buckets = new Map<number, Session[]>()
@@ -129,9 +156,11 @@
     const blocks: WeekBlock[] = []
     for (const [ws, arr] of buckets) {
       let total = 0
+      const dayItems: DayItem[] = []
       let day = ws
       for (let i = 0; i < 7; i++) {
         total += workedPerDay.get(day) ?? 0
+        if (i < 5) dayItems.push(dayItemFor(day)) // Mo-Fr
         day = nextDay(day)
       }
       const wt = weeklyTarget(events, ws)
@@ -141,10 +170,20 @@
         sessions: [...arr].sort((a, b) => b.startedAt - a.startedAt),
         total,
         delta,
+        dayItems,
       })
     }
     return blocks.sort((a, b) => b.weekStart - a.weekStart)
   })
+
+  function formatHm(ms: number): string {
+    const m = Math.max(0, Math.floor(ms / 60_000))
+    return `${Math.floor(m / 60)}h${String(m % 60).padStart(2, '0')}m`
+  }
+
+  function isoWeekNumber(ms: number): string {
+    return isoWeekLabel(ms).slice(5) // 'W##'
+  }
 
   // Budget split into static-past and live-today parts so the per-second
   // tick only re-derives the today contribution.
@@ -820,7 +859,7 @@
 
 {#snippet sessionRow(session: Session, showWeekday: boolean = false)}
   <li>
-    {#if showWeekday}{['Su','Mo','Tu','We','Th','Fr','Sa'][new Date(session.startedAt).getDay()]}{' '}{/if}
+    {#if showWeekday}<span>{['Su','Mo','Tu','We','Th','Fr','Sa'][new Date(session.startedAt).getDay()]} {String(new Date(session.startedAt).getDate()).padStart(2, '0')}</span> {/if}
     {#if editingId === session.startId}
       <label>
         Start
@@ -841,7 +880,7 @@
     {:else}
       <time datetime={iso(session.startedAt)}>{timeOfDay(session.startedAt)}</time>
       {#if session.stoppedAt !== null}
-        – <time datetime={iso(session.stoppedAt)}>{timeOfDay(session.stoppedAt)}</time>
+        - <time datetime={iso(session.stoppedAt)}>{timeOfDay(session.stoppedAt)}</time>
         (<span data-testid="session-length">{hhmm(session.stoppedAt - session.startedAt)}</span>)
       {/if}
       <button onclick={() => startEdit(session.startId, session.startedAt, session.stoppedAt)}>Edit</button>
@@ -896,8 +935,11 @@
   {#each previousWeeks as week (week.weekStart)}
     <details data-week-start={week.weekStart}>
       <summary>
-        {isoWeekLabel(week.weekStart)}
-        <span>{hhmm(week.total)}</span>
+        {isoWeekNumber(week.weekStart)}
+        {#each week.dayItems as item}
+          {' '}<span data-day-item style:color={item.color}>{item.text}</span>
+        {/each}
+        {' '}<span>{formatHm(week.total)}</span>
         {#if week.delta !== null}
           <span>{formatBudget(week.delta)}</span>
         {/if}

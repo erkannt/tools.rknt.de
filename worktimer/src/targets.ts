@@ -13,6 +13,13 @@ export function weekStartLocal(t: number): number {
   return d.getTime()
 }
 
+export function hasOverride(events: WorkEvent[], day: number): boolean {
+  for (const ev of events) {
+    if (ev.type === 'TargetOverride' && day >= ev.startDay && day <= ev.endDay) return true
+  }
+  return false
+}
+
 function activeOverride(events: WorkEvent[], day: number): number | null {
   let chosenAt = -Infinity
   let chosenVal: number | null = null
