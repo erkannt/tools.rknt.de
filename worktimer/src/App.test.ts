@@ -96,6 +96,75 @@ describe('App', () => {
     expect(queryByTestId('today-delta')).toBeNull()
   })
 
+  it('shows this week\'s total and per-past-day details', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date(2026, 5, 24, 12, 0, 0)) // Wed
+    try {
+      const tue = new Date(2026, 5, 23, 0, 0, 0).getTime()
+      const today = new Date(2026, 5, 24, 0, 0, 0).getTime()
+      localStorage.setItem(
+        'worktimer.events',
+        JSON.stringify([
+          { type: 'WorkStarted', id: 'tA', at: tue + 9 * 3600_000 },
+          { type: 'WorkStopped', id: 'tB', at: tue + 17 * 3600_000 }, // 8h
+          { type: 'WorkStarted', id: 'wA', at: today + 9 * 3600_000 },
+          { type: 'WorkStopped', id: 'wB', at: today + 11 * 3600_000 }, // 2h
+        ]),
+      )
+      const { getByText, getByTestId } = render(App)
+      const week = getByText('This week', { selector: 'h2' }).closest('section')!
+      expect(getByTestId('week-total').textContent).toBe('10:00')
+
+      const tueDetails = week.querySelector(`details[data-day-start="${tue}"]`) as HTMLDetailsElement
+      expect(tueDetails).toBeTruthy()
+      expect(tueDetails.querySelector('summary')!.textContent).toMatch(/08:00/)
+      expect(tueDetails.querySelectorAll('li')).toHaveLength(1)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('omits the weekly delta when no targets are active', () => {
+    const { queryByTestId } = render(App)
+    expect(queryByTestId('week-delta')).toBeNull()
+  })
+
+  it('shows weekly delta and per-day deltas when targets exist', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date(2026, 5, 24, 12, 0, 0)) // Wed
+    try {
+      const today = new Date(2026, 5, 24, 0, 0, 0).getTime()
+      const tue = today - 24 * 3600_000
+      const monStart = new Date(2026, 5, 22, 0, 0, 0).getTime() // Mon
+      localStorage.setItem(
+        'worktimer.events',
+        JSON.stringify([
+          { type: 'WorkStarted', id: 'tA', at: tue + 9 * 3600_000 },
+          { type: 'WorkStopped', id: 'tB', at: tue + 17 * 3600_000 }, // 8h Tue
+          {
+            type: 'WorkTargetsSet',
+            id: 'tg',
+            at: 1,
+            effectiveFrom: monStart,
+            targets: { Mo: 480, Tu: 480, We: 480, Th: 480, Fr: 480 },
+          },
+        ]),
+      )
+      const { getByTestId, getByText } = render(App)
+      // Week total = 8h Tue + 0h today = 8h
+      // Week target = 5 * 8h = 40h, delta = -32h
+      expect(getByTestId('week-total').textContent).toBe('08:00')
+      expect(getByTestId('week-delta').textContent).toBe('-32:00')
+
+      // Tue's day delta: 8h worked - 8h target = 00:00
+      const week = getByText('This week', { selector: 'h2' }).closest('section')!
+      const tueDetails = week.querySelector(`details[data-day-start="${tue}"]`) as HTMLDetailsElement
+      expect(tueDetails.querySelector('summary')!.textContent).toMatch(/[+\-]00:00/)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
   it('lists only today\'s sessions in the Today section', () => {
     const today = new Date(2026, 5, 24, 0, 0, 0).getTime()
     const lastWeek = today - 7 * 24 * 3600_000

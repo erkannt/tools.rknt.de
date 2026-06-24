@@ -8,10 +8,10 @@
     updateEventAt,
     type WorkEvent,
   } from './events'
-  import { deriveSessions, elapsedToday, validateEdit, type Session } from './sessions'
+  import { deriveSessions, elapsedToday, elapsedOnDay, validateEdit, type Session } from './sessions'
   import { generateSampleEvents } from './seed'
   import { parseHHMM, formatHHMM } from './time'
-  import { activeTargets, dailyTarget, flexBudget } from './targets'
+  import { activeTargets, dailyTarget, flexBudget, weekStartLocal, weeklyTarget } from './targets'
   import { WEEKDAYS } from './events'
 
   let events = $state<WorkEvent[]>(loadEvents())
@@ -35,6 +35,46 @@
       .filter(s => startOfDayMs(s.startedAt) === startOfDayMs(now))
       .reverse(),
   )
+
+  const DAY = 24 * 3600_000
+  const thisWeekStart = $derived(weekStartLocal(now))
+
+  type DayBlock = { dayStart: number; sessions: Session[]; total: number; delta: number | null }
+
+  const pastDaysThisWeek = $derived.by<DayBlock[]>(() => {
+    const todayStart = startOfDayMs(now)
+    const days: DayBlock[] = []
+    for (let d = thisWeekStart; d < todayStart; d += DAY) {
+      const daySessions = [...sessions]
+        .filter(s => startOfDayMs(s.startedAt) === d)
+        .reverse()
+      const total = elapsedOnDay(sessions, d, now)
+      const tgt = dailyTarget(events, d)
+      const delta = tgt === null ? null : total - tgt * 60_000
+      days.push({ dayStart: d, sessions: daySessions, total, delta })
+    }
+    return days.reverse()
+  })
+
+  const weekTotalMs = $derived.by(() => {
+    let sum = 0
+    const todayStart = startOfDayMs(now)
+    for (let d = thisWeekStart; d <= todayStart; d += DAY) {
+      sum += elapsedOnDay(sessions, d, now)
+    }
+    return sum
+  })
+
+  const weekTargetInfo = $derived(weeklyTarget(events, thisWeekStart))
+  const weekDeltaMs = $derived(
+    weekTargetInfo.hasAny ? weekTotalMs - weekTargetInfo.mins * 60_000 : null,
+  )
+
+  function dayLabel(ms: number): string {
+    const d = new Date(ms)
+    const wd = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'][d.getDay()]
+    return `${wd} ${d.getDate()}`
+  }
   const budgetMs = $derived(flexBudget(events, now))
 
   const today = $derived(activeTargets(events, startOfDayMs(now)))
@@ -321,6 +361,28 @@
 
 <section>
   <h2>This week</h2>
+  <p>
+    <span data-testid="week-total">{hhmm(weekTotalMs)}</span>
+    {#if weekDeltaMs !== null}
+      <span data-testid="week-delta">{formatBudget(weekDeltaMs)}</span>
+    {/if}
+  </p>
+  {#each pastDaysThisWeek as day (day.dayStart)}
+    <details data-day-start={day.dayStart}>
+      <summary>
+        {dayLabel(day.dayStart)}
+        <span>{hhmm(day.total)}</span>
+        {#if day.delta !== null}
+          <span>{formatBudget(day.delta)}</span>
+        {/if}
+      </summary>
+      <ul>
+        {#each day.sessions as session (session.startId)}
+          {@render sessionRow(session)}
+        {/each}
+      </ul>
+    </details>
+  {/each}
 </section>
 
 <section>
