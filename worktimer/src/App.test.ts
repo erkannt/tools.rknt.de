@@ -69,6 +69,52 @@ describe('App', () => {
     }
   })
 
+  it('renders an Analysis section, collapsed by default', () => {
+    const { getByText } = render(App)
+    const summary = getByText(/^analysis$/i)
+    const details = summary.closest('details')!
+    expect(details.open).toBe(false)
+  })
+
+  it('lists past days with |worked-target| > 2h in the Analysis section', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date(2026, 5, 24, 12, 0, 0)) // Wed
+    try {
+      const monStart = new Date(2026, 5, 22, 0, 0, 0).getTime() // Mon this week
+      const tueStart = new Date(2026, 5, 23, 0, 0, 0).getTime() // Tue this week
+      // Targets effective Monday this week so the walk only covers Mon and Tue.
+      localStorage.setItem(
+        'worktimer.events',
+        JSON.stringify([
+          {
+            type: 'WorkTargetsSet', id: 't', at: 1, effectiveFrom: monStart,
+            targets: { Mo: 480, Tu: 480, We: 480, Th: 480, Fr: 480 },
+          },
+          // Mon: worked 11h vs target 8h → +3h (outlier).
+          { type: 'WorkStarted', id: 'a', at: monStart + 9 * 3600_000 },
+          { type: 'WorkStopped', id: 'b', at: monStart + 20 * 3600_000 },
+          // Tue: worked 10h vs target 8h → +2h (NOT outlier — threshold is strictly >2h).
+          { type: 'WorkStarted', id: 'c', at: tueStart + 9 * 3600_000 },
+          { type: 'WorkStopped', id: 'd', at: tueStart + 19 * 3600_000 },
+        ]),
+      )
+      const { getByTestId } = render(App)
+      const items = getByTestId('analysis-outliers').querySelectorAll('li')
+      expect(items).toHaveLength(1)
+      expect(items[0].textContent).toMatch(/2026-06-22/)
+      expect(items[0].textContent).toMatch(/\+03:00/)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('shows an empty-state message when there are no outliers', () => {
+    const { getByText } = render(App)
+    const summary = getByText(/^analysis$/i)
+    const details = summary.closest('details')!
+    expect(details.textContent).toMatch(/no past days/i)
+  })
+
   it('shows a flex budget of +00:00 when no targets are set', () => {
     const { getByTestId } = render(App)
     expect(getByTestId('flex-budget').textContent).toBe('+00:00')

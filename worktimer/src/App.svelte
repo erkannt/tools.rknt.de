@@ -178,6 +178,24 @@
     return total
   })
 
+  type OutlierDay = { day: number; worked: number; targetMs: number; delta: number }
+  const outlierDays = $derived.by<OutlierDay[]>(() => {
+    if (budgetEarliestDay === null) return []
+    const threshold = 2 * 3600_000
+    const days: OutlierDay[] = []
+    for (let d = budgetEarliestDay; d < today; d = nextDay(d)) {
+      const tgt = dailyTarget(events, d)
+      if (tgt === null) continue
+      const targetMs = tgt * 60_000
+      const worked = workedPerDay.get(d) ?? 0
+      const delta = worked - targetMs
+      if (Math.abs(delta) > threshold) {
+        days.push({ day: d, worked, targetMs, delta })
+      }
+    }
+    return days.reverse()
+  })
+
   const currentTargets = $derived(activeTargets(events, today))
   const currentTargetEvent = $derived(activeTargetEvent(events, today))
   const targetsHistory = $derived(
@@ -666,6 +684,22 @@
 </details>
 
 <p>Flex budget: <span data-testid="flex-budget">{formatBudget(budgetMs)}</span></p>
+
+<details>
+  <summary>Analysis</summary>
+  {#if outlierDays.length === 0}
+    <p>No past days with |delta| above 02:00.</p>
+  {:else}
+    <ul data-testid="analysis-outliers">
+      {#each outlierDays as d (d.day)}
+        <li>
+          <time datetime={iso(d.day)}>{toDateInput(d.day)}</time>
+          worked {hhmm(d.worked)} / target {hhmm(d.targetMs)} / delta {formatBudget(d.delta)}
+        </li>
+      {/each}
+    </ul>
+  {/if}
+</details>
 
 {#snippet sessionRow(session: Session, showWeekday: boolean = false)}
   <li>
