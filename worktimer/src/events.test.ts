@@ -214,6 +214,31 @@ describe('parseEventsJson', () => {
     expect(() => parseEventsJson(JSON.stringify(bad))).toThrow()
   })
 
+  it('parses a TargetOverride event', () => {
+    const payload = [
+      {
+        type: 'TargetOverride',
+        id: 'o1',
+        at: 1000,
+        startDay: 100,
+        endDay: 200,
+        targetMin: 0,
+        reason: 'holiday',
+      },
+    ]
+    expect(parseEventsJson(JSON.stringify(payload))).toEqual(payload)
+  })
+
+  it('throws when TargetOverride startDay/endDay are not numbers', () => {
+    const bad = [{ type: 'TargetOverride', id: 'o', at: 1, startDay: '100', endDay: 200, targetMin: 0, reason: '' }]
+    expect(() => parseEventsJson(JSON.stringify(bad))).toThrow()
+  })
+
+  it('throws when TargetOverride targetMin is not a number', () => {
+    const bad = [{ type: 'TargetOverride', id: 'o', at: 1, startDay: 100, endDay: 200, targetMin: '0', reason: '' }]
+    expect(() => parseEventsJson(JSON.stringify(bad))).toThrow()
+  })
+
   it('throws when a target value is not a number', () => {
     const bad = [
       {

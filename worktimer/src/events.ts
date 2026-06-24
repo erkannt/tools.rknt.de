@@ -15,12 +15,29 @@ export type WorkEvent =
       targets: Targets
     }
   | { type: 'FlexAdjusted'; id: string; at: number; deltaMs: number; reason: string }
+  | {
+      type: 'TargetOverride'
+      id: string
+      at: number
+      startDay: number
+      endDay: number
+      targetMin: number
+      reason: string
+    }
 
 export type NewEvent =
   | { type: 'WorkStarted'; at: number }
   | { type: 'WorkStopped'; at: number }
   | { type: 'WorkTargetsSet'; at: number; effectiveFrom: number; targets: Targets }
   | { type: 'FlexAdjusted'; at: number; deltaMs: number; reason: string }
+  | {
+      type: 'TargetOverride'
+      at: number
+      startDay: number
+      endDay: number
+      targetMin: number
+      reason: string
+    }
 
 export function loadEvents(): WorkEvent[] {
   const raw = localStorage.getItem(STORAGE_KEY)
@@ -86,6 +103,14 @@ export function parseEventsJson(text: string): WorkEvent[] {
         throw new Error(`entry ${i}: reason must be a string`)
       }
       return { type, id, at, deltaMs, reason }
+    }
+    if (type === 'TargetOverride') {
+      const { startDay, endDay, targetMin, reason } = entry as Record<string, unknown>
+      if (typeof startDay !== 'number') throw new Error(`entry ${i}: startDay must be a number`)
+      if (typeof endDay !== 'number') throw new Error(`entry ${i}: endDay must be a number`)
+      if (typeof targetMin !== 'number') throw new Error(`entry ${i}: targetMin must be a number`)
+      if (typeof reason !== 'string') throw new Error(`entry ${i}: reason must be a string`)
+      return { type, id, at, startDay, endDay, targetMin, reason }
     }
     throw new Error(`entry ${i}: unknown type ${JSON.stringify(type)}`)
   })
