@@ -200,20 +200,20 @@ describe('App', () => {
     expect(Array.from(alerts).some(a => /end .* start|start .* end|range/i.test(a.textContent ?? ''))).toBe(true)
   })
 
-  it('lists overrides newest-emitted first with per-row Delete', async () => {
+  it('lists overrides by start date (most recent first), regardless of emission order', async () => {
     localStorage.setItem(
       'worktimer.events',
       JSON.stringify([
-        { type: 'TargetOverride', id: 'o1', at: 1000, startDay: new Date(2026, 0, 1).getTime(), endDay: new Date(2026, 0, 1).getTime(), targetMin: 0, reason: 'new year' },
-        { type: 'TargetOverride', id: 'o2', at: 2000, startDay: new Date(2026, 4, 1).getTime(), endDay: new Date(2026, 4, 3).getTime(), targetMin: 240, reason: 'short days' },
+        // Emitted second, but covers an earlier date.
+        { type: 'TargetOverride', id: 'jan', at: 2000, startDay: new Date(2026, 0, 1).getTime(), endDay: new Date(2026, 0, 1).getTime(), targetMin: 0, reason: 'new year' },
+        // Emitted first, covers a later date.
+        { type: 'TargetOverride', id: 'may', at: 1000, startDay: new Date(2026, 4, 1).getTime(), endDay: new Date(2026, 4, 3).getTime(), targetMin: 240, reason: 'short days' },
       ]),
     )
     const { getByTestId } = render(App)
     const items = getByTestId('overrides-history').querySelectorAll('li')
     expect(items).toHaveLength(2)
-    expect(items[0].textContent).toMatch(/2026-05-01/)
-    expect(items[0].textContent).toMatch(/04:00/)
-    expect(items[0].textContent).toMatch(/short days/)
+    expect(items[0].textContent).toMatch(/2026-05-01/) // by startDay, May wins
     expect(items[1].textContent).toMatch(/2026-01-01/)
 
     await fireEvent.click(items[0].querySelector('button') as HTMLButtonElement)

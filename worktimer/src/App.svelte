@@ -193,7 +193,7 @@
   const overridesHistory = $derived(
     events
       .filter((e): e is Extract<WorkEvent, { type: 'TargetOverride' }> => e.type === 'TargetOverride')
-      .sort((a, b) => b.at - a.at),
+      .sort((a, b) => b.startDay - a.startDay),
   )
   let targetInputs = $state<Record<string, string>>({ Mo: '', Tu: '', We: '', Th: '', Fr: '' })
   let effectiveFromInput = $state('')
