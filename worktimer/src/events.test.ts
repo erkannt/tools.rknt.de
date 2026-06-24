@@ -4,6 +4,7 @@ import {
   appendEvent,
   updateEventAt,
   replaceEvents,
+  removeEvents,
   parseEventsJson,
   STORAGE_KEY,
 } from './events'
@@ -86,6 +87,30 @@ describe('replaceEvents', () => {
     appendEvent({ type: 'WorkStarted', at: 1 })
     replaceEvents([])
     expect(loadEvents()).toEqual([])
+  })
+})
+
+describe('removeEvents', () => {
+  it('removes events with the given ids', () => {
+    const a = appendEvent({ type: 'WorkStarted', at: 1 })
+    const b = appendEvent({ type: 'WorkStopped', at: 2 })
+    const c = appendEvent({ type: 'WorkStarted', at: 3 })
+
+    removeEvents([a.id, b.id])
+
+    expect(loadEvents()).toEqual([c])
+  })
+
+  it('is a no-op for unknown ids', () => {
+    const a = appendEvent({ type: 'WorkStarted', at: 1 })
+    removeEvents(['nope'])
+    expect(loadEvents()).toEqual([a])
+  })
+
+  it('handles an empty id list', () => {
+    const a = appendEvent({ type: 'WorkStarted', at: 1 })
+    removeEvents([])
+    expect(loadEvents()).toEqual([a])
   })
 })
 

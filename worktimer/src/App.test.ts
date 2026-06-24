@@ -253,6 +253,43 @@ describe('App', () => {
     expect(queryByRole('alert')).toBeNull()
   })
 
+  it('removes a completed session when Delete is clicked', async () => {
+    const today = new Date(2026, 5, 24, 0, 0, 0).getTime()
+    localStorage.setItem(
+      'worktimer.events',
+      JSON.stringify([
+        { type: 'WorkStarted', id: 'a', at: today + 9 * 3600_000 },
+        { type: 'WorkStopped', id: 'b', at: today + 10 * 3600_000 },
+        { type: 'WorkStarted', id: 'c', at: today + 13 * 3600_000 },
+        { type: 'WorkStopped', id: 'd', at: today + 14 * 3600_000 },
+      ]),
+    )
+    const { getAllByRole } = render(App)
+    const items = getAllByRole('listitem')
+    const deleteBtn = Array.from(items[0].querySelectorAll('button')).find(
+      b => /delete/i.test(b.textContent ?? ''),
+    )!
+    await fireEvent.click(deleteBtn)
+
+    expect(getAllByRole('listitem')).toHaveLength(1)
+    expect(loadEvents().map(e => e.id)).toEqual(['a', 'b'])
+  })
+
+  it('removes a running session when Delete is clicked', async () => {
+    const today = new Date(2026, 5, 24, 0, 0, 0).getTime()
+    localStorage.setItem(
+      'worktimer.events',
+      JSON.stringify([{ type: 'WorkStarted', id: 'a', at: today + 9 * 3600_000 }]),
+    )
+    const { getByRole, queryAllByRole } = render(App)
+    await fireEvent.click(getByRole('button', { name: /delete/i }))
+
+    expect(queryAllByRole('listitem')).toHaveLength(0)
+    expect(loadEvents()).toEqual([])
+    // Idle state restored: Start button visible.
+    expect(getByRole('button', { name: /start/i })).toBeTruthy()
+  })
+
   it('shows a format error when the input is not HHMM', async () => {
     const today = new Date(2026, 5, 24, 0, 0, 0).getTime()
     const original = [

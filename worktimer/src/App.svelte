@@ -3,6 +3,7 @@
     appendEvent,
     loadEvents,
     parseEventsJson,
+    removeEvents,
     replaceEvents,
     updateEventAt,
     type WorkEvent,
@@ -66,6 +67,16 @@
   function cancelEdit() {
     editingId = null
     editError = null
+  }
+
+  function deleteSession(session: { startId: string; stopId: string | null }) {
+    const ids = session.stopId === null ? [session.startId] : [session.startId, session.stopId]
+    removeEvents(ids)
+    events = loadEvents()
+    if (editingId === session.startId) {
+      editingId = null
+      editError = null
+    }
   }
 
   function saveEdit(session: { startId: string; stopId: string | null }) {
@@ -176,6 +187,7 @@
           (<span data-testid="session-length">{hhmm(session.stoppedAt - session.startedAt)}</span>)
         {/if}
         <button onclick={() => startEdit(session.startId, session.startedAt, session.stoppedAt)}>Edit</button>
+        <button onclick={() => deleteSession(session)}>Delete</button>
       {/if}
     </li>
   {/each}

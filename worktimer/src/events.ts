@@ -24,6 +24,12 @@ export function replaceEvents(events: WorkEvent[]): void {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(events))
 }
 
+export function removeEvents(ids: string[]): void {
+  if (ids.length === 0) return
+  const toRemove = new Set(ids)
+  replaceEvents(loadEvents().filter(e => !toRemove.has(e.id)))
+}
+
 export function parseEventsJson(text: string): WorkEvent[] {
   const data = JSON.parse(text)
   if (!Array.isArray(data)) throw new Error('expected a JSON array of events')
