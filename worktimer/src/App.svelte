@@ -122,12 +122,22 @@
       .filter((e): e is Extract<WorkEvent, { type: 'FlexAdjusted' }> => e.type === 'FlexAdjusted')
       .sort((a, b) => b.at - a.at),
   )
+  const overridesHistory = $derived(
+    events
+      .filter((e): e is Extract<WorkEvent, { type: 'TargetOverride' }> => e.type === 'TargetOverride')
+      .sort((a, b) => b.at - a.at),
+  )
   let targetInputs = $state<Record<string, string>>({ Mo: '', Tu: '', We: '', Th: '', Fr: '' })
   let effectiveFromInput = $state('')
   let targetsError = $state<string | null>(null)
   let adjustAmount = $state('')
   let adjustReason = $state('')
   let adjustError = $state<string | null>(null)
+  let overrideFrom = $state('')
+  let overrideTo = $state('')
+  let overrideAmount = $state('')
+  let overrideReason = $state('')
+  let overrideError = $state<string | null>(null)
 
   function startOfDayMs(t: number): number {
     const d = new Date(t)
@@ -164,6 +174,8 @@
   $effect(() => {
     targetInputs = targetsToInputs(currentTargets)
     if (effectiveFromInput === '') effectiveFromInput = toDateInput(Date.now())
+    if (overrideFrom === '') overrideFrom = toDateInput(Date.now())
+    if (overrideTo === '') overrideTo = toDateInput(Date.now())
   })
 
   function formatBudget(ms: number): string {
@@ -331,6 +343,50 @@
     events = loadEvents()
   }
 
+  function deleteOverride(id: string) {
+    removeEvents([id])
+    events = loadEvents()
+  }
+
+  function parseHHMMMin(s: string): number | null {
+    if (!/^\d{4}$/.test(s)) return null
+    const hh = Number(s.slice(0, 2))
+    const mm = Number(s.slice(2, 4))
+    if (hh > 23 || mm > 59) return null
+    return hh * 60 + mm
+  }
+
+  function applyOverride() {
+    const start = fromDateInput(overrideFrom)
+    const end = fromDateInput(overrideTo)
+    if (Number.isNaN(start) || Number.isNaN(end)) {
+      overrideError = 'Invalid date.'; return
+    }
+    if (end < start) {
+      overrideError = 'End must be on or after start.'; return
+    }
+    const target = parseHHMMMin(overrideAmount)
+    if (target === null) {
+      overrideError = 'Use HHMM (e.g. 0800).'; return
+    }
+    events = [
+      ...events,
+      appendEvent({
+        type: 'TargetOverride',
+        at: Date.now(),
+        startDay: start,
+        endDay: end,
+        targetMin: target,
+        reason: overrideReason,
+      }),
+    ]
+    overrideFrom = ''
+    overrideTo = ''
+    overrideAmount = ''
+    overrideReason = ''
+    overrideError = null
+  }
+
   function formatAdjustmentTime(ms: number): string {
     const d = new Date(ms)
     const pad = (n: number) => String(n).padStart(2, '0')
@@ -437,6 +493,42 @@
             {formatBudget(adj.deltaMs)}
             {#if adj.reason !== ''}— {adj.reason}{/if}
             <button onclick={() => deleteAdjustment(adj.id)}>Delete</button>
+          </li>
+        {/each}
+      </ul>
+    {/if}
+  </fieldset>
+  <fieldset>
+    <legend>Target overrides</legend>
+    <label>From <input type="date" bind:value={overrideFrom} /></label>
+    <label>To <input type="date" bind:value={overrideTo} /></label>
+    <label>
+      Target
+      <input
+        type="text"
+        inputmode="numeric"
+        maxlength="4"
+        size="4"
+        pattern="\d{'{4}'}"
+        bind:value={overrideAmount}
+      />
+    </label>
+    <label>Override reason <input type="text" bind:value={overrideReason} /></label>
+    <button onclick={applyOverride}>Apply override</button>
+    {#if overrideError !== null}
+      <p role="alert">{overrideError}</p>
+    {/if}
+    {#if overridesHistory.length > 0}
+      <ul data-testid="overrides-history">
+        {#each overridesHistory as o (o.id)}
+          <li>
+            <time datetime={iso(o.startDay)}>{toDateInput(o.startDay)}</time>
+            {#if o.endDay !== o.startDay}
+              – <time datetime={iso(o.endDay)}>{toDateInput(o.endDay)}</time>
+            {/if}
+            : {hhmm(o.targetMin * 60_000)}
+            {#if o.reason !== ''}— {o.reason}{/if}
+            <button onclick={() => deleteOverride(o.id)}>Delete</button>
           </li>
         {/each}
       </ul>

@@ -61,7 +61,7 @@ describe('App', () => {
   it('increases the flex budget via the adjust form', async () => {
     const { getByLabelText, getByRole, getByTestId } = render(App)
     await fireEvent.input(getByLabelText(/amount/i), { target: { value: '0300' } })
-    await fireEvent.input(getByLabelText(/reason/i), { target: { value: 'TOIL' } })
+    await fireEvent.input(getByLabelText(/^reason$/i), { target: { value: 'TOIL' } })
     await fireEvent.click(getByRole('button', { name: /^increase$/i }))
 
     expect(getByTestId('flex-budget').textContent).toBe('+03:00')
@@ -113,6 +113,55 @@ describe('App', () => {
 
     expect(loadEvents().filter(e => e.type === 'FlexAdjusted')).toHaveLength(0)
     expect(getByTestId('flex-budget').textContent).toBe('+00:00')
+  })
+
+  it('creates a TargetOverride event via the override form', async () => {
+    const { getByLabelText, getByRole } = render(App)
+    await fireEvent.input(getByLabelText(/^from$/i), { target: { value: '2026-12-24' } })
+    await fireEvent.input(getByLabelText(/^to$/i), { target: { value: '2026-12-26' } })
+    await fireEvent.input(getByLabelText(/^target$/i), { target: { value: '0000' } })
+    await fireEvent.input(getByLabelText(/override reason/i), { target: { value: 'holiday' } })
+    await fireEvent.click(getByRole('button', { name: /apply override/i }))
+
+    const overrides = loadEvents().filter(e => e.type === 'TargetOverride')
+    expect(overrides).toHaveLength(1)
+    const o = overrides[0] as any
+    expect(o.startDay).toBe(new Date(2026, 11, 24).getTime())
+    expect(o.endDay).toBe(new Date(2026, 11, 26).getTime())
+    expect(o.targetMin).toBe(0)
+    expect(o.reason).toBe('holiday')
+  })
+
+  it('rejects an override where end is before start', async () => {
+    const { getByLabelText, getByRole } = render(App)
+    await fireEvent.input(getByLabelText(/^from$/i), { target: { value: '2026-12-26' } })
+    await fireEvent.input(getByLabelText(/^to$/i), { target: { value: '2026-12-24' } })
+    await fireEvent.input(getByLabelText(/^target$/i), { target: { value: '0000' } })
+    await fireEvent.click(getByRole('button', { name: /apply override/i }))
+
+    expect(loadEvents().filter(e => e.type === 'TargetOverride')).toHaveLength(0)
+    const alerts = document.querySelectorAll('[role=alert]')
+    expect(Array.from(alerts).some(a => /end .* start|start .* end|range/i.test(a.textContent ?? ''))).toBe(true)
+  })
+
+  it('lists overrides newest-emitted first with per-row Delete', async () => {
+    localStorage.setItem(
+      'worktimer.events',
+      JSON.stringify([
+        { type: 'TargetOverride', id: 'o1', at: 1000, startDay: new Date(2026, 0, 1).getTime(), endDay: new Date(2026, 0, 1).getTime(), targetMin: 0, reason: 'new year' },
+        { type: 'TargetOverride', id: 'o2', at: 2000, startDay: new Date(2026, 4, 1).getTime(), endDay: new Date(2026, 4, 3).getTime(), targetMin: 240, reason: 'short days' },
+      ]),
+    )
+    const { getByTestId } = render(App)
+    const items = getByTestId('overrides-history').querySelectorAll('li')
+    expect(items).toHaveLength(2)
+    expect(items[0].textContent).toMatch(/2026-05-01/)
+    expect(items[0].textContent).toMatch(/04:00/)
+    expect(items[0].textContent).toMatch(/short days/)
+    expect(items[1].textContent).toMatch(/2026-01-01/)
+
+    await fireEvent.click(items[0].querySelector('button') as HTMLButtonElement)
+    expect(loadEvents().filter(e => e.type === 'TargetOverride')).toHaveLength(1)
   })
 
   it('shows an error for invalid HHMM in the adjust form', async () => {
