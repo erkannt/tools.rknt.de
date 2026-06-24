@@ -680,7 +680,7 @@ describe('App', () => {
     const { getByRole } = render(App)
     expect(loadEvents()).toHaveLength(0)
 
-    await fireEvent.click(getByRole('button', { name: /load sample/i }))
+    await fireEvent.click(getByRole('button', { name: /replace current data with generated/i }))
     expect(loadEvents().length).toBeGreaterThan(50)
   })
 
@@ -704,6 +704,17 @@ describe('App', () => {
     const items = await findAllByRole('listitem')
     expect(items).toHaveLength(1)
     expect(loadEvents()).toEqual(incoming)
+  })
+
+  it('clears all events when "Clear current data" is clicked', async () => {
+    const today = new Date(2026, 5, 24, 0, 0, 0).getTime()
+    localStorage.setItem(
+      'worktimer.events',
+      JSON.stringify([{ type: 'WorkStarted', id: 'a', at: today + 9 * 3600_000 }]),
+    )
+    const { getByRole } = render(App)
+    await fireEvent.click(getByRole('button', { name: /clear current data/i }))
+    expect(loadEvents()).toEqual([])
   })
 
   it('exposes an Export JSON button', () => {

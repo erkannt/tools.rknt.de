@@ -305,6 +305,11 @@
     events = next
   }
 
+  function clearAll() {
+    replaceEvents([])
+    events = []
+  }
+
   async function importJson(e: Event) {
     const input = e.target as HTMLInputElement
     const file = input.files?.[0]
@@ -387,15 +392,6 @@
 </details>
 
 <p>Flex budget: <span data-testid="flex-budget">{formatBudget(budgetMs)}</span></p>
-
-<footer>
-  <button onclick={loadSample}>Load sample data</button>
-  <label>
-    Import JSON
-    <input type="file" accept="application/json" onchange={importJson} />
-  </label>
-  <button onclick={exportJson}>Export JSON</button>
-</footer>
 
 {#snippet sessionRow(session: Session)}
   <li>
@@ -488,3 +484,13 @@
     </details>
   {/each}
 </section>
+
+<footer>
+  <button onclick={loadSample}>Replace current data with generated data</button>
+  <button onclick={clearAll}>Clear current data</button>
+  <label>
+    Import JSON
+    <input type="file" accept="application/json" onchange={importJson} />
+  </label>
+  <button onclick={exportJson}>Export JSON</button>
+</footer>
