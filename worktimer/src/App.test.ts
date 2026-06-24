@@ -127,6 +127,57 @@ describe('App', () => {
     expect(items[0].querySelectorAll('time')).toHaveLength(1)
   })
 
+  it('shows an Edit button on each completed session', () => {
+    const today = new Date(2026, 5, 24, 0, 0, 0).getTime()
+    localStorage.setItem(
+      'worktimer.events',
+      JSON.stringify([
+        { type: 'WorkStarted', id: 'a', at: today + 9 * 3600_000 },
+        { type: 'WorkStopped', id: 'b', at: today + 10 * 3600_000 },
+      ]),
+    )
+    const { getByRole } = render(App)
+    expect(getByRole('button', { name: /edit/i })).toBeTruthy()
+  })
+
+  it('reveals start and stop datetime inputs prefilled when Edit is clicked', async () => {
+    const today = new Date(2026, 5, 24, 0, 0, 0).getTime()
+    localStorage.setItem(
+      'worktimer.events',
+      JSON.stringify([
+        { type: 'WorkStarted', id: 'a', at: today + 9 * 3600_000 },
+        { type: 'WorkStopped', id: 'b', at: today + 10 * 3600_000 + 30 * 60_000 },
+      ]),
+    )
+    const { getByRole, getByLabelText } = render(App)
+    await fireEvent.click(getByRole('button', { name: /edit/i }))
+
+    const startInput = getByLabelText(/start/i) as HTMLInputElement
+    const stopInput = getByLabelText(/stop/i) as HTMLInputElement
+    expect(startInput.type).toBe('datetime-local')
+    expect(startInput.value).toBe('2026-06-24T09:00')
+    expect(stopInput.value).toBe('2026-06-24T10:30')
+  })
+
+  it('recomputes session length live as the inputs change', async () => {
+    const today = new Date(2026, 5, 24, 0, 0, 0).getTime()
+    localStorage.setItem(
+      'worktimer.events',
+      JSON.stringify([
+        { type: 'WorkStarted', id: 'a', at: today + 9 * 3600_000 },
+        { type: 'WorkStopped', id: 'b', at: today + 10 * 3600_000 },
+      ]),
+    )
+    const { getByRole, getByLabelText, getByTestId } = render(App)
+    expect(getByTestId('session-length').textContent).toBe('01:00')
+
+    await fireEvent.click(getByRole('button', { name: /edit/i }))
+    const stopInput = getByLabelText(/stop/i) as HTMLInputElement
+    await fireEvent.input(stopInput, { target: { value: '2026-06-24T11:45' } })
+
+    expect(getByTestId('session-length').textContent).toBe('02:45')
+  })
+
   it('ticks the elapsed display while a session is running', async () => {
     const now = new Date(2026, 5, 24, 12, 0, 0).getTime()
     vi.useFakeTimers()

@@ -4,9 +4,14 @@
 
   let events = $state<WorkEvent[]>(loadEvents())
   let now = $state(Date.now())
+  let editingId = $state<string | null>(null)
+  let editStart = $state('')
+  let editStop = $state('')
+
   const sessions = $derived(deriveSessions(events))
   const running = $derived(events.at(-1)?.type === 'WorkStarted')
   const elapsedMs = $derived(elapsedToday(sessions, now))
+  const newestFirst = $derived([...sessions].reverse())
 
   $effect(() => {
     const id = setInterval(() => { now = Date.now() }, 1000)
@@ -37,7 +42,28 @@
     return new Date(ms).toISOString()
   }
 
-  const newestFirst = $derived([...sessions].reverse())
+  function toLocalInput(ms: number): string {
+    const d = new Date(ms)
+    const pad = (n: number) => String(n).padStart(2, '0')
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+  }
+
+  function fromLocalInput(s: string): number {
+    return new Date(s).getTime()
+  }
+
+  function startEdit(startId: string, startedAt: number, stoppedAt: number) {
+    editingId = startId
+    editStart = toLocalInput(startedAt)
+    editStop = toLocalInput(stoppedAt)
+  }
+
+  function editedLength(startedAt: number, stoppedAt: number): number {
+    const s = fromLocalInput(editStart)
+    const e = fromLocalInput(editStop)
+    if (Number.isNaN(s) || Number.isNaN(e)) return stoppedAt - startedAt
+    return e - s
+  }
 
   function start() {
     events = [...events, appendEvent({ type: 'WorkStarted', at: Date.now() })]
@@ -61,10 +87,23 @@
 <ul>
   {#each newestFirst as session (session.startId)}
     <li>
-      <time datetime={iso(session.startedAt)}>{timeOfDay(session.startedAt)}</time>
-      {#if session.stoppedAt !== null}
-        – <time datetime={iso(session.stoppedAt)}>{timeOfDay(session.stoppedAt)}</time>
-        (<span data-testid="session-length">{hhmm(session.stoppedAt - session.startedAt)}</span>)
+      {#if editingId === session.startId && session.stoppedAt !== null}
+        <label>
+          Start
+          <input type="datetime-local" bind:value={editStart} />
+        </label>
+        <label>
+          Stop
+          <input type="datetime-local" bind:value={editStop} />
+        </label>
+        (<span data-testid="session-length">{hhmm(editedLength(session.startedAt, session.stoppedAt))}</span>)
+      {:else}
+        <time datetime={iso(session.startedAt)}>{timeOfDay(session.startedAt)}</time>
+        {#if session.stoppedAt !== null}
+          – <time datetime={iso(session.stoppedAt)}>{timeOfDay(session.stoppedAt)}</time>
+          (<span data-testid="session-length">{hhmm(session.stoppedAt - session.startedAt)}</span>)
+          <button onclick={() => startEdit(session.startId, session.startedAt, session.stoppedAt!)}>Edit</button>
+        {/if}
       {/if}
     </li>
   {/each}
