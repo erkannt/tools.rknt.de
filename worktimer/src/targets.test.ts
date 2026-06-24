@@ -117,6 +117,24 @@ describe('flexBudget', () => {
     expect(flexBudget(events, dayMs(2026, 0, 7) + 12 * HOUR)).toBe(60 * MIN)
   })
 
+  it('adds FlexAdjusted deltas regardless of targets', () => {
+    const events: WorkEvent[] = [
+      { type: 'FlexAdjusted', id: 'f', at: 1, deltaMs: 3 * HOUR, reason: 'TOIL' },
+    ]
+    expect(flexBudget(events, dayMs(2026, 0, 6))).toBe(3 * HOUR)
+  })
+
+  it('combines work-vs-target and FlexAdjusted', () => {
+    const mon = dayMs(2026, 0, 5)
+    const events: WorkEvent[] = [
+      targets('t', 1, mon, { Mo: 7 * 60 }),
+      work('a', mon + 9 * HOUR), stop('b', mon + 17 * HOUR), // 8h, +1h vs target
+      { type: 'FlexAdjusted', id: 'f', at: 1, deltaMs: -30 * MIN, reason: 'oops' },
+    ]
+    // +1h day delta + (-30m adjust) = +30m
+    expect(flexBudget(events, dayMs(2026, 0, 6))).toBe(30 * MIN)
+  })
+
   it('includes today with current elapsed time', () => {
     // Today is Mon 2026-01-05; running session started 09:00, now 11:00 => 2h worked
     const mon = dayMs(2026, 0, 5)

@@ -60,17 +60,21 @@ export function activeTargets(events: WorkEvent[], day: number): Targets | null 
 }
 
 export function flexBudget(events: WorkEvent[], now: number): number {
+  let total = 0
+  for (const ev of events) {
+    if (ev.type === 'FlexAdjusted') total += ev.deltaMs
+  }
+
   let earliest = Infinity
   for (const ev of events) {
     if (ev.type === 'WorkTargetsSet' && ev.effectiveFrom < earliest) {
       earliest = ev.effectiveFrom
     }
   }
-  if (earliest === Infinity) return 0
+  if (earliest === Infinity) return total
 
   const sessions = deriveSessions(events)
   const lastDay = startOfDay(now)
-  let total = 0
   for (let day = startOfDay(earliest); day <= lastDay; day += DAY_MS) {
     const targets = activeTargets(events, day)
     if (!targets) continue
