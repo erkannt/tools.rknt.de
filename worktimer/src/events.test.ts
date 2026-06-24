@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { loadEvents, appendEvent, STORAGE_KEY } from './events'
+import { loadEvents, appendEvent, updateEventAt, STORAGE_KEY } from './events'
 
 beforeEach(() => {
   localStorage.clear()
@@ -40,5 +40,23 @@ describe('appendEvent', () => {
     const a = appendEvent({ type: 'WorkStarted', at: 1 })
     const b = appendEvent({ type: 'WorkStopped', at: 2 })
     expect(a.id).not.toBe(b.id)
+  })
+})
+
+describe('updateEventAt', () => {
+  it('updates the matching event in storage', () => {
+    const a = appendEvent({ type: 'WorkStarted', at: 1000 })
+    const b = appendEvent({ type: 'WorkStopped', at: 2000 })
+
+    const updated = updateEventAt(b.id, 2500)
+
+    expect(updated.id).toBe(b.id)
+    expect(updated.at).toBe(2500)
+    expect(loadEvents()).toEqual([a, { ...b, at: 2500 }])
+  })
+
+  it('throws when the id is unknown', () => {
+    appendEvent({ type: 'WorkStarted', at: 1 })
+    expect(() => updateEventAt('nope', 5)).toThrow()
   })
 })
