@@ -51,6 +51,26 @@ describe('appendEvent', () => {
   })
 })
 
+describe('events array ordering', () => {
+  it('appendEvent inserts back-dated events in chronological position', () => {
+    const a = appendEvent({ type: 'WorkStarted', at: 1000 })
+    const b = appendEvent({ type: 'WorkStarted', at: 500 })
+
+    const stored = loadEvents()
+    expect(stored.map(e => e.id)).toEqual([b.id, a.id])
+  })
+
+  it('updateEventAt re-sorts when the new at moves the event', () => {
+    const a = appendEvent({ type: 'WorkStarted', at: 1000 })
+    const b = appendEvent({ type: 'WorkStopped', at: 2000 })
+
+    updateEventAt(a.id, 3000)
+
+    const stored = loadEvents()
+    expect(stored.map(e => e.id)).toEqual([b.id, a.id])
+  })
+})
+
 describe('updateEventAt', () => {
   it('updates the matching event in storage', () => {
     const a = appendEvent({ type: 'WorkStarted', at: 1000 })

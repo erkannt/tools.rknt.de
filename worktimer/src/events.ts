@@ -49,6 +49,7 @@ export function appendEvent(ev: NewEvent): WorkEvent {
   const stored: WorkEvent = { ...ev, id: crypto.randomUUID() }
   const events = loadEvents()
   events.push(stored)
+  events.sort((a, b) => a.at - b.at)
   localStorage.setItem(STORAGE_KEY, JSON.stringify(events))
   return stored
 }
@@ -121,6 +122,7 @@ export function updateEventAt(id: string, at: number): WorkEvent {
   const target = events.find(e => e.id === id)
   if (!target) throw new Error(`event ${id} not found`)
   target.at = at
+  events.sort((a, b) => a.at - b.at)
   localStorage.setItem(STORAGE_KEY, JSON.stringify(events))
   return target
 }
