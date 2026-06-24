@@ -11,6 +11,8 @@
   import { deriveSessions, elapsedToday, validateEdit } from './sessions'
   import { generateSampleEvents } from './seed'
   import { parseHHMM, formatHHMM } from './time'
+  import { activeTargets, flexBudget } from './targets'
+  import { WEEKDAYS } from './events'
 
   let events = $state<WorkEvent[]>(loadEvents())
   let now = $state(Date.now())
@@ -25,6 +27,81 @@
   const running = $derived(events.at(-1)?.type === 'WorkStarted')
   const elapsedMs = $derived(elapsedToday(sessions, now))
   const newestFirst = $derived([...sessions].reverse())
+  const budgetMs = $derived(flexBudget(events, now))
+
+  const today = $derived(activeTargets(events, startOfDayMs(now)))
+  let targetInputs = $state<Record<string, string>>({ Mo: '', Tu: '', We: '', Th: '', Fr: '' })
+  let effectiveFromInput = $state('')
+  let targetsError = $state<string | null>(null)
+
+  function startOfDayMs(t: number): number {
+    const d = new Date(t)
+    d.setHours(0, 0, 0, 0)
+    return d.getTime()
+  }
+
+  function toDateInput(ms: number): string {
+    const d = new Date(ms)
+    const pad = (n: number) => String(n).padStart(2, '0')
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+  }
+
+  function fromDateInput(s: string): number {
+    const [y, m, d] = s.split('-').map(Number)
+    return new Date(y, m - 1, d, 0, 0, 0, 0).getTime()
+  }
+
+  function targetsToInputs(t: { Mo: number; Tu: number; We: number; Th: number; Fr: number } | null) {
+    const minToHHMM = (m: number) => {
+      const hh = String(Math.floor(m / 60)).padStart(2, '0')
+      const mm = String(m % 60).padStart(2, '0')
+      return `${hh}${mm}`
+    }
+    return {
+      Mo: t === null ? '' : minToHHMM(t.Mo),
+      Tu: t === null ? '' : minToHHMM(t.Tu),
+      We: t === null ? '' : minToHHMM(t.We),
+      Th: t === null ? '' : minToHHMM(t.Th),
+      Fr: t === null ? '' : minToHHMM(t.Fr),
+    }
+  }
+
+  $effect(() => {
+    targetInputs = targetsToInputs(today)
+    if (effectiveFromInput === '') effectiveFromInput = toDateInput(Date.now())
+  })
+
+  function formatBudget(ms: number): string {
+    const sign = ms < 0 ? '-' : '+'
+    const total = Math.floor(Math.abs(ms) / 60_000)
+    const hh = String(Math.floor(total / 60)).padStart(2, '0')
+    const mm = String(total % 60).padStart(2, '0')
+    return `${sign}${hh}:${mm}`
+  }
+
+  function saveTargets() {
+    const parsed: Record<string, number> = {}
+    for (const day of WEEKDAYS) {
+      const s = targetInputs[day]
+      if (!/^\d{4}$/.test(s)) { targetsError = 'Use HHMM (e.g. 0800).'; return }
+      const hh = Number(s.slice(0, 2))
+      const mm = Number(s.slice(2, 4))
+      if (hh > 23 || mm > 59) { targetsError = 'Use HHMM (e.g. 0800).'; return }
+      parsed[day] = hh * 60 + mm
+    }
+    const eff = fromDateInput(effectiveFromInput)
+    if (Number.isNaN(eff)) { targetsError = 'Invalid date.'; return }
+    events = [
+      ...events,
+      appendEvent({
+        type: 'WorkTargetsSet',
+        at: Date.now(),
+        effectiveFrom: eff,
+        targets: parsed as { Mo: number; Tu: number; We: number; Th: number; Fr: number },
+      }),
+    ]
+    targetsError = null
+  }
 
   $effect(() => {
     const id = setInterval(() => { now = Date.now() }, 1000)
@@ -149,6 +226,35 @@
   <button onclick={start}>Start</button>
 {/if}
 
+<details>
+  <summary>Flex time</summary>
+  <fieldset>
+    <legend>Weekly targets</legend>
+    <label>
+      Effective from
+      <input type="date" bind:value={effectiveFromInput} />
+    </label>
+    {#each WEEKDAYS as day}
+      <label>
+        {day}
+        <input
+          type="text"
+          inputmode="numeric"
+          maxlength="4"
+          size="4"
+          pattern="\d{'{4}'}"
+          bind:value={targetInputs[day]}
+        />
+      </label>
+    {/each}
+    <button onclick={saveTargets}>Save targets</button>
+    {#if targetsError !== null}
+      <p role="alert">{targetsError}</p>
+    {/if}
+  </fieldset>
+</details>
+
+<p>Flex budget: <span data-testid="flex-budget">{formatBudget(budgetMs)}</span></p>
 <p>Today: <time data-testid="elapsed-today">{format(elapsedMs)}</time></p>
 
 <footer>

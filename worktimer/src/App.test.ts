@@ -13,6 +13,71 @@ afterEach(() => {
 })
 
 describe('App', () => {
+  it('shows a flex budget of +00:00 when no targets are set', () => {
+    const { getByTestId } = render(App)
+    expect(getByTestId('flex-budget').textContent).toBe('+00:00')
+  })
+
+  it('renders a collapsible Flex time section, collapsed by default', () => {
+    const { getByText } = render(App)
+    const summary = getByText(/flex time/i)
+    const details = summary.closest('details')!
+    expect(details.open).toBe(false)
+  })
+
+  it('persists a WorkTargetsSet event on Save and updates the budget', async () => {
+    // Today: Wed 2026-06-24, noon
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date(2026, 5, 24, 12, 0, 0))
+    try {
+      const today = new Date(2026, 5, 24, 0, 0, 0).getTime()
+      const wedMorning = today + 9 * 3600_000
+      const wedStop = today + 11 * 3600_000 // 2h worked
+      localStorage.setItem(
+        'worktimer.events',
+        JSON.stringify([
+          { type: 'WorkStarted', id: 'a', at: wedMorning },
+          { type: 'WorkStopped', id: 'b', at: wedStop },
+        ]),
+      )
+
+      const { getByLabelText, getByRole, getByTestId } = render(App)
+      await fireEvent.input(getByLabelText('Mo'), { target: { value: '0800' } })
+      await fireEvent.input(getByLabelText('Tu'), { target: { value: '0800' } })
+      await fireEvent.input(getByLabelText('We'), { target: { value: '0800' } })
+      await fireEvent.input(getByLabelText('Th'), { target: { value: '0800' } })
+      await fireEvent.input(getByLabelText('Fr'), { target: { value: '0800' } })
+      await fireEvent.input(getByLabelText(/effective from/i), { target: { value: '2026-06-24' } })
+      await fireEvent.click(getByRole('button', { name: /save targets/i }))
+
+      const stored = loadEvents().filter(e => e.type === 'WorkTargetsSet')
+      expect(stored).toHaveLength(1)
+      expect(getByTestId('flex-budget').textContent).toBe('-06:00') // 2h worked - 8h target
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('prefills the targets form from the currently active target set', () => {
+    const today = new Date(2026, 5, 24, 0, 0, 0).getTime()
+    localStorage.setItem(
+      'worktimer.events',
+      JSON.stringify([
+        {
+          type: 'WorkTargetsSet',
+          id: 't',
+          at: 1,
+          effectiveFrom: today - 7 * 24 * 3600_000,
+          targets: { Mo: 510, Tu: 480, We: 0, Th: 480, Fr: 240 },
+        },
+      ]),
+    )
+    const { getByLabelText } = render(App)
+    expect((getByLabelText('Mo') as HTMLInputElement).value).toBe('0830')
+    expect((getByLabelText('We') as HTMLInputElement).value).toBe('0000')
+    expect((getByLabelText('Fr') as HTMLInputElement).value).toBe('0400')
+  })
+
   it('renders a Start button when there are no events', () => {
     const { getByRole } = render(App)
     expect(getByRole('button', { name: /start/i })).toBeTruthy()
@@ -192,7 +257,7 @@ describe('App', () => {
 
     await fireEvent.input(getByLabelText(/start/i), { target: { value: '0830' } })
     await fireEvent.input(getByLabelText(/stop/i), { target: { value: '1100' } })
-    await fireEvent.click(getByRole('button', { name: /save/i }))
+    await fireEvent.click(getByRole('button', { name: /^save$/i }))
 
     expect(queryByLabelText(/start/i)).toBeNull()
     const item = getAllByRole('listitem')[0]
@@ -222,7 +287,7 @@ describe('App', () => {
 
     // Push its stop past the start of the 13:00 session.
     await fireEvent.input(getByLabelText(/stop/i), { target: { value: '1330' } })
-    await fireEvent.click(getByRole('button', { name: /save/i }))
+    await fireEvent.click(getByRole('button', { name: /^save$/i }))
 
     expect(getByRole('alert').textContent).toMatch(/overlap/i)
     expect(loadEvents()).toEqual(original)
@@ -245,11 +310,11 @@ describe('App', () => {
     await fireEvent.click(items[1].querySelector('button')!)
 
     await fireEvent.input(getByLabelText(/stop/i), { target: { value: '1330' } })
-    await fireEvent.click(getByRole('button', { name: /save/i }))
+    await fireEvent.click(getByRole('button', { name: /^save$/i }))
     expect(getByRole('alert')).toBeTruthy()
 
     await fireEvent.input(getByLabelText(/stop/i), { target: { value: '1100' } })
-    await fireEvent.click(getByRole('button', { name: /save/i }))
+    await fireEvent.click(getByRole('button', { name: /^save$/i }))
     expect(queryByRole('alert')).toBeNull()
   })
 
@@ -301,7 +366,7 @@ describe('App', () => {
     const { getByRole, getByLabelText } = render(App)
     await fireEvent.click(getByRole('button', { name: /edit/i }))
     await fireEvent.input(getByLabelText(/stop/i), { target: { value: '11:00' } })
-    await fireEvent.click(getByRole('button', { name: /save/i }))
+    await fireEvent.click(getByRole('button', { name: /^save$/i }))
 
     expect(getByRole('alert').textContent).toMatch(/hhmm/i)
     expect(loadEvents()).toEqual(original)
@@ -336,7 +401,7 @@ describe('App', () => {
     const { getByRole, getByLabelText, queryByRole } = render(App)
     await fireEvent.click(getByRole('button', { name: /edit/i }))
     await fireEvent.input(getByLabelText(/stop/i), { target: { value: '0800' } })
-    await fireEvent.click(getByRole('button', { name: /save/i }))
+    await fireEvent.click(getByRole('button', { name: /^save$/i }))
     expect(getByRole('alert')).toBeTruthy()
 
     await fireEvent.click(getByRole('button', { name: /cancel/i }))
@@ -357,7 +422,7 @@ describe('App', () => {
     expect(queryByLabelText(/stop/i)).toBeNull()
 
     await fireEvent.input(getByLabelText(/start/i), { target: { value: '0830' } })
-    await fireEvent.click(getByRole('button', { name: /save/i }))
+    await fireEvent.click(getByRole('button', { name: /^save$/i }))
 
     expect(loadEvents()[0].at).toBe(new Date(2026, 5, 24, 8, 30).getTime())
     expect(queryByLabelText(/start/i)).toBeNull()
@@ -376,7 +441,7 @@ describe('App', () => {
       const { getByRole, getByLabelText } = render(App)
       await fireEvent.click(getByRole('button', { name: /edit/i }))
       await fireEvent.input(getByLabelText(/start/i), { target: { value: '1500' } })
-      await fireEvent.click(getByRole('button', { name: /save/i }))
+      await fireEvent.click(getByRole('button', { name: /^save$/i }))
 
       expect(getByRole('alert').textContent).toMatch(/future/i)
       expect(loadEvents()[0].at).toBe(today + 9 * 3600_000)
