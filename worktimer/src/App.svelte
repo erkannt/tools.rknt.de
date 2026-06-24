@@ -3,9 +3,15 @@
   import { deriveSessions, elapsedToday } from './sessions'
 
   let events = $state<WorkEvent[]>(loadEvents())
+  let now = $state(Date.now())
   const sessions = $derived(deriveSessions(events))
   const running = $derived(events.at(-1)?.type === 'WorkStarted')
-  const elapsedMs = $derived(elapsedToday(sessions, Date.now()))
+  const elapsedMs = $derived(elapsedToday(sessions, now))
+
+  $effect(() => {
+    const id = setInterval(() => { now = Date.now() }, 1000)
+    return () => clearInterval(id)
+  })
 
   function format(ms: number): string {
     const s = Math.floor(ms / 1000)

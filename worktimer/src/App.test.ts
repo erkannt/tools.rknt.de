@@ -1,5 +1,6 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { render, fireEvent, cleanup } from '@testing-library/svelte'
+import { tick } from 'svelte'
 import App from './App.svelte'
 import { loadEvents } from './events'
 
@@ -75,5 +76,25 @@ describe('App', () => {
   it("renders 00:00:00 elapsed when no sessions exist today", () => {
     const { getByTestId } = render(App)
     expect(getByTestId('elapsed-today').textContent).toBe('00:00:00')
+  })
+
+  it('ticks the elapsed display while a session is running', async () => {
+    const now = new Date(2026, 5, 24, 12, 0, 0).getTime()
+    vi.useFakeTimers()
+    vi.setSystemTime(now)
+    try {
+      localStorage.setItem(
+        'worktimer.events',
+        JSON.stringify([{ type: 'WorkStarted', id: 'a', at: now }]),
+      )
+      const { getByTestId } = render(App)
+      expect(getByTestId('elapsed-today').textContent).toBe('00:00:00')
+
+      await vi.advanceTimersByTimeAsync(3000)
+      await tick()
+      expect(getByTestId('elapsed-today').textContent).toBe('00:00:03')
+    } finally {
+      vi.useRealTimers()
+    }
   })
 })
