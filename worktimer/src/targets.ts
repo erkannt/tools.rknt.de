@@ -19,7 +19,23 @@ export function weekStartLocal(t: number): number {
   return d.getTime()
 }
 
+function activeOverride(events: WorkEvent[], day: number): number | null {
+  let chosenAt = -Infinity
+  let chosenVal: number | null = null
+  for (const ev of events) {
+    if (ev.type !== 'TargetOverride') continue
+    if (day < ev.startDay || day > ev.endDay) continue
+    if (ev.at >= chosenAt) {
+      chosenAt = ev.at
+      chosenVal = ev.targetMin
+    }
+  }
+  return chosenVal
+}
+
 export function dailyTarget(events: WorkEvent[], day: number): number | null {
+  const ovr = activeOverride(events, day)
+  if (ovr !== null) return ovr
   const t = activeTargets(events, day)
   if (t === null) return null
   const wd = weekdayKey(day)
@@ -75,16 +91,17 @@ export function flexBudget(events: WorkEvent[], now: number): number {
     if (ev.type === 'WorkTargetsSet' && ev.effectiveFrom < earliest) {
       earliest = ev.effectiveFrom
     }
+    if (ev.type === 'TargetOverride' && ev.startDay < earliest) {
+      earliest = ev.startDay
+    }
   }
   if (earliest === Infinity) return total
 
   const sessions = deriveSessions(events)
   const lastDay = startOfDay(now)
   for (let day = startOfDay(earliest); day <= lastDay; day += DAY_MS) {
-    const targets = activeTargets(events, day)
-    if (!targets) continue
-    const wd = weekdayKey(day)
-    const targetMin = wd === null ? 0 : targets[wd]
+    const targetMin = dailyTarget(events, day)
+    if (targetMin === null) continue
     const worked = elapsedOnDay(sessions, day, now)
     total += worked - targetMin * MIN_MS
   }

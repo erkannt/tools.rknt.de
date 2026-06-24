@@ -124,6 +124,27 @@ describe('flexBudget', () => {
     expect(flexBudget(events, dayMs(2026, 0, 6))).toBe(3 * HOUR)
   })
 
+  it('uses override target on days it covers', () => {
+    const mon = dayMs(2026, 0, 5)
+    const events: WorkEvent[] = [
+      targets('t', 1, mon, { Mo: 8 * 60 }),
+      work('a', mon + 9 * HOUR), stop('b', mon + 11 * HOUR), // 2h on Mon
+      { type: 'TargetOverride', id: 'o', at: 2, startDay: mon, endDay: mon, targetMin: 0, reason: 'sick' },
+    ]
+    // Override target=0 → contribution = 2h - 0 = +2h
+    expect(flexBudget(events, dayMs(2026, 0, 6))).toBe(2 * HOUR)
+  })
+
+  it('counts days covered by override even without a base target', () => {
+    const mon = dayMs(2026, 0, 5)
+    const events: WorkEvent[] = [
+      work('a', mon + 9 * HOUR), stop('b', mon + 11 * HOUR), // 2h
+      { type: 'TargetOverride', id: 'o', at: 1, startDay: mon, endDay: mon, targetMin: 60, reason: '' },
+    ]
+    // 2h worked - 1h override = +1h
+    expect(flexBudget(events, dayMs(2026, 0, 6))).toBe(1 * HOUR)
+  })
+
   it('combines work-vs-target and FlexAdjusted', () => {
     const mon = dayMs(2026, 0, 5)
     const events: WorkEvent[] = [
@@ -182,6 +203,55 @@ describe('dailyTarget', () => {
     const events = [t('a', 1, dayMs(2026, 0, 1), { Mo: 480 })]
     expect(dailyTarget(events, dayMs(2026, 0, 3))).toBe(0) // Sat
     expect(dailyTarget(events, dayMs(2026, 0, 4))).toBe(0) // Sun
+  })
+
+  const override = (
+    id: string,
+    at: number,
+    startDay: number,
+    endDay: number,
+    targetMin: number,
+  ): WorkEvent => ({
+    type: 'TargetOverride',
+    id,
+    at,
+    startDay,
+    endDay,
+    targetMin,
+    reason: '',
+  })
+
+  it('returns override value when an override covers the day', () => {
+    const day = dayMs(2026, 0, 5)
+    const events = [
+      t('base', 1, day, { Mo: 480 }),
+      override('o', 2, day, day, 0), // holiday on Mon
+    ]
+    expect(dailyTarget(events, day)).toBe(0)
+  })
+
+  it('last-emitted override wins when ranges overlap', () => {
+    const day = dayMs(2026, 0, 5)
+    const events = [
+      override('o1', 1, day, day, 240),
+      override('o2', 2, day, day, 60),
+    ]
+    expect(dailyTarget(events, day)).toBe(60)
+  })
+
+  it('override applies even with no base target', () => {
+    const day = dayMs(2026, 0, 5)
+    const events = [override('o', 1, day, day, 90)]
+    expect(dailyTarget(events, day)).toBe(90)
+  })
+
+  it('override does not affect days outside its range', () => {
+    const day = dayMs(2026, 0, 5)
+    const events = [
+      t('base', 1, day, { Mo: 480, Tu: 480 }),
+      override('o', 2, day, day, 0),
+    ]
+    expect(dailyTarget(events, dayMs(2026, 0, 6))).toBe(480) // Tue unaffected
   })
 })
 
