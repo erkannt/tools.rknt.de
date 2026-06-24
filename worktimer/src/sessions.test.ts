@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { deriveSessions, elapsedToday, validateEdit, type Session } from './sessions'
+import { deriveSessions, elapsedToday, elapsedOnDay, validateEdit, type Session } from './sessions'
 import type { WorkEvent } from './events'
 
 const ev = (type: 'WorkStarted' | 'WorkStopped', id: string, at: number): WorkEvent => ({
@@ -78,6 +78,30 @@ describe('elapsedToday', () => {
       { startId: 'a', stopId: 'b', startedAt: startOfToday - 5000, stoppedAt: startOfToday + 2000 },
     ]
     expect(elapsedToday(sessions, today)).toBe(2000)
+  })
+})
+
+describe('elapsedOnDay', () => {
+  const yesterday = new Date(2026, 5, 23, 0, 0, 0).getTime()
+  const yesterdayMid = new Date(2026, 5, 23, 12, 0, 0).getTime()
+  const today = new Date(2026, 5, 24, 12, 0, 0).getTime()
+
+  it('returns work on a specific past day', () => {
+    const sessions = [
+      { startId: 'a', stopId: 'b', startedAt: yesterdayMid, stoppedAt: yesterdayMid + 3600_000 },
+    ]
+    expect(elapsedOnDay(sessions, yesterday, today)).toBe(3600_000)
+  })
+
+  it('clips a running session to the day end', () => {
+    const sessions = [
+      { startId: 'a', stopId: null, startedAt: yesterdayMid, stoppedAt: null },
+    ]
+    expect(elapsedOnDay(sessions, yesterday, today)).toBe(12 * 3600_000)
+  })
+
+  it('returns 0 for an empty day', () => {
+    expect(elapsedOnDay([], yesterday, today)).toBe(0)
   })
 })
 

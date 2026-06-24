@@ -62,8 +62,7 @@ export function validateEdit(
   return { ok: true }
 }
 
-export function elapsedToday(sessions: Session[], now: number): number {
-  const dayStart = startOfDay(now)
+export function elapsedOnDay(sessions: Session[], dayStart: number, now: number): number {
   const dayEnd = dayStart + 24 * 60 * 60 * 1000
   let total = 0
   for (const s of sessions) {
@@ -72,4 +71,8 @@ export function elapsedToday(sessions: Session[], now: number): number {
     if (overlap > 0) total += overlap
   }
   return total
+}
+
+export function elapsedToday(sessions: Session[], now: number): number {
+  return elapsedOnDay(sessions, startOfDay(now), now)
 }
