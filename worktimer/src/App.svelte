@@ -220,9 +220,10 @@
   const CHART_WEEKS = 24
   type WeekPoint = { weekStart: number; delta: number; cumulative: number }
   const weeklyBudgetSeries = $derived.by<WeekPoint[]>(() => {
-    // Window starts CHART_WEEKS-1 weeks before this week's Monday.
+    // Window: CHART_WEEKS completed weeks ending with the week *before* this
+    // week (so the in-progress current week is excluded).
     let firstWs = thisWeekStart
-    for (let i = 0; i < CHART_WEEKS - 1; i++) {
+    for (let i = 0; i < CHART_WEEKS; i++) {
       const d = new Date(firstWs); d.setDate(d.getDate() - 7); firstWs = d.getTime()
     }
     // Pre-window cumulative: per-day deltas + adjustments before firstWs.
