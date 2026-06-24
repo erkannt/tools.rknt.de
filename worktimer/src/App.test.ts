@@ -54,4 +54,26 @@ describe('App', () => {
     const { getByRole } = render(App)
     expect(getByRole('button', { name: /stop/i })).toBeTruthy()
   })
+
+  it("renders today's elapsed time as HH:MM:SS", () => {
+    const now = Date.now()
+    const startOfToday = new Date(now)
+    startOfToday.setHours(0, 0, 0, 0)
+    const start = startOfToday.getTime() + 1000
+    const stop = start + (1 * 3600 + 2 * 60 + 3) * 1000 // 1h 2m 3s
+    localStorage.setItem(
+      'worktimer.events',
+      JSON.stringify([
+        { type: 'WorkStarted', id: 'a', at: start },
+        { type: 'WorkStopped', id: 'b', at: stop },
+      ]),
+    )
+    const { getByTestId } = render(App)
+    expect(getByTestId('elapsed-today').textContent).toBe('01:02:03')
+  })
+
+  it("renders 00:00:00 elapsed when no sessions exist today", () => {
+    const { getByTestId } = render(App)
+    expect(getByTestId('elapsed-today').textContent).toBe('00:00:00')
+  })
 })
