@@ -65,6 +65,37 @@ describe('App', () => {
     expect(getByText('Previous weeks', { selector: 'h2' })).toBeTruthy()
   })
 
+  it('shows the today delta when a target is active', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date(2026, 5, 24, 12, 0, 0)) // Wed
+    try {
+      const today = new Date(2026, 5, 24, 0, 0, 0).getTime()
+      localStorage.setItem(
+        'worktimer.events',
+        JSON.stringify([
+          { type: 'WorkStarted', id: 'a', at: today + 9 * 3600_000 },
+          { type: 'WorkStopped', id: 'b', at: today + 11 * 3600_000 }, // 2h worked
+          {
+            type: 'WorkTargetsSet',
+            id: 't',
+            at: 1,
+            effectiveFrom: today,
+            targets: { Mo: 480, Tu: 480, We: 480, Th: 480, Fr: 480 },
+          },
+        ]),
+      )
+      const { getByTestId } = render(App)
+      expect(getByTestId('today-delta').textContent).toBe('-06:00')
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('omits the today delta when no target is active', () => {
+    const { queryByTestId } = render(App)
+    expect(queryByTestId('today-delta')).toBeNull()
+  })
+
   it('lists only today\'s sessions in the Today section', () => {
     const today = new Date(2026, 5, 24, 0, 0, 0).getTime()
     const lastWeek = today - 7 * 24 * 3600_000

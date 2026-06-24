@@ -11,7 +11,7 @@
   import { deriveSessions, elapsedToday, validateEdit, type Session } from './sessions'
   import { generateSampleEvents } from './seed'
   import { parseHHMM, formatHHMM } from './time'
-  import { activeTargets, flexBudget } from './targets'
+  import { activeTargets, dailyTarget, flexBudget } from './targets'
   import { WEEKDAYS } from './events'
 
   let events = $state<WorkEvent[]>(loadEvents())
@@ -26,6 +26,10 @@
   const sessions = $derived(deriveSessions(events))
   const running = $derived(events.at(-1)?.type === 'WorkStarted')
   const elapsedMs = $derived(elapsedToday(sessions, now))
+  const todayTargetMin = $derived(dailyTarget(events, startOfDayMs(now)))
+  const todayDeltaMs = $derived(
+    todayTargetMin === null ? null : elapsedMs - todayTargetMin * 60_000,
+  )
   const todaySessions = $derived(
     [...sessions]
       .filter(s => startOfDayMs(s.startedAt) === startOfDayMs(now))
@@ -302,7 +306,12 @@
 
 <section>
   <h2>Today</h2>
-  <p><time data-testid="elapsed-today">{format(elapsedMs)}</time></p>
+  <p>
+    <time data-testid="elapsed-today">{format(elapsedMs)}</time>
+    {#if todayDeltaMs !== null}
+      <span data-testid="today-delta">{formatBudget(todayDeltaMs)}</span>
+    {/if}
+  </p>
   <ul>
     {#each todaySessions as session (session.startId)}
       {@render sessionRow(session)}
