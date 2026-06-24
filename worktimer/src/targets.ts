@@ -1,14 +1,8 @@
 import { WEEKDAYS, type Targets, type WorkEvent, type Weekday } from './events'
 import { deriveSessions, elapsedOnDay } from './sessions'
+import { nextDay, startOfDay } from './time'
 
-const DAY_MS = 24 * 60 * 60 * 1000
 const MIN_MS = 60_000
-
-function startOfDay(t: number): number {
-  const d = new Date(t)
-  d.setHours(0, 0, 0, 0)
-  return d.getTime()
-}
 
 export function weekStartLocal(t: number): number {
   const d = new Date(t)
@@ -45,12 +39,14 @@ export function dailyTarget(events: WorkEvent[], day: number): number | null {
 export function weeklyTarget(events: WorkEvent[], weekStart: number): { mins: number; hasAny: boolean } {
   let total = 0
   let hasAny = false
+  let day = weekStart
   for (let i = 0; i < 7; i++) {
-    const day = weekStart + i * DAY_MS
     const dt = dailyTarget(events, day)
-    if (dt === null) continue
-    hasAny = true
-    total += dt
+    if (dt !== null) {
+      hasAny = true
+      total += dt
+    }
+    day = nextDay(day)
   }
   return { mins: total, hasAny }
 }
@@ -99,7 +95,7 @@ export function flexBudget(events: WorkEvent[], now: number): number {
 
   const sessions = deriveSessions(events)
   const lastDay = startOfDay(now)
-  for (let day = startOfDay(earliest); day <= lastDay; day += DAY_MS) {
+  for (let day = startOfDay(earliest); day <= lastDay; day = nextDay(day)) {
     const targetMin = dailyTarget(events, day)
     if (targetMin === null) continue
     const worked = elapsedOnDay(sessions, day, now)

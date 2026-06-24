@@ -11,7 +11,7 @@
   } from './events'
   import { deriveSessions, validateEdit, type Session } from './sessions'
   import { generateSampleEvents } from './seed'
-  import { parseHHMM, formatHHMM } from './time'
+  import { parseHHMM, formatHHMM, startOfDay as startOfDayMs, nextDay } from './time'
   import { activeTargets, activeTargetEvent, dailyTarget, weekStartLocal, weeklyTarget } from './targets'
   import { WEEKDAYS } from './events'
 
@@ -24,7 +24,6 @@
   let editStopAnchor = $state(0)
   let editError = $state<string | null>(null)
 
-  const DAY = 24 * 3600_000
   const sessions = $derived(deriveSessions(events))
   const running = $derived(events.at(-1)?.type === 'WorkStarted')
   const today = $derived(startOfDayMs(now))
@@ -39,7 +38,7 @@
       const end = s.stoppedAt ?? today
       let d = startOfDayMs(s.startedAt)
       while (d < end) {
-        const dayEnd = d + DAY
+        const dayEnd = nextDay(d)
         const overlap = Math.min(end, dayEnd) - Math.max(s.startedAt, d)
         if (overlap > 0) m.set(d, (m.get(d) ?? 0) + overlap)
         d = dayEnd
@@ -65,9 +64,10 @@
 
   const elapsedMs = $derived.by(() => {
     let total = workedPerDay.get(today) ?? 0
-    if (runningSession !== null && runningSession.startedAt < today + DAY) {
+    const tomorrow = nextDay(today)
+    if (runningSession !== null && runningSession.startedAt < tomorrow) {
       const tipStart = Math.max(runningSession.startedAt, today)
-      const overlap = Math.min(now, today + DAY) - tipStart
+      const overlap = Math.min(now, tomorrow) - tipStart
       if (overlap > 0) total += overlap
     }
     return total
@@ -85,7 +85,7 @@
   // events (for targets) and thisWeekStart/today (which only change at midnight).
   const pastDaysThisWeek = $derived.by<DayBlock[]>(() => {
     const days: DayBlock[] = []
-    for (let d = thisWeekStart; d < today; d += DAY) {
+    for (let d = thisWeekStart; d < today; d = nextDay(d)) {
       const total = workedPerDay.get(d) ?? 0
       const tgt = dailyTarget(events, d)
       const delta = tgt === null ? null : total - tgt * 60_000
@@ -96,7 +96,7 @@
 
   const weekPastDaysTotal = $derived.by(() => {
     let sum = 0
-    for (let d = thisWeekStart; d < today; d += DAY) {
+    for (let d = thisWeekStart; d < today; d = nextDay(d)) {
       sum += workedPerDay.get(d) ?? 0
     }
     return sum
@@ -134,7 +134,11 @@
     const blocks: WeekBlock[] = []
     for (const [ws, arr] of buckets) {
       let total = 0
-      for (let i = 0; i < 7; i++) total += workedPerDay.get(ws + i * DAY) ?? 0
+      let day = ws
+      for (let i = 0; i < 7; i++) {
+        total += workedPerDay.get(day) ?? 0
+        day = nextDay(day)
+      }
       const wt = weeklyTarget(events, ws)
       const delta = wt.hasAny ? total - wt.mins * 60_000 : null
       blocks.push({
@@ -165,7 +169,7 @@
   const budgetPast = $derived.by(() => {
     let total = flexAdjustmentsTotal
     if (budgetEarliestDay === null) return total
-    for (let d = budgetEarliestDay; d < today; d += DAY) {
+    for (let d = budgetEarliestDay; d < today; d = nextDay(d)) {
       const tgt = dailyTarget(events, d)
       if (tgt === null) continue
       const worked = workedPerDay.get(d) ?? 0
@@ -211,12 +215,6 @@
   let addStartTime = $state('')
   let addEndTime = $state('')
   let addError = $state<string | null>(null)
-
-  function startOfDayMs(t: number): number {
-    const d = new Date(t)
-    d.setHours(0, 0, 0, 0)
-    return d.getTime()
-  }
 
   function toDateInput(ms: number): string {
     const d = new Date(ms)

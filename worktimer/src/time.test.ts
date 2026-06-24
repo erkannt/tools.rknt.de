@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { parseHHMM, formatHHMM } from './time'
+import { parseHHMM, formatHHMM, startOfDay, nextDay } from './time'
 
 describe('parseHHMM', () => {
   // anchor: 2026-06-24 13:45:30.500 local
@@ -44,5 +44,30 @@ describe('formatHHMM', () => {
   it('pads single-digit hours and minutes', () => {
     const t = new Date(2026, 5, 24, 1, 5, 0).getTime()
     expect(formatHHMM(t)).toBe('0105')
+  })
+})
+
+describe('startOfDay / nextDay', () => {
+  it('startOfDay returns local midnight', () => {
+    const t = new Date(2026, 5, 24, 9, 30, 15).getTime()
+    const expected = new Date(2026, 5, 24, 0, 0, 0).getTime()
+    expect(startOfDay(t)).toBe(expected)
+  })
+
+  it('nextDay advances by one calendar day', () => {
+    const t = new Date(2026, 5, 24, 0, 0, 0).getTime()
+    const expected = new Date(2026, 5, 25, 0, 0, 0).getTime()
+    expect(nextDay(t)).toBe(expected)
+  })
+
+  it('nextDay lands on local midnight after the DST spring-forward', () => {
+    // Construct via local-time constructor: Sun 2026-03-29 00:00 is local midnight
+    // in any TZ; nextDay should give Mon 2026-03-30 00:00 *local*, regardless of
+    // how many wall-clock hours elapsed between them. In TZs without DST, this
+    // still passes (24h elapsed); in TZs with spring-forward DST on Mar 29, only
+    // 23h elapsed but the local-midnight target is the same.
+    const sun = new Date(2026, 2, 29, 0, 0, 0).getTime()
+    const mon = new Date(2026, 2, 30, 0, 0, 0).getTime()
+    expect(nextDay(sun)).toBe(mon)
   })
 })

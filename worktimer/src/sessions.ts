@@ -62,8 +62,10 @@ export function validateEdit(
   return { ok: true }
 }
 
+import { nextDay } from './time'
+
 export function elapsedOnDay(sessions: Session[], dayStart: number, now: number): number {
-  const dayEnd = dayStart + 24 * 60 * 60 * 1000
+  const dayEnd = nextDay(dayStart)
   let total = 0
   for (const s of sessions) {
     const end = s.stoppedAt ?? now
