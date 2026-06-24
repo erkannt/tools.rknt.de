@@ -26,6 +26,13 @@
     return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
   }
 
+  function hhmm(ms: number): string {
+    const minutes = Math.max(0, Math.floor(ms / 60_000))
+    const hh = String(Math.floor(minutes / 60)).padStart(2, '0')
+    const mm = String(minutes % 60).padStart(2, '0')
+    return `${hh}:${mm}`
+  }
+
   function iso(ms: number): string {
     return new Date(ms).toISOString()
   }
@@ -57,6 +64,7 @@
       <time datetime={iso(session.startedAt)}>{timeOfDay(session.startedAt)}</time>
       {#if session.stoppedAt !== null}
         – <time datetime={iso(session.stoppedAt)}>{timeOfDay(session.stoppedAt)}</time>
+        (<span data-testid="session-length">{hhmm(session.stoppedAt - session.startedAt)}</span>)
       {/if}
     </li>
   {/each}

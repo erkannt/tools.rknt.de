@@ -97,6 +97,20 @@ describe('App', () => {
     expect(items[1].textContent).toMatch(/09:00.*10:00/)
   })
 
+  it('shows session length (hh:mm) next to completed sessions', () => {
+    const today = new Date(2026, 5, 24, 0, 0, 0).getTime()
+    localStorage.setItem(
+      'worktimer.events',
+      JSON.stringify([
+        { type: 'WorkStarted', id: 'a', at: today + 9 * 3600_000 },
+        { type: 'WorkStopped', id: 'b', at: today + 10 * 3600_000 + 30 * 60_000 },
+      ]),
+    )
+    const { getAllByRole } = render(App)
+    const items = getAllByRole('listitem')
+    expect(items[0].textContent).toMatch(/01:30/)
+  })
+
   it('shows only the start time for a running session', () => {
     const today = new Date(2026, 5, 24, 0, 0, 0).getTime()
     localStorage.setItem(
