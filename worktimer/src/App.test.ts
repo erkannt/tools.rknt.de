@@ -178,6 +178,33 @@ describe('App', () => {
     expect(getByTestId('session-length').textContent).toBe('02:45')
   })
 
+  it('persists edited start/stop times when Save is clicked', async () => {
+    const today = new Date(2026, 5, 24, 0, 0, 0).getTime()
+    localStorage.setItem(
+      'worktimer.events',
+      JSON.stringify([
+        { type: 'WorkStarted', id: 'a', at: today + 9 * 3600_000 },
+        { type: 'WorkStopped', id: 'b', at: today + 10 * 3600_000 },
+      ]),
+    )
+    const { getByRole, getByLabelText, queryByLabelText, getAllByRole } = render(App)
+    await fireEvent.click(getByRole('button', { name: /edit/i }))
+
+    await fireEvent.input(getByLabelText(/start/i), { target: { value: '2026-06-24T08:30' } })
+    await fireEvent.input(getByLabelText(/stop/i), { target: { value: '2026-06-24T11:00' } })
+    await fireEvent.click(getByRole('button', { name: /save/i }))
+
+    expect(queryByLabelText(/start/i)).toBeNull()
+    const item = getAllByRole('listitem')[0]
+    expect(item.textContent).toMatch(/08:30/)
+    expect(item.textContent).toMatch(/11:00/)
+    expect(item.textContent).toMatch(/02:30/) // length
+
+    const stored = loadEvents()
+    expect(stored[0].at).toBe(new Date('2026-06-24T08:30').getTime())
+    expect(stored[1].at).toBe(new Date('2026-06-24T11:00').getTime())
+  })
+
   it('populates events when "Load sample data" is clicked', async () => {
     const { getByRole, queryAllByRole, findAllByRole } = render(App)
     expect(queryAllByRole('listitem')).toHaveLength(0)

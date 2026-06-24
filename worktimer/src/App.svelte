@@ -4,9 +4,10 @@
     loadEvents,
     parseEventsJson,
     replaceEvents,
+    updateEventAt,
     type WorkEvent,
   } from './events'
-  import { deriveSessions, elapsedToday } from './sessions'
+  import { deriveSessions, elapsedToday, validateEdit } from './sessions'
   import { generateSampleEvents } from './seed'
 
   let events = $state<WorkEvent[]>(loadEvents())
@@ -63,6 +64,17 @@
     editingId = startId
     editStart = toLocalInput(startedAt)
     editStop = toLocalInput(stoppedAt)
+  }
+
+  function saveEdit(session: { startId: string; stopId: string | null }) {
+    const start = fromLocalInput(editStart)
+    const stop = fromLocalInput(editStop)
+    const result = validateEdit({ startId: session.startId, start, stop }, sessions, Date.now())
+    if (!result.ok) return
+    updateEventAt(session.startId, start)
+    if (session.stopId !== null) updateEventAt(session.stopId, stop)
+    events = loadEvents()
+    editingId = null
   }
 
   function editedLength(startedAt: number, stoppedAt: number): number {
@@ -140,6 +152,7 @@
           <input type="datetime-local" bind:value={editStop} />
         </label>
         (<span data-testid="session-length">{hhmm(editedLength(session.startedAt, session.stoppedAt))}</span>)
+        <button onclick={() => saveEdit(session)}>Save</button>
       {:else}
         <time datetime={iso(session.startedAt)}>{timeOfDay(session.startedAt)}</time>
         {#if session.stoppedAt !== null}
