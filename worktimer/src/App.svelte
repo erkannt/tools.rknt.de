@@ -8,7 +8,7 @@
     updateEventAt,
     type WorkEvent,
   } from './events'
-  import { deriveSessions, elapsedToday, validateEdit } from './sessions'
+  import { deriveSessions, elapsedToday, validateEdit, type Session } from './sessions'
   import { generateSampleEvents } from './seed'
   import { parseHHMM, formatHHMM } from './time'
   import { activeTargets, flexBudget } from './targets'
@@ -269,7 +269,7 @@
   <button onclick={exportJson}>Export JSON</button>
 </footer>
 
-{#snippet sessionRow(session)}
+{#snippet sessionRow(session: Session)}
   <li>
     {#if editingId === session.startId}
       <label>
