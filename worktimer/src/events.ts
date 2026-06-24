@@ -24,6 +24,23 @@ export function replaceEvents(events: WorkEvent[]): void {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(events))
 }
 
+export function parseEventsJson(text: string): WorkEvent[] {
+  const data = JSON.parse(text)
+  if (!Array.isArray(data)) throw new Error('expected a JSON array of events')
+  return data.map((entry, i) => {
+    if (entry === null || typeof entry !== 'object') {
+      throw new Error(`entry ${i}: expected object`)
+    }
+    const { type, id, at } = entry as Record<string, unknown>
+    if (type !== 'WorkStarted' && type !== 'WorkStopped') {
+      throw new Error(`entry ${i}: unknown type ${JSON.stringify(type)}`)
+    }
+    if (typeof id !== 'string') throw new Error(`entry ${i}: id must be a string`)
+    if (typeof at !== 'number') throw new Error(`entry ${i}: at must be a number`)
+    return { type, id, at }
+  })
+}
+
 export function updateEventAt(id: string, at: number): WorkEvent {
   const events = loadEvents()
   const target = events.find(e => e.id === id)

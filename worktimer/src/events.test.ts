@@ -1,5 +1,12 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { loadEvents, appendEvent, updateEventAt, replaceEvents, STORAGE_KEY } from './events'
+import {
+  loadEvents,
+  appendEvent,
+  updateEventAt,
+  replaceEvents,
+  parseEventsJson,
+  STORAGE_KEY,
+} from './events'
 
 beforeEach(() => {
   localStorage.clear()
@@ -79,5 +86,43 @@ describe('replaceEvents', () => {
     appendEvent({ type: 'WorkStarted', at: 1 })
     replaceEvents([])
     expect(loadEvents()).toEqual([])
+  })
+})
+
+describe('parseEventsJson', () => {
+  const valid = [
+    { type: 'WorkStarted', id: 'a', at: 1000 },
+    { type: 'WorkStopped', id: 'b', at: 2000 },
+  ]
+
+  it('parses a well-formed array', () => {
+    expect(parseEventsJson(JSON.stringify(valid))).toEqual(valid)
+  })
+
+  it('accepts an empty array', () => {
+    expect(parseEventsJson('[]')).toEqual([])
+  })
+
+  it('throws on invalid JSON', () => {
+    expect(() => parseEventsJson('not json')).toThrow()
+  })
+
+  it('throws when payload is not an array', () => {
+    expect(() => parseEventsJson('{}')).toThrow(/array/i)
+  })
+
+  it('throws when an entry has an unknown type', () => {
+    const bad = [{ type: 'Bogus', id: 'a', at: 1 }]
+    expect(() => parseEventsJson(JSON.stringify(bad))).toThrow(/type/i)
+  })
+
+  it('throws when an entry is missing required fields', () => {
+    const bad = [{ type: 'WorkStarted', id: 'a' }]
+    expect(() => parseEventsJson(JSON.stringify(bad))).toThrow()
+  })
+
+  it('throws when at is not a number', () => {
+    const bad = [{ type: 'WorkStarted', id: 'a', at: '1000' }]
+    expect(() => parseEventsJson(JSON.stringify(bad))).toThrow()
   })
 })
