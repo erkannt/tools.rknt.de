@@ -190,6 +190,30 @@ describe('parseEventsJson', () => {
     expect(() => parseEventsJson(JSON.stringify(bad))).toThrow()
   })
 
+  it('parses a FlexAdjusted event', () => {
+    const payload = [
+      { type: 'FlexAdjusted', id: 'f1', at: 1000, deltaMs: 3 * 3600_000, reason: 'TOIL' },
+    ]
+    expect(parseEventsJson(JSON.stringify(payload))).toEqual(payload)
+  })
+
+  it('accepts a negative FlexAdjusted deltaMs and empty reason', () => {
+    const payload = [
+      { type: 'FlexAdjusted', id: 'f1', at: 1000, deltaMs: -30 * 60_000, reason: '' },
+    ]
+    expect(parseEventsJson(JSON.stringify(payload))).toEqual(payload)
+  })
+
+  it('throws when FlexAdjusted deltaMs is not a number', () => {
+    const bad = [{ type: 'FlexAdjusted', id: 'f1', at: 1000, deltaMs: '30', reason: '' }]
+    expect(() => parseEventsJson(JSON.stringify(bad))).toThrow()
+  })
+
+  it('throws when FlexAdjusted reason is not a string', () => {
+    const bad = [{ type: 'FlexAdjusted', id: 'f1', at: 1000, deltaMs: 0, reason: null }]
+    expect(() => parseEventsJson(JSON.stringify(bad))).toThrow()
+  })
+
   it('throws when a target value is not a number', () => {
     const bad = [
       {

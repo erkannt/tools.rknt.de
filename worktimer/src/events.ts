@@ -14,11 +14,13 @@ export type WorkEvent =
       effectiveFrom: number
       targets: Targets
     }
+  | { type: 'FlexAdjusted'; id: string; at: number; deltaMs: number; reason: string }
 
 export type NewEvent =
   | { type: 'WorkStarted'; at: number }
   | { type: 'WorkStopped'; at: number }
   | { type: 'WorkTargetsSet'; at: number; effectiveFrom: number; targets: Targets }
+  | { type: 'FlexAdjusted'; at: number; deltaMs: number; reason: string }
 
 export function loadEvents(): WorkEvent[] {
   const raw = localStorage.getItem(STORAGE_KEY)
@@ -74,6 +76,16 @@ export function parseEventsJson(text: string): WorkEvent[] {
         parsed[day] = t[day] as number
       }
       return { type, id, at, effectiveFrom, targets: parsed }
+    }
+    if (type === 'FlexAdjusted') {
+      const { deltaMs, reason } = entry as Record<string, unknown>
+      if (typeof deltaMs !== 'number') {
+        throw new Error(`entry ${i}: deltaMs must be a number`)
+      }
+      if (typeof reason !== 'string') {
+        throw new Error(`entry ${i}: reason must be a string`)
+      }
+      return { type, id, at, deltaMs, reason }
     }
     throw new Error(`entry ${i}: unknown type ${JSON.stringify(type)}`)
   })
