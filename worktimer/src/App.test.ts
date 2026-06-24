@@ -290,6 +290,47 @@ describe('App', () => {
     expect(queryByRole('alert')).toBeNull()
   })
 
+  it('lets the user edit the start of a running session (no stop input)', async () => {
+    const today = new Date(2026, 5, 24, 0, 0, 0).getTime()
+    localStorage.setItem(
+      'worktimer.events',
+      JSON.stringify([{ type: 'WorkStarted', id: 'a', at: today + 9 * 3600_000 }]),
+    )
+    const { getByRole, getByLabelText, queryByLabelText, getAllByRole } = render(App)
+    await fireEvent.click(getByRole('button', { name: /edit/i }))
+
+    expect(getByLabelText(/start/i)).toBeTruthy()
+    expect(queryByLabelText(/stop/i)).toBeNull()
+
+    await fireEvent.input(getByLabelText(/start/i), { target: { value: '2026-06-24T08:30' } })
+    await fireEvent.click(getByRole('button', { name: /save/i }))
+
+    expect(loadEvents()[0].at).toBe(new Date('2026-06-24T08:30').getTime())
+    expect(queryByLabelText(/start/i)).toBeNull()
+    expect(getAllByRole('listitem')[0].textContent).toMatch(/08:30/)
+  })
+
+  it('rejects a running-session start in the future', async () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date(2026, 5, 24, 12, 0, 0))
+    try {
+      const today = new Date(2026, 5, 24, 0, 0, 0).getTime()
+      localStorage.setItem(
+        'worktimer.events',
+        JSON.stringify([{ type: 'WorkStarted', id: 'a', at: today + 9 * 3600_000 }]),
+      )
+      const { getByRole, getByLabelText } = render(App)
+      await fireEvent.click(getByRole('button', { name: /edit/i }))
+      await fireEvent.input(getByLabelText(/start/i), { target: { value: '2026-06-24T15:00' } })
+      await fireEvent.click(getByRole('button', { name: /save/i }))
+
+      expect(getByRole('alert').textContent).toMatch(/future/i)
+      expect(loadEvents()[0].at).toBe(today + 9 * 3600_000)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
   it('populates events when "Load sample data" is clicked', async () => {
     const { getByRole, queryAllByRole, findAllByRole } = render(App)
     expect(queryAllByRole('listitem')).toHaveLength(0)

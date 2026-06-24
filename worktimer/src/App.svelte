@@ -61,10 +61,10 @@
     return new Date(s).getTime()
   }
 
-  function startEdit(startId: string, startedAt: number, stoppedAt: number) {
+  function startEdit(startId: string, startedAt: number, stoppedAt: number | null) {
     editingId = startId
     editStart = toLocalInput(startedAt)
-    editStop = toLocalInput(stoppedAt)
+    editStop = stoppedAt === null ? '' : toLocalInput(stoppedAt)
     editError = null
   }
 
@@ -75,14 +75,14 @@
 
   function saveEdit(session: { startId: string; stopId: string | null }) {
     const start = fromLocalInput(editStart)
-    const stop = fromLocalInput(editStop)
+    const stop = session.stopId === null ? null : fromLocalInput(editStop)
     const result = validateEdit({ startId: session.startId, start, stop }, sessions, Date.now())
     if (!result.ok) {
       editError = result.reason
       return
     }
     updateEventAt(session.startId, start)
-    if (session.stopId !== null) updateEventAt(session.stopId, stop)
+    if (session.stopId !== null && stop !== null) updateEventAt(session.stopId, stop)
     events = loadEvents()
     editingId = null
     editError = null
@@ -153,16 +153,18 @@
 <ul>
   {#each newestFirst as session (session.startId)}
     <li>
-      {#if editingId === session.startId && session.stoppedAt !== null}
+      {#if editingId === session.startId}
         <label>
           Start
           <input type="datetime-local" bind:value={editStart} />
         </label>
-        <label>
-          Stop
-          <input type="datetime-local" bind:value={editStop} />
-        </label>
-        (<span data-testid="session-length">{hhmm(editedLength(session.startedAt, session.stoppedAt))}</span>)
+        {#if session.stoppedAt !== null}
+          <label>
+            Stop
+            <input type="datetime-local" bind:value={editStop} />
+          </label>
+          (<span data-testid="session-length">{hhmm(editedLength(session.startedAt, session.stoppedAt))}</span>)
+        {/if}
         <button onclick={() => saveEdit(session)}>Save</button>
         <button onclick={cancelEdit}>Cancel</button>
         {#if editError !== null}
@@ -173,8 +175,8 @@
         {#if session.stoppedAt !== null}
           – <time datetime={iso(session.stoppedAt)}>{timeOfDay(session.stoppedAt)}</time>
           (<span data-testid="session-length">{hhmm(session.stoppedAt - session.startedAt)}</span>)
-          <button onclick={() => startEdit(session.startId, session.startedAt, session.stoppedAt!)}>Edit</button>
         {/if}
+        <button onclick={() => startEdit(session.startId, session.startedAt, session.stoppedAt)}>Edit</button>
       {/if}
     </li>
   {/each}
