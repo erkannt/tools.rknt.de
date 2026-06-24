@@ -253,6 +253,43 @@ describe('App', () => {
     expect(queryByRole('alert')).toBeNull()
   })
 
+  it('discards edits and exits edit mode on Cancel', async () => {
+    const today = new Date(2026, 5, 24, 0, 0, 0).getTime()
+    const original = [
+      { type: 'WorkStarted', id: 'a', at: today + 9 * 3600_000 },
+      { type: 'WorkStopped', id: 'b', at: today + 10 * 3600_000 },
+    ]
+    localStorage.setItem('worktimer.events', JSON.stringify(original))
+
+    const { getByRole, getByLabelText, queryByLabelText } = render(App)
+    await fireEvent.click(getByRole('button', { name: /edit/i }))
+    await fireEvent.input(getByLabelText(/start/i), { target: { value: '2026-06-24T01:00' } })
+    await fireEvent.click(getByRole('button', { name: /cancel/i }))
+
+    expect(queryByLabelText(/start/i)).toBeNull()
+    expect(loadEvents()).toEqual(original)
+  })
+
+  it('clears any prior error when Cancel is clicked', async () => {
+    const today = new Date(2026, 5, 24, 0, 0, 0).getTime()
+    localStorage.setItem(
+      'worktimer.events',
+      JSON.stringify([
+        { type: 'WorkStarted', id: 'a', at: today + 9 * 3600_000 },
+        { type: 'WorkStopped', id: 'b', at: today + 10 * 3600_000 },
+      ]),
+    )
+    const { getByRole, getByLabelText, queryByRole } = render(App)
+    await fireEvent.click(getByRole('button', { name: /edit/i }))
+    await fireEvent.input(getByLabelText(/stop/i), { target: { value: '2026-06-24T08:00' } })
+    await fireEvent.click(getByRole('button', { name: /save/i }))
+    expect(getByRole('alert')).toBeTruthy()
+
+    await fireEvent.click(getByRole('button', { name: /cancel/i }))
+    await fireEvent.click(getByRole('button', { name: /edit/i }))
+    expect(queryByRole('alert')).toBeNull()
+  })
+
   it('populates events when "Load sample data" is clicked', async () => {
     const { getByRole, queryAllByRole, findAllByRole } = render(App)
     expect(queryAllByRole('listitem')).toHaveLength(0)

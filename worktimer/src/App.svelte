@@ -68,6 +68,11 @@
     editError = null
   }
 
+  function cancelEdit() {
+    editingId = null
+    editError = null
+  }
+
   function saveEdit(session: { startId: string; stopId: string | null }) {
     const start = fromLocalInput(editStart)
     const stop = fromLocalInput(editStop)
@@ -159,6 +164,7 @@
         </label>
         (<span data-testid="session-length">{hhmm(editedLength(session.startedAt, session.stoppedAt))}</span>)
         <button onclick={() => saveEdit(session)}>Save</button>
+        <button onclick={cancelEdit}>Cancel</button>
         {#if editError !== null}
           <p role="alert">{editError}</p>
         {/if}
