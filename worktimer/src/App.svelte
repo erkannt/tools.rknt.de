@@ -544,11 +544,9 @@
   }
 
   function formatBudget(ms: number): string {
-    const sign = ms < 0 ? "-" : "+";
     const total = Math.floor(Math.abs(ms) / 60_000);
-    const hh = String(Math.floor(total / 60)).padStart(2, "0");
-    const mm = String(total % 60).padStart(2, "0");
-    return `${sign}${hh}:${mm}`;
+    const hh = String(Math.floor(total / 60));
+    return `${hh}h`;
   }
 
   function parseAdjustAmount(): number | null {
@@ -1011,7 +1009,7 @@
           y1={chartGeom.yToPx(v)}
           x2={chartGeom.W - chartGeom.PR}
           y2={chartGeom.yToPx(v)}
-          stroke={v === 0 ? "#222" : "cornflowerblue"}
+          stroke={v === 0 ? "#222" : "#ccc"}
         />
         <text
           x={chartGeom.PL - 4}
@@ -1035,7 +1033,7 @@
         data-testid="chart-line"
         points={chartLinePoints}
         fill="none"
-        stroke="rebeccapurple"
+        stroke="cornflowerblue"
         stroke-width="2"
       />
       {#each weeklyBudgetSeries as p, i}
