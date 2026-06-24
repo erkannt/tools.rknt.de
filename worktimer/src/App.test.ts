@@ -412,8 +412,8 @@ describe('App', () => {
       expect(sum).toContain('W25')
       // Mon's day is 15
       expect(sum).toContain('15')
-      // Total format 8h37m
-      expect(sum).toContain('8h37m')
+      // Total format zero-padded so single-digit hours don't shift columns.
+      expect(sum).toContain('08h37m')
     } finally {
       vi.useRealTimers()
     }
@@ -524,7 +524,7 @@ describe('App', () => {
       expect(weeks).toHaveLength(2)
       expect(weeks[0].getAttribute('data-week-start')).toBe(String(last1Mon))
       expect(weeks[1].getAttribute('data-week-start')).toBe(String(last2Mon))
-      expect(weeks[0].querySelector('summary')!.textContent).toMatch(/8h00m/)
+      expect(weeks[0].querySelector('summary')!.textContent).toMatch(/08h00m/)
       expect(weeks[0].querySelectorAll('li')).toHaveLength(1)
     } finally {
       vi.useRealTimers()

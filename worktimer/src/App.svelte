@@ -184,7 +184,7 @@
 
   function formatHm(ms: number): string {
     const m = Math.max(0, Math.floor(ms / 60_000))
-    return `${Math.floor(m / 60)}h${String(m % 60).padStart(2, '0')}m`
+    return `${String(Math.floor(m / 60)).padStart(2, '0')}h${String(m % 60).padStart(2, '0')}m`
   }
 
   function isoWeekNumber(ms: number): string {
