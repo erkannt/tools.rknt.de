@@ -9,9 +9,9 @@ body {
   display: inline-block;
   min-width: 2.5ch;
   text-align: center;
-}
-[data-day-item][data-bg] {
   padding-inline: 0.3em;
   border-radius: 2px;
+}
+[data-day-item][data-bg] {
   color: white;
 }
