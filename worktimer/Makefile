@@ -14,6 +14,10 @@ prod: node_modules
 check: node_modules
 	npx svelte-check --tsconfig ./tsconfig.app.json && npx tsc -p tsconfig.node.json && npx vitest run
 
+.PHONY: import-csv
+import-csv: node_modules
+	npx tsx scripts/csv-to-json.ts events-to-import.csv > events-to-import.json
+
 node_modules: package.json pnpm-lock.yaml
 	pnpm install --frozen-lockfile
 
