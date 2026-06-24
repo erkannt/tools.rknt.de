@@ -1,5 +1,6 @@
 <script lang="ts">
   import {
+    addSession,
     appendEvent,
     loadEvents,
     parseEventsJson,
@@ -206,6 +207,10 @@
   let overrideAmount = $state('')
   let overrideReason = $state('')
   let overrideError = $state<string | null>(null)
+  let addDate = $state('')
+  let addStartTime = $state('')
+  let addEndTime = $state('')
+  let addError = $state<string | null>(null)
 
   function startOfDayMs(t: number): number {
     const d = new Date(t)
@@ -244,7 +249,36 @@
     if (effectiveFromInput === '') effectiveFromInput = toDateInput(Date.now())
     if (overrideFrom === '') overrideFrom = toDateInput(Date.now())
     if (overrideTo === '') overrideTo = toDateInput(Date.now())
+    if (addDate === '') addDate = toDateInput(Date.now())
   })
+
+  function addSessionAnchor(): number {
+    const d = fromDateInput(addDate)
+    return Number.isNaN(d) ? Date.now() : d
+  }
+
+  const addStartMs = $derived(parseHHMM(addStartTime, addSessionAnchor()))
+  const addEndMs = $derived(parseHHMM(addEndTime, addSessionAnchor()))
+  const addLengthMs = $derived(
+    addStartMs === null || addEndMs === null ? null : addEndMs - addStartMs,
+  )
+
+  function handleAddSession() {
+    if (addStartMs === null || addEndMs === null) {
+      addError = 'Use HHMM (e.g. 0900).'; return
+    }
+    const result = validateEdit(
+      { startId: '__new__', start: addStartMs, stop: addEndMs },
+      sessions,
+      Date.now(),
+    )
+    if (!result.ok) { addError = result.reason; return }
+    addSession(addStartMs, addEndMs)
+    events = loadEvents()
+    addStartTime = ''
+    addEndTime = ''
+    addError = null
+  }
 
   function formatBudget(ms: number): string {
     const sign = ms < 0 ? '-' : '+'
@@ -490,6 +524,40 @@
 {:else}
   <button onclick={start}>Start</button>
 {/if}
+
+<fieldset>
+  <legend>Add session</legend>
+  <label>Date <input type="date" bind:value={addDate} /></label>
+  <label>
+    Session start
+    <input
+      type="text"
+      inputmode="numeric"
+      maxlength="4"
+      size="4"
+      pattern="\d{'{4}'}"
+      bind:value={addStartTime}
+    />
+  </label>
+  <label>
+    Session end
+    <input
+      type="text"
+      inputmode="numeric"
+      maxlength="4"
+      size="4"
+      pattern="\d{'{4}'}"
+      bind:value={addEndTime}
+    />
+  </label>
+  {#if addLengthMs !== null && addLengthMs >= 0}
+    <span data-testid="add-session-length">{hhmm(addLengthMs)}</span>
+  {/if}
+  <button onclick={handleAddSession}>Add session</button>
+  {#if addError !== null}
+    <p role="alert">{addError}</p>
+  {/if}
+</fieldset>
 
 <details>
   <summary>Flex time</summary>

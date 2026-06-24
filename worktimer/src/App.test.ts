@@ -13,6 +13,62 @@ afterEach(() => {
 })
 
 describe('App', () => {
+  it('adds a session via the Add session form', async () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date(2026, 5, 24, 12, 0, 0))
+    try {
+      const { getByLabelText, getByRole } = render(App)
+      await fireEvent.input(getByLabelText(/^date$/i), { target: { value: '2026-06-22' } })
+      await fireEvent.input(getByLabelText(/^session start$/i), { target: { value: '0900' } })
+      await fireEvent.input(getByLabelText(/^session end$/i), { target: { value: '1230' } })
+      await fireEvent.click(getByRole('button', { name: /add session/i }))
+
+      const stored = loadEvents()
+      expect(stored.map(e => e.type)).toEqual(['WorkStarted', 'WorkStopped'])
+      expect(stored[0].at).toBe(new Date(2026, 5, 22, 9, 0).getTime())
+      expect(stored[1].at).toBe(new Date(2026, 5, 22, 12, 30).getTime())
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('displays the resulting session length live as inputs change', async () => {
+    const { getByLabelText, getByTestId } = render(App)
+    await fireEvent.input(getByLabelText(/^date$/i), { target: { value: '2026-06-22' } })
+    await fireEvent.input(getByLabelText(/^session start$/i), { target: { value: '0900' } })
+    await fireEvent.input(getByLabelText(/^session end$/i), { target: { value: '1230' } })
+    expect(getByTestId('add-session-length').textContent).toBe('03:30')
+
+    await fireEvent.input(getByLabelText(/^session end$/i), { target: { value: '1700' } })
+    expect(getByTestId('add-session-length').textContent).toBe('08:00')
+  })
+
+  it('rejects an added session that overlaps an existing one', async () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date(2026, 5, 24, 12, 0, 0))
+    try {
+      const day = new Date(2026, 5, 22, 0, 0, 0).getTime()
+      localStorage.setItem(
+        'worktimer.events',
+        JSON.stringify([
+          { type: 'WorkStarted', id: 'a', at: day + 9 * 3600_000 },
+          { type: 'WorkStopped', id: 'b', at: day + 12 * 3600_000 },
+        ]),
+      )
+      const { getByLabelText, getByRole } = render(App)
+      await fireEvent.input(getByLabelText(/^date$/i), { target: { value: '2026-06-22' } })
+      await fireEvent.input(getByLabelText(/^session start$/i), { target: { value: '1100' } })
+      await fireEvent.input(getByLabelText(/^session end$/i), { target: { value: '1300' } })
+      await fireEvent.click(getByRole('button', { name: /add session/i }))
+
+      expect(loadEvents()).toHaveLength(2) // original pair, no new events
+      const alerts = document.querySelectorAll('[role=alert]')
+      expect(Array.from(alerts).some(a => /overlap/i.test(a.textContent ?? ''))).toBe(true)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
   it('shows a flex budget of +00:00 when no targets are set', () => {
     const { getByTestId } = render(App)
     expect(getByTestId('flex-budget').textContent).toBe('+00:00')
@@ -655,8 +711,8 @@ describe('App', () => {
     const { getByRole, getByLabelText } = render(App)
     await fireEvent.click(getByRole('button', { name: /edit/i }))
 
-    const startInput = getByLabelText(/start/i) as HTMLInputElement
-    const stopInput = getByLabelText(/stop/i) as HTMLInputElement
+    const startInput = getByLabelText(/^start$/i) as HTMLInputElement
+    const stopInput = getByLabelText(/^stop$/i) as HTMLInputElement
     expect(startInput.type).toBe('text')
     expect(startInput.value).toBe('0900')
     expect(stopInput.value).toBe('1030')
@@ -675,7 +731,7 @@ describe('App', () => {
     expect(getByTestId('session-length').textContent).toBe('01:00')
 
     await fireEvent.click(getByRole('button', { name: /edit/i }))
-    const stopInput = getByLabelText(/stop/i) as HTMLInputElement
+    const stopInput = getByLabelText(/^stop$/i) as HTMLInputElement
     await fireEvent.input(stopInput, { target: { value: '1145' } })
 
     expect(getByTestId('session-length').textContent).toBe('02:45')
@@ -693,11 +749,11 @@ describe('App', () => {
     const { getByRole, getByLabelText, queryByLabelText, getAllByRole } = render(App)
     await fireEvent.click(getByRole('button', { name: /edit/i }))
 
-    await fireEvent.input(getByLabelText(/start/i), { target: { value: '0830' } })
-    await fireEvent.input(getByLabelText(/stop/i), { target: { value: '1100' } })
+    await fireEvent.input(getByLabelText(/^start$/i), { target: { value: '0830' } })
+    await fireEvent.input(getByLabelText(/^stop$/i), { target: { value: '1100' } })
     await fireEvent.click(getByRole('button', { name: /^save$/i }))
 
-    expect(queryByLabelText(/start/i)).toBeNull()
+    expect(queryByLabelText(/^start$/i)).toBeNull()
     const item = getAllByRole('listitem')[0]
     expect(item.textContent).toMatch(/08:30/)
     expect(item.textContent).toMatch(/11:00/)
@@ -724,12 +780,12 @@ describe('App', () => {
     await fireEvent.click(items[1].querySelector('button')!)
 
     // Push its stop past the start of the 13:00 session.
-    await fireEvent.input(getByLabelText(/stop/i), { target: { value: '1330' } })
+    await fireEvent.input(getByLabelText(/^stop$/i), { target: { value: '1330' } })
     await fireEvent.click(getByRole('button', { name: /^save$/i }))
 
     expect(getByRole('alert').textContent).toMatch(/overlap/i)
     expect(loadEvents()).toEqual(original)
-    expect(getByLabelText(/stop/i)).toBeTruthy() // still in edit mode
+    expect(getByLabelText(/^stop$/i)).toBeTruthy() // still in edit mode
   })
 
   it('clears the error after a successful Save', async () => {
@@ -747,11 +803,11 @@ describe('App', () => {
     const items = getAllByRole('listitem')
     await fireEvent.click(items[1].querySelector('button')!)
 
-    await fireEvent.input(getByLabelText(/stop/i), { target: { value: '1330' } })
+    await fireEvent.input(getByLabelText(/^stop$/i), { target: { value: '1330' } })
     await fireEvent.click(getByRole('button', { name: /^save$/i }))
     expect(getByRole('alert')).toBeTruthy()
 
-    await fireEvent.input(getByLabelText(/stop/i), { target: { value: '1100' } })
+    await fireEvent.input(getByLabelText(/^stop$/i), { target: { value: '1100' } })
     await fireEvent.click(getByRole('button', { name: /^save$/i }))
     expect(queryByRole('alert')).toBeNull()
   })
@@ -803,7 +859,7 @@ describe('App', () => {
 
     const { getByRole, getByLabelText } = render(App)
     await fireEvent.click(getByRole('button', { name: /edit/i }))
-    await fireEvent.input(getByLabelText(/stop/i), { target: { value: '11:00' } })
+    await fireEvent.input(getByLabelText(/^stop$/i), { target: { value: '11:00' } })
     await fireEvent.click(getByRole('button', { name: /^save$/i }))
 
     expect(getByRole('alert').textContent).toMatch(/hhmm/i)
@@ -820,10 +876,10 @@ describe('App', () => {
 
     const { getByRole, getByLabelText, queryByLabelText } = render(App)
     await fireEvent.click(getByRole('button', { name: /edit/i }))
-    await fireEvent.input(getByLabelText(/start/i), { target: { value: '0100' } })
+    await fireEvent.input(getByLabelText(/^start$/i), { target: { value: '0100' } })
     await fireEvent.click(getByRole('button', { name: /cancel/i }))
 
-    expect(queryByLabelText(/start/i)).toBeNull()
+    expect(queryByLabelText(/^start$/i)).toBeNull()
     expect(loadEvents()).toEqual(original)
   })
 
@@ -838,7 +894,7 @@ describe('App', () => {
     )
     const { getByRole, getByLabelText, queryByRole } = render(App)
     await fireEvent.click(getByRole('button', { name: /edit/i }))
-    await fireEvent.input(getByLabelText(/stop/i), { target: { value: '0800' } })
+    await fireEvent.input(getByLabelText(/^stop$/i), { target: { value: '0800' } })
     await fireEvent.click(getByRole('button', { name: /^save$/i }))
     expect(getByRole('alert')).toBeTruthy()
 
@@ -856,14 +912,14 @@ describe('App', () => {
     const { getByRole, getByLabelText, queryByLabelText, getAllByRole } = render(App)
     await fireEvent.click(getByRole('button', { name: /edit/i }))
 
-    expect(getByLabelText(/start/i)).toBeTruthy()
-    expect(queryByLabelText(/stop/i)).toBeNull()
+    expect(getByLabelText(/^start$/i)).toBeTruthy()
+    expect(queryByLabelText(/^stop$/i)).toBeNull()
 
-    await fireEvent.input(getByLabelText(/start/i), { target: { value: '0830' } })
+    await fireEvent.input(getByLabelText(/^start$/i), { target: { value: '0830' } })
     await fireEvent.click(getByRole('button', { name: /^save$/i }))
 
     expect(loadEvents()[0].at).toBe(new Date(2026, 5, 24, 8, 30).getTime())
-    expect(queryByLabelText(/start/i)).toBeNull()
+    expect(queryByLabelText(/^start$/i)).toBeNull()
     expect(getAllByRole('listitem')[0].textContent).toMatch(/08:30/)
   })
 
@@ -878,7 +934,7 @@ describe('App', () => {
       )
       const { getByRole, getByLabelText } = render(App)
       await fireEvent.click(getByRole('button', { name: /edit/i }))
-      await fireEvent.input(getByLabelText(/start/i), { target: { value: '1500' } })
+      await fireEvent.input(getByLabelText(/^start$/i), { target: { value: '1500' } })
       await fireEvent.click(getByRole('button', { name: /^save$/i }))
 
       expect(getByRole('alert').textContent).toMatch(/future/i)
