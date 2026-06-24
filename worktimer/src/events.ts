@@ -1,10 +1,24 @@
 export const STORAGE_KEY = 'worktimer.events'
 
+export type Weekday = 'Mo' | 'Tu' | 'We' | 'Th' | 'Fr'
+export const WEEKDAYS: Weekday[] = ['Mo', 'Tu', 'We', 'Th', 'Fr']
+export type Targets = Record<Weekday, number>
+
 export type WorkEvent =
   | { type: 'WorkStarted'; id: string; at: number }
   | { type: 'WorkStopped'; id: string; at: number }
+  | {
+      type: 'WorkTargetsSet'
+      id: string
+      at: number
+      effectiveFrom: number
+      targets: Targets
+    }
 
-export type NewEvent = Omit<WorkEvent, 'id'>
+export type NewEvent =
+  | { type: 'WorkStarted'; at: number }
+  | { type: 'WorkStopped'; at: number }
+  | { type: 'WorkTargetsSet'; at: number; effectiveFrom: number; targets: Targets }
 
 export function loadEvents(): WorkEvent[] {
   const raw = localStorage.getItem(STORAGE_KEY)
@@ -38,12 +52,30 @@ export function parseEventsJson(text: string): WorkEvent[] {
       throw new Error(`entry ${i}: expected object`)
     }
     const { type, id, at } = entry as Record<string, unknown>
-    if (type !== 'WorkStarted' && type !== 'WorkStopped') {
-      throw new Error(`entry ${i}: unknown type ${JSON.stringify(type)}`)
-    }
     if (typeof id !== 'string') throw new Error(`entry ${i}: id must be a string`)
     if (typeof at !== 'number') throw new Error(`entry ${i}: at must be a number`)
-    return { type, id, at }
+    if (type === 'WorkStarted' || type === 'WorkStopped') {
+      return { type, id, at }
+    }
+    if (type === 'WorkTargetsSet') {
+      const { effectiveFrom, targets } = entry as Record<string, unknown>
+      if (typeof effectiveFrom !== 'number') {
+        throw new Error(`entry ${i}: effectiveFrom must be a number`)
+      }
+      if (targets === null || typeof targets !== 'object') {
+        throw new Error(`entry ${i}: targets must be an object`)
+      }
+      const t = targets as Record<string, unknown>
+      const parsed: Targets = { Mo: 0, Tu: 0, We: 0, Th: 0, Fr: 0 }
+      for (const day of WEEKDAYS) {
+        if (typeof t[day] !== 'number') {
+          throw new Error(`entry ${i}: targets.${day} must be a number`)
+        }
+        parsed[day] = t[day] as number
+      }
+      return { type, id, at, effectiveFrom, targets: parsed }
+    }
+    throw new Error(`entry ${i}: unknown type ${JSON.stringify(type)}`)
   })
 }
 

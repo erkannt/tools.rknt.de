@@ -150,4 +150,56 @@ describe('parseEventsJson', () => {
     const bad = [{ type: 'WorkStarted', id: 'a', at: '1000' }]
     expect(() => parseEventsJson(JSON.stringify(bad))).toThrow()
   })
+
+  it('parses a WorkTargetsSet event', () => {
+    const payload = [
+      {
+        type: 'WorkTargetsSet',
+        id: 't1',
+        at: 1000,
+        effectiveFrom: 500,
+        targets: { Mo: 480, Tu: 480, We: 480, Th: 480, Fr: 480 },
+      },
+    ]
+    expect(parseEventsJson(JSON.stringify(payload))).toEqual(payload)
+  })
+
+  it('throws when WorkTargetsSet targets is missing a weekday', () => {
+    const bad = [
+      {
+        type: 'WorkTargetsSet',
+        id: 't1',
+        at: 1000,
+        effectiveFrom: 500,
+        targets: { Mo: 480, Tu: 480, We: 480, Th: 480 }, // Fr missing
+      },
+    ]
+    expect(() => parseEventsJson(JSON.stringify(bad))).toThrow(/Fr/)
+  })
+
+  it('throws when WorkTargetsSet effectiveFrom is not a number', () => {
+    const bad = [
+      {
+        type: 'WorkTargetsSet',
+        id: 't1',
+        at: 1000,
+        effectiveFrom: '500',
+        targets: { Mo: 480, Tu: 480, We: 480, Th: 480, Fr: 480 },
+      },
+    ]
+    expect(() => parseEventsJson(JSON.stringify(bad))).toThrow()
+  })
+
+  it('throws when a target value is not a number', () => {
+    const bad = [
+      {
+        type: 'WorkTargetsSet',
+        id: 't1',
+        at: 1000,
+        effectiveFrom: 500,
+        targets: { Mo: '480', Tu: 480, We: 480, Th: 480, Fr: 480 },
+      },
+    ]
+    expect(() => parseEventsJson(JSON.stringify(bad))).toThrow()
+  })
 })
