@@ -178,6 +178,83 @@
     return total
   })
 
+  const CHART_WEEKS = 24
+  type WeekPoint = { weekStart: number; delta: number; cumulative: number }
+  const weeklyBudgetSeries = $derived.by<WeekPoint[]>(() => {
+    // Window starts CHART_WEEKS-1 weeks before this week's Monday.
+    let firstWs = thisWeekStart
+    for (let i = 0; i < CHART_WEEKS - 1; i++) {
+      const d = new Date(firstWs); d.setDate(d.getDate() - 7); firstWs = d.getTime()
+    }
+    // Pre-window cumulative: per-day deltas + adjustments before firstWs.
+    let cumulative = 0
+    for (const ev of events) {
+      if (ev.type === 'FlexAdjusted' && ev.at < firstWs) cumulative += ev.deltaMs
+    }
+    if (budgetEarliestDay !== null) {
+      for (let day = budgetEarliestDay; day < firstWs; day = nextDay(day)) {
+        const tgt = dailyTarget(events, day)
+        if (tgt === null) continue
+        const worked = workedPerDay.get(day) ?? 0
+        cumulative += worked - tgt * 60_000
+      }
+    }
+    const points: WeekPoint[] = []
+    let ws = firstWs
+    for (let i = 0; i < CHART_WEEKS; i++) {
+      const weekEnd = (() => { const d = new Date(ws); d.setDate(d.getDate() + 7); return d.getTime() })()
+      let weekDelta = 0
+      let day = ws
+      for (let j = 0; j < 7; j++) {
+        const tgt = dailyTarget(events, day)
+        if (tgt !== null) {
+          const worked = workedPerDay.get(day) ?? 0
+          weekDelta += worked - tgt * 60_000
+        }
+        day = nextDay(day)
+      }
+      for (const ev of events) {
+        if (ev.type === 'FlexAdjusted' && ev.at >= ws && ev.at < weekEnd) weekDelta += ev.deltaMs
+      }
+      cumulative += weekDelta
+      points.push({ weekStart: ws, delta: weekDelta, cumulative })
+      ws = weekEnd
+    }
+    return points
+  })
+
+  const chartGeom = $derived.by(() => {
+    const W = 600, H = 200, PL = 50, PR = 10, PT = 10, PB = 24
+    const plotW = W - PL - PR
+    const plotH = H - PT - PB
+    let yMin = 0, yMax = 0
+    for (const p of weeklyBudgetSeries) {
+      if (p.delta < yMin) yMin = p.delta
+      if (p.delta > yMax) yMax = p.delta
+      if (p.cumulative < yMin) yMin = p.cumulative
+      if (p.cumulative > yMax) yMax = p.cumulative
+    }
+    if (yMin === yMax) yMax = yMin + 1
+    const pad = Math.max(1, (yMax - yMin) * 0.05)
+    yMin -= pad; yMax += pad
+    const range = yMax - yMin
+    const yToPx = (y: number) => PT + plotH - ((y - yMin) / range) * plotH
+    const step = plotW / Math.max(1, weeklyBudgetSeries.length)
+    const barW = step * 0.7
+    return { W, H, PL, PR, PT, PB, plotW, plotH, yMin, yMax, yToPx, step, barW, zeroY: yToPx(0) }
+  })
+  const chartBars = $derived(weeklyBudgetSeries.map((p, i) => {
+    const x = chartGeom.PL + i * chartGeom.step + (chartGeom.step - chartGeom.barW) / 2
+    const top = chartGeom.yToPx(Math.max(p.delta, 0))
+    const bot = chartGeom.yToPx(Math.min(p.delta, 0))
+    return { x, y: top, width: chartGeom.barW, height: Math.max(0, bot - top), point: p }
+  }))
+  const chartLinePoints = $derived(
+    weeklyBudgetSeries
+      .map((p, i) => `${chartGeom.PL + i * chartGeom.step + chartGeom.step / 2},${chartGeom.yToPx(p.cumulative)}`)
+      .join(' '),
+  )
+
   type OutlierDay = { day: number; worked: number; targetMs: number; delta: number }
   const outlierDays = $derived.by<OutlierDay[]>(() => {
     if (budgetEarliestDay === null) return []
@@ -687,6 +764,46 @@
 
 <details>
   <summary>Analysis</summary>
+  <svg
+    data-testid="budget-chart"
+    viewBox="0 0 {chartGeom.W} {chartGeom.H}"
+    width="100%"
+    role="img"
+    aria-label="Flex budget over the last 24 weeks"
+  >
+    <line
+      x1={chartGeom.PL} y1={chartGeom.zeroY}
+      x2={chartGeom.W - chartGeom.PR} y2={chartGeom.zeroY}
+      stroke="#999"
+    />
+    {#each chartBars as b, i (i)}
+      <rect
+        data-testid="chart-bar"
+        x={b.x} y={b.y} width={b.width} height={b.height}
+        fill={b.point.delta < 0 ? '#c66' : '#6a8'}
+      />
+    {/each}
+    <polyline
+      data-testid="chart-line"
+      points={chartLinePoints}
+      fill="none"
+      stroke="#26b"
+      stroke-width="2"
+    />
+    {#each weeklyBudgetSeries as p, i}
+      {#if i % 4 === 0 || i === weeklyBudgetSeries.length - 1}
+        <text
+          x={chartGeom.PL + i * chartGeom.step + chartGeom.step / 2}
+          y={chartGeom.H - 8}
+          font-size="10"
+          text-anchor="middle"
+        >{isoWeekLabel(p.weekStart).slice(5)}</text>
+      {/if}
+    {/each}
+    <text x={chartGeom.PL - 4} y={chartGeom.yToPx(chartGeom.yMax) + 4} font-size="10" text-anchor="end">{formatBudget(chartGeom.yMax)}</text>
+    <text x={chartGeom.PL - 4} y={chartGeom.zeroY + 4} font-size="10" text-anchor="end">0</text>
+    <text x={chartGeom.PL - 4} y={chartGeom.yToPx(chartGeom.yMin) + 4} font-size="10" text-anchor="end">{formatBudget(chartGeom.yMin)}</text>
+  </svg>
   {#if outlierDays.length === 0}
     <p>No past days with |delta| above 02:30.</p>
   {:else}

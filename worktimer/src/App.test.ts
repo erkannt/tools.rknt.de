@@ -76,6 +76,34 @@ describe('App', () => {
     expect(details.open).toBe(false)
   })
 
+  it('renders a 24-week chart in the Analysis section', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date(2026, 5, 24, 12, 0, 0)) // Wed Jun 24
+    try {
+      // Targets effective in Jan so all 24 weeks of the chart have targets.
+      localStorage.setItem(
+        'worktimer.events',
+        JSON.stringify([
+          {
+            type: 'WorkTargetsSet', id: 't', at: 1,
+            effectiveFrom: new Date(2026, 0, 1).getTime(),
+            targets: { Mo: 480, Tu: 480, We: 480, Th: 480, Fr: 480 },
+          },
+        ]),
+      )
+      const { getByTestId } = render(App)
+      const chart = getByTestId('budget-chart')
+      expect(chart.tagName).toBe('svg')
+      expect(chart.querySelectorAll('rect[data-testid=chart-bar]')).toHaveLength(24)
+      expect(chart.querySelectorAll('polyline[data-testid=chart-line]')).toHaveLength(1)
+      const line = chart.querySelector('polyline[data-testid=chart-line]')!
+      const pointCount = (line.getAttribute('points') ?? '').trim().split(/\s+/).length
+      expect(pointCount).toBe(24)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
   it('lists past days with |worked-target| > 2h30m in the Analysis section', () => {
     vi.useFakeTimers()
     vi.setSystemTime(new Date(2026, 5, 24, 12, 0, 0)) // Wed
