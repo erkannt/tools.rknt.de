@@ -10,6 +10,35 @@ function startOfDay(t: number): number {
   return d.getTime()
 }
 
+export function weekStartLocal(t: number): number {
+  const d = new Date(t)
+  d.setHours(0, 0, 0, 0)
+  const dow = d.getDay() // 0=Sun..6=Sat
+  const offset = dow === 0 ? 6 : dow - 1 // days since Monday
+  d.setDate(d.getDate() - offset)
+  return d.getTime()
+}
+
+export function dailyTarget(events: WorkEvent[], day: number): number | null {
+  const t = activeTargets(events, day)
+  if (t === null) return null
+  const wd = weekdayKey(day)
+  return wd === null ? 0 : t[wd]
+}
+
+export function weeklyTarget(events: WorkEvent[], weekStart: number): { mins: number; hasAny: boolean } {
+  let total = 0
+  let hasAny = false
+  for (let i = 0; i < 7; i++) {
+    const day = weekStart + i * DAY_MS
+    const dt = dailyTarget(events, day)
+    if (dt === null) continue
+    hasAny = true
+    total += dt
+  }
+  return { mins: total, hasAny }
+}
+
 function weekdayKey(day: number): Weekday | null {
   const idx = new Date(day).getDay() // 0=Sun..6=Sat
   if (idx === 0 || idx === 6) return null

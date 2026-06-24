@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { activeTargets, flexBudget } from './targets'
+import { activeTargets, flexBudget, weekStartLocal, dailyTarget, weeklyTarget } from './targets'
 import type { Targets, WorkEvent } from './events'
 
 const T = (id: string, at: number, effectiveFrom: number, mo: number): WorkEvent => ({
@@ -125,5 +125,74 @@ describe('flexBudget', () => {
       work('a', mon + 9 * HOUR),
     ]
     expect(flexBudget(events, mon + 11 * HOUR)).toBe(-6 * 60 * MIN)
+  })
+})
+
+describe('weekStartLocal', () => {
+  it('returns Monday 00:00 for any time within the week', () => {
+    const mon = dayMs(2026, 5, 22) // 2026-06-22 is a Monday
+    expect(weekStartLocal(new Date(2026, 5, 22, 9, 0, 0).getTime())).toBe(mon)
+    expect(weekStartLocal(new Date(2026, 5, 24, 23, 59, 0).getTime())).toBe(mon)
+    expect(weekStartLocal(new Date(2026, 5, 28, 12, 0, 0).getTime())).toBe(mon) // Sunday
+  })
+
+  it('jumps to the previous Monday when given a Sunday', () => {
+    // Sunday 2026-06-21
+    expect(weekStartLocal(new Date(2026, 5, 21, 0, 0, 0).getTime())).toBe(dayMs(2026, 5, 15))
+  })
+})
+
+describe('dailyTarget', () => {
+  const t = (id: string, at: number, effectiveFrom: number, vals: Partial<Targets>): WorkEvent => ({
+    type: 'WorkTargetsSet',
+    id,
+    at,
+    effectiveFrom,
+    targets: { Mo: 0, Tu: 0, We: 0, Th: 0, Fr: 0, ...vals },
+  })
+
+  it('returns null when no targets are active', () => {
+    expect(dailyTarget([], dayMs(2026, 0, 5))).toBeNull()
+  })
+
+  it('returns the active weekday target', () => {
+    const events = [t('a', 1, dayMs(2026, 0, 1), { Mo: 480 })]
+    expect(dailyTarget(events, dayMs(2026, 0, 5))).toBe(480) // Mon
+  })
+
+  it('returns 0 for Sat/Sun when targets are active', () => {
+    const events = [t('a', 1, dayMs(2026, 0, 1), { Mo: 480 })]
+    expect(dailyTarget(events, dayMs(2026, 0, 3))).toBe(0) // Sat
+    expect(dailyTarget(events, dayMs(2026, 0, 4))).toBe(0) // Sun
+  })
+})
+
+describe('weeklyTarget', () => {
+  const HOURS8 = 8 * 60
+  const t = (id: string, at: number, effectiveFrom: number, vals: Partial<Targets>): WorkEvent => ({
+    type: 'WorkTargetsSet',
+    id,
+    at,
+    effectiveFrom,
+    targets: { Mo: 0, Tu: 0, We: 0, Th: 0, Fr: 0, ...vals },
+  })
+
+  it('returns hasAny=false when no targets cover the week', () => {
+    expect(weeklyTarget([], dayMs(2026, 5, 22))).toEqual({ mins: 0, hasAny: false })
+  })
+
+  it('sums weekday targets across the week', () => {
+    const events = [
+      t('a', 1, dayMs(2026, 0, 1), { Mo: HOURS8, Tu: HOURS8, We: HOURS8, Th: HOURS8, Fr: HOURS8 }),
+    ]
+    expect(weeklyTarget(events, dayMs(2026, 5, 22))).toEqual({ mins: 5 * HOURS8, hasAny: true })
+  })
+
+  it('counts only days with an active target', () => {
+    // Targets effective Wed of this week (2026-06-24)
+    const wed = dayMs(2026, 5, 24)
+    const events = [t('a', 1, wed, { Mo: HOURS8, Tu: HOURS8, We: HOURS8, Th: HOURS8, Fr: HOURS8 })]
+    // Mon/Tue have no active target → 0 contribution. Wed/Thu/Fri at 8h each.
+    expect(weeklyTarget(events, dayMs(2026, 5, 22))).toEqual({ mins: 3 * HOURS8, hasAny: true })
   })
 })
