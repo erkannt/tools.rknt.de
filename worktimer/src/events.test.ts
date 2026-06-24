@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest'
 import {
   loadEvents,
   appendEvent,
+  addSession,
   updateEventAt,
   replaceEvents,
   removeEvents,
@@ -48,6 +49,24 @@ describe('appendEvent', () => {
     const a = appendEvent({ type: 'WorkStarted', at: 1 })
     const b = appendEvent({ type: 'WorkStopped', at: 2 })
     expect(a.id).not.toBe(b.id)
+  })
+})
+
+describe('addSession', () => {
+  it('appends a paired WorkStarted/WorkStopped', () => {
+    const [start, stop] = addSession(1000, 2000)
+    expect(start.type).toBe('WorkStarted')
+    expect(stop.type).toBe('WorkStopped')
+    expect(start.at).toBe(1000)
+    expect(stop.at).toBe(2000)
+    expect(start.id).not.toBe(stop.id)
+    expect(loadEvents()).toEqual([start, stop])
+  })
+
+  it('inserts a back-dated session in chronological position', () => {
+    const existing = appendEvent({ type: 'WorkStarted', at: 5000 })
+    const [start, stop] = addSession(1000, 2000)
+    expect(loadEvents().map(e => e.id)).toEqual([start.id, stop.id, existing.id])
   })
 })
 

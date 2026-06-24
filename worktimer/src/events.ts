@@ -45,6 +45,16 @@ export function loadEvents(): WorkEvent[] {
   return JSON.parse(raw) as WorkEvent[]
 }
 
+export function addSession(startedAt: number, stoppedAt: number): [WorkEvent, WorkEvent] {
+  const start: WorkEvent = { type: 'WorkStarted', id: crypto.randomUUID(), at: startedAt }
+  const stop: WorkEvent = { type: 'WorkStopped', id: crypto.randomUUID(), at: stoppedAt }
+  const events = loadEvents()
+  events.push(start, stop)
+  events.sort((a, b) => a.at - b.at)
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(events))
+  return [start, stop]
+}
+
 export function appendEvent(ev: NewEvent): WorkEvent {
   const stored: WorkEvent = { ...ev, id: crypto.randomUUID() }
   const events = loadEvents()
