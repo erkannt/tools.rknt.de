@@ -178,6 +178,42 @@ describe('App', () => {
     expect(getByTestId('session-length').textContent).toBe('02:45')
   })
 
+  it('populates events when "Load sample data" is clicked', async () => {
+    const { getByRole, queryAllByRole, findAllByRole } = render(App)
+    expect(queryAllByRole('listitem')).toHaveLength(0)
+
+    await fireEvent.click(getByRole('button', { name: /load sample/i }))
+    const items = await findAllByRole('listitem')
+    expect(items.length).toBeGreaterThan(5)
+  })
+
+  it('replaces events when a JSON file is imported', async () => {
+    const today = new Date(2026, 5, 24, 0, 0, 0).getTime()
+    localStorage.setItem(
+      'worktimer.events',
+      JSON.stringify([{ type: 'WorkStarted', id: 'old', at: 1 }]),
+    )
+
+    const incoming = [
+      { type: 'WorkStarted', id: 'new-a', at: today + 9 * 3600_000 },
+      { type: 'WorkStopped', id: 'new-b', at: today + 10 * 3600_000 },
+    ]
+    const file = new File([JSON.stringify(incoming)], 'events.json', { type: 'application/json' })
+
+    const { getByLabelText, findAllByRole } = render(App)
+    const input = getByLabelText(/import/i) as HTMLInputElement
+    await fireEvent.change(input, { target: { files: [file] } })
+
+    const items = await findAllByRole('listitem')
+    expect(items).toHaveLength(1)
+    expect(loadEvents()).toEqual(incoming)
+  })
+
+  it('exposes an Export JSON button', () => {
+    const { getByRole } = render(App)
+    expect(getByRole('button', { name: /export/i })).toBeTruthy()
+  })
+
   it('ticks the elapsed display while a session is running', async () => {
     const now = new Date(2026, 5, 24, 12, 0, 0).getTime()
     vi.useFakeTimers()

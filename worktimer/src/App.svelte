@@ -1,6 +1,13 @@
 <script lang="ts">
-  import { appendEvent, loadEvents, type WorkEvent } from './events'
+  import {
+    appendEvent,
+    loadEvents,
+    parseEventsJson,
+    replaceEvents,
+    type WorkEvent,
+  } from './events'
   import { deriveSessions, elapsedToday } from './sessions'
+  import { generateSampleEvents } from './seed'
 
   let events = $state<WorkEvent[]>(loadEvents())
   let now = $state(Date.now())
@@ -72,6 +79,33 @@
   function stop() {
     events = [...events, appendEvent({ type: 'WorkStopped', at: Date.now() })]
   }
+
+  function loadSample() {
+    const next = generateSampleEvents({ today: Date.now(), days: 90, seed: Date.now() })
+    replaceEvents(next)
+    events = next
+  }
+
+  async function importJson(e: Event) {
+    const input = e.target as HTMLInputElement
+    const file = input.files?.[0]
+    if (!file) return
+    const text = await file.text()
+    const next = parseEventsJson(text)
+    replaceEvents(next)
+    events = next
+    input.value = ''
+  }
+
+  function exportJson() {
+    const blob = new Blob([JSON.stringify(events, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'worktimer-events.json'
+    a.click()
+    URL.revokeObjectURL(url)
+  }
 </script>
 
 <h1>worktimer</h1>
@@ -83,6 +117,15 @@
 {/if}
 
 <p>Today: <time data-testid="elapsed-today">{format(elapsedMs)}</time></p>
+
+<footer>
+  <button onclick={loadSample}>Load sample data</button>
+  <label>
+    Import JSON
+    <input type="file" accept="application/json" onchange={importJson} />
+  </label>
+  <button onclick={exportJson}>Export JSON</button>
+</footer>
 
 <ul>
   {#each newestFirst as session (session.startId)}
