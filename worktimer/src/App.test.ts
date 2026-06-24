@@ -205,6 +205,54 @@ describe('App', () => {
     expect(stored[1].at).toBe(new Date('2026-06-24T11:00').getTime())
   })
 
+  it('shows an error and does not mutate when Save would overlap another session', async () => {
+    const today = new Date(2026, 5, 24, 0, 0, 0).getTime()
+    const original = [
+      { type: 'WorkStarted', id: 'a', at: today + 9 * 3600_000 },
+      { type: 'WorkStopped', id: 'b', at: today + 10 * 3600_000 },
+      { type: 'WorkStarted', id: 'c', at: today + 13 * 3600_000 },
+      { type: 'WorkStopped', id: 'd', at: today + 14 * 3600_000 },
+    ]
+    localStorage.setItem('worktimer.events', JSON.stringify(original))
+
+    const { getAllByRole, getByLabelText, getByRole, getAllByRole: getAll } = render(App)
+    // Edit the older session (the 09–10 one) — it's the second listitem (newest-first).
+    const items = getAll('listitem')
+    await fireEvent.click(items[1].querySelector('button')!)
+
+    // Push its stop past the start of the 13:00 session.
+    await fireEvent.input(getByLabelText(/stop/i), { target: { value: '2026-06-24T13:30' } })
+    await fireEvent.click(getByRole('button', { name: /save/i }))
+
+    expect(getByRole('alert').textContent).toMatch(/overlap/i)
+    expect(loadEvents()).toEqual(original)
+    expect(getByLabelText(/stop/i)).toBeTruthy() // still in edit mode
+  })
+
+  it('clears the error after a successful Save', async () => {
+    const today = new Date(2026, 5, 24, 0, 0, 0).getTime()
+    localStorage.setItem(
+      'worktimer.events',
+      JSON.stringify([
+        { type: 'WorkStarted', id: 'a', at: today + 9 * 3600_000 },
+        { type: 'WorkStopped', id: 'b', at: today + 10 * 3600_000 },
+        { type: 'WorkStarted', id: 'c', at: today + 13 * 3600_000 },
+        { type: 'WorkStopped', id: 'd', at: today + 14 * 3600_000 },
+      ]),
+    )
+    const { getAllByRole, getByLabelText, getByRole, queryByRole } = render(App)
+    const items = getAllByRole('listitem')
+    await fireEvent.click(items[1].querySelector('button')!)
+
+    await fireEvent.input(getByLabelText(/stop/i), { target: { value: '2026-06-24T13:30' } })
+    await fireEvent.click(getByRole('button', { name: /save/i }))
+    expect(getByRole('alert')).toBeTruthy()
+
+    await fireEvent.input(getByLabelText(/stop/i), { target: { value: '2026-06-24T11:00' } })
+    await fireEvent.click(getByRole('button', { name: /save/i }))
+    expect(queryByRole('alert')).toBeNull()
+  })
+
   it('populates events when "Load sample data" is clicked', async () => {
     const { getByRole, queryAllByRole, findAllByRole } = render(App)
     expect(queryAllByRole('listitem')).toHaveLength(0)

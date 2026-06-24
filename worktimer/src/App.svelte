@@ -15,6 +15,7 @@
   let editingId = $state<string | null>(null)
   let editStart = $state('')
   let editStop = $state('')
+  let editError = $state<string | null>(null)
 
   const sessions = $derived(deriveSessions(events))
   const running = $derived(events.at(-1)?.type === 'WorkStarted')
@@ -64,17 +65,22 @@
     editingId = startId
     editStart = toLocalInput(startedAt)
     editStop = toLocalInput(stoppedAt)
+    editError = null
   }
 
   function saveEdit(session: { startId: string; stopId: string | null }) {
     const start = fromLocalInput(editStart)
     const stop = fromLocalInput(editStop)
     const result = validateEdit({ startId: session.startId, start, stop }, sessions, Date.now())
-    if (!result.ok) return
+    if (!result.ok) {
+      editError = result.reason
+      return
+    }
     updateEventAt(session.startId, start)
     if (session.stopId !== null) updateEventAt(session.stopId, stop)
     events = loadEvents()
     editingId = null
+    editError = null
   }
 
   function editedLength(startedAt: number, stoppedAt: number): number {
@@ -153,6 +159,9 @@
         </label>
         (<span data-testid="session-length">{hhmm(editedLength(session.startedAt, session.stoppedAt))}</span>)
         <button onclick={() => saveEdit(session)}>Save</button>
+        {#if editError !== null}
+          <p role="alert">{editError}</p>
+        {/if}
       {:else}
         <time datetime={iso(session.startedAt)}>{timeOfDay(session.startedAt)}</time>
         {#if session.stoppedAt !== null}
