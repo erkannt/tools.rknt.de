@@ -29,6 +29,39 @@ function startOfDay(t: number): number {
   return d.getTime()
 }
 
+export type EditInput = {
+  startId: string
+  start: number
+  stop: number | null
+}
+
+export type ValidationResult = { ok: true } | { ok: false; reason: string }
+
+export function validateEdit(
+  input: EditInput,
+  sessions: Session[],
+  now: number,
+): ValidationResult {
+  if (input.stop === null) {
+    if (input.start > now) {
+      return { ok: false, reason: 'Start must not be in the future.' }
+    }
+  } else if (input.start >= input.stop) {
+    return { ok: false, reason: 'Start must be before stop.' }
+  }
+
+  const editedEnd = input.stop ?? now
+  for (const s of sessions) {
+    if (s.startId === input.startId) continue
+    const otherEnd = s.stoppedAt ?? now
+    if (input.start < otherEnd && s.startedAt < editedEnd) {
+      return { ok: false, reason: 'Overlaps another session.' }
+    }
+  }
+
+  return { ok: true }
+}
+
 export function elapsedToday(sessions: Session[], now: number): number {
   const dayStart = startOfDay(now)
   const dayEnd = dayStart + 24 * 60 * 60 * 1000

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { deriveSessions, elapsedToday } from './sessions'
+import { deriveSessions, elapsedToday, validateEdit, type Session } from './sessions'
 import type { WorkEvent } from './events'
 
 const ev = (type: 'WorkStarted' | 'WorkStopped', id: string, at: number): WorkEvent => ({
@@ -78,5 +78,72 @@ describe('elapsedToday', () => {
       { startId: 'a', stopId: 'b', startedAt: startOfToday - 5000, stoppedAt: startOfToday + 2000 },
     ]
     expect(elapsedToday(sessions, today)).toBe(2000)
+  })
+})
+
+describe('validateEdit', () => {
+  const session = (startId: string, startedAt: number, stoppedAt: number | null): Session => ({
+    startId,
+    stopId: stoppedAt === null ? null : `${startId}-stop`,
+    startedAt,
+    stoppedAt,
+  })
+
+  const now = 1_000_000
+
+  it('accepts a non-overlapping edit', () => {
+    const a = session('a', 100, 200)
+    const b = session('b', 300, 400)
+    const result = validateEdit({ startId: 'b', start: 250, stop: 280 }, [a, b], now)
+    expect(result).toEqual({ ok: true })
+  })
+
+  it('rejects when start >= stop on a completed session', () => {
+    const a = session('a', 100, 200)
+    const result = validateEdit({ startId: 'a', start: 200, stop: 200 }, [a], now)
+    expect(result.ok).toBe(false)
+    if (!result.ok) expect(result.reason).toMatch(/before/i)
+  })
+
+  it('rejects when start > now on a running session', () => {
+    const a = session('a', 100, null)
+    const result = validateEdit({ startId: 'a', start: now + 1, stop: null }, [a], now)
+    expect(result.ok).toBe(false)
+  })
+
+  it('accepts a running session with start <= now', () => {
+    const a = session('a', 100, null)
+    const result = validateEdit({ startId: 'a', start: now, stop: null }, [a], now)
+    expect(result).toEqual({ ok: true })
+  })
+
+  it('rejects overlap with another completed session', () => {
+    const a = session('a', 100, 200)
+    const b = session('b', 300, 400)
+    const result = validateEdit({ startId: 'b', start: 150, stop: 350 }, [a, b], now)
+    expect(result.ok).toBe(false)
+    if (!result.ok) expect(result.reason).toMatch(/overlap/i)
+  })
+
+  it('rejects overlap with a running session (uses now as its end)', () => {
+    const running = session('r', 500, null)
+    const target = session('a', 100, 200)
+    const result = validateEdit({ startId: 'a', start: 400, stop: 600 }, [target, running], now)
+    expect(result.ok).toBe(false)
+  })
+
+  it('allows edited session to occupy its own previous slot exactly', () => {
+    const a = session('a', 100, 200)
+    const b = session('b', 300, 400)
+    // shrinking b within itself should still pass (does not overlap a or itself)
+    const result = validateEdit({ startId: 'b', start: 320, stop: 380 }, [a, b], now)
+    expect(result).toEqual({ ok: true })
+  })
+
+  it('allows adjacency (end-of-one == start-of-other)', () => {
+    const a = session('a', 100, 200)
+    const b = session('b', 300, 400)
+    const result = validateEdit({ startId: 'b', start: 200, stop: 300 }, [a, b], now)
+    expect(result).toEqual({ ok: true })
   })
 })
