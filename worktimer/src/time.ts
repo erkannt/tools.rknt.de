@@ -28,3 +28,19 @@ export function nextDay(t: number): number {
   d.setDate(d.getDate() + 1)
   return d.getTime()
 }
+
+// ISO 8601 week label, e.g. "2026-W25". Week 1 is the week containing the
+// first Thursday of the year; week numbers reset at the Mon-Sun boundary.
+export function isoWeekLabel(t: number): string {
+  const d = new Date(t)
+  // Thursday of this week determines the ISO week-year.
+  const thursday = new Date(d.getFullYear(), d.getMonth(), d.getDate())
+  const dayNum = (thursday.getDay() + 6) % 7 // Mon=0..Sun=6
+  thursday.setDate(thursday.getDate() - dayNum + 3)
+  const isoYear = thursday.getFullYear()
+  const jan4 = new Date(isoYear, 0, 4)
+  const jan4DayNum = (jan4.getDay() + 6) % 7
+  const week1Monday = new Date(isoYear, 0, 4 - jan4DayNum)
+  const week = Math.round((thursday.getTime() - week1Monday.getTime()) / (7 * 86400_000)) + 1
+  return `${isoYear}-W${String(week).padStart(2, '0')}`
+}

@@ -11,7 +11,7 @@
   } from './events'
   import { deriveSessions, validateEdit, type Session } from './sessions'
   import { generateSampleEvents } from './seed'
-  import { parseHHMM, formatHHMM, startOfDay as startOfDayMs, nextDay } from './time'
+  import { parseHHMM, formatHHMM, startOfDay as startOfDayMs, nextDay, isoWeekLabel } from './time'
   import { activeTargets, activeTargetEvent, dailyTarget, weekStartLocal, weeklyTarget } from './targets'
   import { WEEKDAYS } from './events'
 
@@ -114,11 +114,6 @@
     return `${wd} ${d.getDate()}`
   }
 
-  function weekLabel(ms: number): string {
-    const d = new Date(ms)
-    const month = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()]
-    return `Wk of ${d.getDate()} ${month}`
-  }
 
   type WeekBlock = { weekStart: number; sessions: Session[]; total: number; delta: number | null }
 
@@ -750,7 +745,7 @@
   {#each previousWeeks as week (week.weekStart)}
     <details data-week-start={week.weekStart}>
       <summary>
-        {weekLabel(week.weekStart)}
+        {isoWeekLabel(week.weekStart)}
         <span>{hhmm(week.total)}</span>
         {#if week.delta !== null}
           <span>{formatBudget(week.delta)}</span>
@@ -765,7 +760,8 @@
   {/each}
 </section>
 
-<footer>
+<section>
+  <h2>Import/Export</h2>
   <button onclick={loadSample}>Replace current data with generated data</button>
   <button onclick={clearAll}>Clear current data</button>
   <label>
@@ -773,4 +769,4 @@
     <input type="file" accept="application/json" onchange={importJson} />
   </label>
   <button onclick={exportJson}>Export JSON</button>
-</footer>
+</section>

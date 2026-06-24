@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { parseHHMM, formatHHMM, startOfDay, nextDay } from './time'
+import { parseHHMM, formatHHMM, startOfDay, nextDay, isoWeekLabel } from './time'
 
 describe('parseHHMM', () => {
   // anchor: 2026-06-24 13:45:30.500 local
@@ -58,6 +58,21 @@ describe('startOfDay / nextDay', () => {
     const t = new Date(2026, 5, 24, 0, 0, 0).getTime()
     const expected = new Date(2026, 5, 25, 0, 0, 0).getTime()
     expect(nextDay(t)).toBe(expected)
+  })
+
+  it('isoWeekLabel returns YYYY-Www', () => {
+    // Mon 2026-06-15 → ISO 2026-W25
+    expect(isoWeekLabel(new Date(2026, 5, 15).getTime())).toBe('2026-W25')
+  })
+
+  it('isoWeekLabel rolls week 1 into the year containing its Thursday', () => {
+    // Mon 2025-12-29 is in ISO week 1 of 2026 (Thursday 2026-01-01).
+    expect(isoWeekLabel(new Date(2025, 11, 29).getTime())).toBe('2026-W01')
+  })
+
+  it('isoWeekLabel keeps week 53 in the prior year when applicable', () => {
+    // Mon 2026-12-28 is in ISO week 53 of 2026 (Thursday 2026-12-31).
+    expect(isoWeekLabel(new Date(2026, 11, 28).getTime())).toBe('2026-W53')
   })
 
   it('nextDay lands on local midnight after the DST spring-forward', () => {
