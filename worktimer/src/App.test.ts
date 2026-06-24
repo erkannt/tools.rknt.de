@@ -472,9 +472,9 @@ describe('App', () => {
       const sum = prev.querySelector('details summary')!
       const dayItems = Array.from(sum.querySelectorAll('[data-day-item]')) as HTMLElement[]
       expect(dayItems).toHaveLength(5) // Mo-Fr
-      expect(dayItems[0].style.color).toBe('seagreen') // Mon positive
-      expect(dayItems[1].style.color).toBe('crimson')  // Tue negative
-      expect(dayItems[4].style.color).toBe('steelblue') // Fri override
+      expect(dayItems[0].style.backgroundColor).toBe('seagreen') // Mon positive
+      expect(dayItems[1].style.backgroundColor).toBe('crimson')  // Tue negative
+      expect(dayItems[4].style.backgroundColor).toBe('rgb(52, 93, 138)') // Fri override (darker steelblue)
     } finally {
       vi.useRealTimers()
     }

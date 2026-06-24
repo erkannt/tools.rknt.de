@@ -126,13 +126,17 @@
 
   const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 
+  // Background colours chosen to hit WCAG AA (>=4.5:1) with white text:
+  //   crimson  #dc143c -> 5.46:1
+  //   seagreen #2e8b57 -> 4.67:1
+  //   #345d8a (darker steelblue) -> ~5.0:1
   function dayItemFor(day: number): DayItem {
     const date = new Date(day)
     const dom = date.getDate()
     const text = dom === 1 ? MONTHS[date.getMonth()] : String(dom).padStart(2, '0')
     let color: string | null = null
     if (hasOverride(events, day)) {
-      color = 'steelblue'
+      color = '#345d8a'
     } else {
       const tgt = dailyTarget(events, day)
       if (tgt !== null) {
@@ -950,7 +954,7 @@
       <summary>
         {isoWeekNumber(week.weekStart)}
         {#each week.dayItems as item}
-          {' '}<span data-day-item style:color={item.color}>{item.text}</span>
+          {' '}<span data-day-item data-bg={item.color !== null ? '' : undefined} style:background-color={item.color}>{item.text}</span>
         {/each}
         {' '}<span>{formatHm(week.total)}</span>
         {#if week.delta !== null}

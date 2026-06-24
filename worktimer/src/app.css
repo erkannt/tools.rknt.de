@@ -2,5 +2,16 @@ body {
   margin: 0 auto;
   padding-inline: 2rem;
   max-width: 90ch;
-  font-family: system-ui, sans-serif;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+[data-day-item] {
+  display: inline-block;
+  min-width: 2.5ch;
+  text-align: center;
+}
+[data-day-item][data-bg] {
+  padding-inline: 0.3em;
+  border-radius: 2px;
+  color: white;
 }
