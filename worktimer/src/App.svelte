@@ -293,6 +293,14 @@
       .map((p, i) => `${chartGeom.PL + i * chartGeom.step + chartGeom.step / 2},${chartGeom.yToPx(p.cumulative)}`)
       .join(' '),
   )
+  const chartGridlines = $derived.by(() => {
+    const step = 5 * 3600_000
+    const first = Math.ceil(chartGeom.yMin / step) * step
+    const last = Math.floor(chartGeom.yMax / step) * step
+    const out: number[] = []
+    for (let v = first; v <= last; v += step) out.push(v)
+    return out
+  })
 
   type OutlierDay = { day: number; worked: number; targetMs: number; delta: number }
   const outlierDays = $derived.by<OutlierDay[]>(() => {
@@ -810,11 +818,18 @@
     role="img"
     aria-label="Flex budget over the last 24 weeks"
   >
-    <line
-      x1={chartGeom.PL} y1={chartGeom.zeroY}
-      x2={chartGeom.W - chartGeom.PR} y2={chartGeom.zeroY}
-      stroke="#999"
-    />
+    {#each chartGridlines as v}
+      <line
+        data-testid="gridline"
+        x1={chartGeom.PL} y1={chartGeom.yToPx(v)}
+        x2={chartGeom.W - chartGeom.PR} y2={chartGeom.yToPx(v)}
+        stroke={v === 0 ? '#999' : '#e6e6e6'}
+      />
+      <text
+        x={chartGeom.PL - 4} y={chartGeom.yToPx(v) + 4}
+        font-size="9" text-anchor="end" fill="#666"
+      >{v === 0 ? '0' : formatBudget(v)}</text>
+    {/each}
     {#each chartBars as b, i (i)}
       <rect
         data-testid="chart-bar"
@@ -830,18 +845,15 @@
       stroke-width="2"
     />
     {#each weeklyBudgetSeries as p, i}
-      {#if i % 4 === 0 || i === weeklyBudgetSeries.length - 1}
-        <text
-          x={chartGeom.PL + i * chartGeom.step + chartGeom.step / 2}
-          y={chartGeom.H - 8}
-          font-size="10"
-          text-anchor="middle"
-        >{isoWeekLabel(p.weekStart).slice(5)}</text>
-      {/if}
+      <text
+        data-testid="x-tick"
+        x={chartGeom.PL + i * chartGeom.step + chartGeom.step / 2}
+        y={chartGeom.H - 8}
+        font-size="9"
+        text-anchor="middle"
+        fill="#666"
+      >{isoWeekLabel(p.weekStart).slice(5)}</text>
     {/each}
-    <text x={chartGeom.PL - 4} y={chartGeom.yToPx(chartGeom.yMax) + 4} font-size="10" text-anchor="end">{formatBudget(chartGeom.yMax)}</text>
-    <text x={chartGeom.PL - 4} y={chartGeom.zeroY + 4} font-size="10" text-anchor="end">0</text>
-    <text x={chartGeom.PL - 4} y={chartGeom.yToPx(chartGeom.yMin) + 4} font-size="10" text-anchor="end">{formatBudget(chartGeom.yMin)}</text>
   </svg>
   {#if outlierDays.length === 0}
     <p>No past days with |delta| above 02:30.</p>

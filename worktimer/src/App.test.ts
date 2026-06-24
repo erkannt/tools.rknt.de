@@ -99,6 +99,8 @@ describe('App', () => {
       const line = chart.querySelector('polyline[data-testid=chart-line]')!
       const pointCount = (line.getAttribute('points') ?? '').trim().split(/\s+/).length
       expect(pointCount).toBe(24)
+      expect(chart.querySelectorAll('text[data-testid=x-tick]')).toHaveLength(24)
+      expect(chart.querySelectorAll('line[data-testid=gridline]').length).toBeGreaterThanOrEqual(2)
     } finally {
       vi.useRealTimers()
     }
