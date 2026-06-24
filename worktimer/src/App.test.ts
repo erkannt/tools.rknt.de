@@ -284,6 +284,32 @@ describe('App', () => {
     }
   })
 
+  it('displays the currently active targets below the form', () => {
+    const today = new Date(2026, 5, 24, 0, 0, 0).getTime()
+    localStorage.setItem(
+      'worktimer.events',
+      JSON.stringify([
+        {
+          type: 'WorkTargetsSet',
+          id: 't',
+          at: 1,
+          effectiveFrom: today,
+          targets: { Mo: 510, Tu: 480, We: 0, Th: 480, Fr: 240 },
+        },
+      ]),
+    )
+    const { getByTestId } = render(App)
+    const txt = getByTestId('active-targets').textContent ?? ''
+    expect(txt).toMatch(/Mo.*0830/)
+    expect(txt).toMatch(/We.*0000/)
+    expect(txt).toMatch(/Fr.*0400/)
+  })
+
+  it('hides the active targets display when none are set', () => {
+    const { queryByTestId } = render(App)
+    expect(queryByTestId('active-targets')).toBeNull()
+  })
+
   it('prefills the targets form from the currently active target set', () => {
     const today = new Date(2026, 5, 24, 0, 0, 0).getTime()
     localStorage.setItem(

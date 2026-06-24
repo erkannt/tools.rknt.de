@@ -110,7 +110,7 @@
   })
   const budgetMs = $derived(flexBudget(events, now))
 
-  const today = $derived(activeTargets(events, startOfDayMs(now)))
+  const currentTargets = $derived(activeTargets(events, startOfDayMs(now)))
   let targetInputs = $state<Record<string, string>>({ Mo: '', Tu: '', We: '', Th: '', Fr: '' })
   let effectiveFromInput = $state('')
   let targetsError = $state<string | null>(null)
@@ -151,7 +151,7 @@
   }
 
   $effect(() => {
-    targetInputs = targetsToInputs(today)
+    targetInputs = targetsToInputs(currentTargets)
     if (effectiveFromInput === '') effectiveFromInput = toDateInput(Date.now())
   })
 
@@ -364,6 +364,14 @@
     <button onclick={saveTargets}>Save targets</button>
     {#if targetsError !== null}
       <p role="alert">{targetsError}</p>
+    {/if}
+    {#if currentTargets !== null}
+      <p data-testid="active-targets">
+        Active:
+        {#each WEEKDAYS as day, i}
+          {day} {targetsToInputs(currentTargets)[day]}{i < WEEKDAYS.length - 1 ? ', ' : ''}
+        {/each}
+      </p>
     {/if}
   </fieldset>
   <fieldset>
