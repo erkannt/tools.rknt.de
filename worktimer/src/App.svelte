@@ -26,7 +26,11 @@
   const sessions = $derived(deriveSessions(events))
   const running = $derived(events.at(-1)?.type === 'WorkStarted')
   const elapsedMs = $derived(elapsedToday(sessions, now))
-  const newestFirst = $derived([...sessions].reverse())
+  const todaySessions = $derived(
+    [...sessions]
+      .filter(s => startOfDayMs(s.startedAt) === startOfDayMs(now))
+      .reverse(),
+  )
   const budgetMs = $derived(flexBudget(events, now))
 
   const today = $derived(activeTargets(events, startOfDayMs(now)))
@@ -255,7 +259,6 @@
 </details>
 
 <p>Flex budget: <span data-testid="flex-budget">{formatBudget(budgetMs)}</span></p>
-<p>Today: <time data-testid="elapsed-today">{format(elapsedMs)}</time></p>
 
 <footer>
   <button onclick={loadSample}>Load sample data</button>
@@ -266,35 +269,51 @@
   <button onclick={exportJson}>Export JSON</button>
 </footer>
 
-<ul>
-  {#each newestFirst as session (session.startId)}
-    <li>
-      {#if editingId === session.startId}
+{#snippet sessionRow(session)}
+  <li>
+    {#if editingId === session.startId}
+      <label>
+        Start
+        <input type="text" inputmode="numeric" pattern="\d{'{4}'}" maxlength="4" size="4" bind:value={editStart} />
+      </label>
+      {#if session.stoppedAt !== null}
         <label>
-          Start
-          <input type="text" inputmode="numeric" pattern="\d{'{4}'}" maxlength="4" size="4" bind:value={editStart} />
+          Stop
+          <input type="text" inputmode="numeric" pattern="\d{'{4}'}" maxlength="4" size="4" bind:value={editStop} />
         </label>
-        {#if session.stoppedAt !== null}
-          <label>
-            Stop
-            <input type="text" inputmode="numeric" pattern="\d{'{4}'}" maxlength="4" size="4" bind:value={editStop} />
-          </label>
-          (<span data-testid="session-length">{hhmm(editedLength(session.startedAt, session.stoppedAt))}</span>)
-        {/if}
-        <button onclick={() => saveEdit(session)}>Save</button>
-        <button onclick={cancelEdit}>Cancel</button>
-        {#if editError !== null}
-          <p role="alert">{editError}</p>
-        {/if}
-      {:else}
-        <time datetime={iso(session.startedAt)}>{timeOfDay(session.startedAt)}</time>
-        {#if session.stoppedAt !== null}
-          – <time datetime={iso(session.stoppedAt)}>{timeOfDay(session.stoppedAt)}</time>
-          (<span data-testid="session-length">{hhmm(session.stoppedAt - session.startedAt)}</span>)
-        {/if}
-        <button onclick={() => startEdit(session.startId, session.startedAt, session.stoppedAt)}>Edit</button>
-        <button onclick={() => deleteSession(session)}>Delete</button>
+        (<span data-testid="session-length">{hhmm(editedLength(session.startedAt, session.stoppedAt))}</span>)
       {/if}
-    </li>
-  {/each}
-</ul>
+      <button onclick={() => saveEdit(session)}>Save</button>
+      <button onclick={cancelEdit}>Cancel</button>
+      {#if editError !== null}
+        <p role="alert">{editError}</p>
+      {/if}
+    {:else}
+      <time datetime={iso(session.startedAt)}>{timeOfDay(session.startedAt)}</time>
+      {#if session.stoppedAt !== null}
+        – <time datetime={iso(session.stoppedAt)}>{timeOfDay(session.stoppedAt)}</time>
+        (<span data-testid="session-length">{hhmm(session.stoppedAt - session.startedAt)}</span>)
+      {/if}
+      <button onclick={() => startEdit(session.startId, session.startedAt, session.stoppedAt)}>Edit</button>
+      <button onclick={() => deleteSession(session)}>Delete</button>
+    {/if}
+  </li>
+{/snippet}
+
+<section>
+  <h2>Today</h2>
+  <p><time data-testid="elapsed-today">{format(elapsedMs)}</time></p>
+  <ul>
+    {#each todaySessions as session (session.startId)}
+      {@render sessionRow(session)}
+    {/each}
+  </ul>
+</section>
+
+<section>
+  <h2>This week</h2>
+</section>
+
+<section>
+  <h2>Previous weeks</h2>
+</section>

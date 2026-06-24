@@ -58,6 +58,38 @@ describe('App', () => {
     }
   })
 
+  it('renders Today, This week, and Previous weeks sections', () => {
+    const { getByText } = render(App)
+    expect(getByText('Today', { selector: 'h2' })).toBeTruthy()
+    expect(getByText('This week', { selector: 'h2' })).toBeTruthy()
+    expect(getByText('Previous weeks', { selector: 'h2' })).toBeTruthy()
+  })
+
+  it('lists only today\'s sessions in the Today section', () => {
+    const today = new Date(2026, 5, 24, 0, 0, 0).getTime()
+    const lastWeek = today - 7 * 24 * 3600_000
+    localStorage.setItem(
+      'worktimer.events',
+      JSON.stringify([
+        { type: 'WorkStarted', id: 'old-a', at: lastWeek + 9 * 3600_000 },
+        { type: 'WorkStopped', id: 'old-b', at: lastWeek + 10 * 3600_000 },
+        { type: 'WorkStarted', id: 'today-a', at: today + 9 * 3600_000 },
+        { type: 'WorkStopped', id: 'today-b', at: today + 10 * 3600_000 },
+      ]),
+    )
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date(2026, 5, 24, 12, 0, 0))
+    try {
+      const { getByText } = render(App)
+      const todaySection = getByText('Today', { selector: 'h2' }).closest('section')!
+      const items = todaySection.querySelectorAll('li')
+      expect(items).toHaveLength(1)
+      expect(items[0].textContent).toMatch(/09:00/)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
   it('prefills the targets form from the currently active target set', () => {
     const today = new Date(2026, 5, 24, 0, 0, 0).getTime()
     localStorage.setItem(
@@ -451,12 +483,11 @@ describe('App', () => {
   })
 
   it('populates events when "Load sample data" is clicked', async () => {
-    const { getByRole, queryAllByRole, findAllByRole } = render(App)
-    expect(queryAllByRole('listitem')).toHaveLength(0)
+    const { getByRole } = render(App)
+    expect(loadEvents()).toHaveLength(0)
 
     await fireEvent.click(getByRole('button', { name: /load sample/i }))
-    const items = await findAllByRole('listitem')
-    expect(items.length).toBeGreaterThan(5)
+    expect(loadEvents().length).toBeGreaterThan(50)
   })
 
   it('replaces events when a JSON file is imported', async () => {
