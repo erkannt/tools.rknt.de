@@ -45,18 +45,23 @@ function weekdayKey(day: number): Weekday | null {
   return WEEKDAYS[idx - 1]
 }
 
-export function activeTargets(events: WorkEvent[], day: number): Targets | null {
-  let chosen: Targets | null = null
+export function activeTargetEvent(events: WorkEvent[], day: number): WorkEvent | null {
+  let chosen: WorkEvent | null = null
   let chosenFrom = -Infinity
   for (const ev of events) {
     if (ev.type !== 'WorkTargetsSet') continue
     if (ev.effectiveFrom > day) continue
     if (ev.effectiveFrom >= chosenFrom) {
-      chosen = ev.targets
+      chosen = ev
       chosenFrom = ev.effectiveFrom
     }
   }
   return chosen
+}
+
+export function activeTargets(events: WorkEvent[], day: number): Targets | null {
+  const ev = activeTargetEvent(events, day)
+  return ev?.type === 'WorkTargetsSet' ? ev.targets : null
 }
 
 export function flexBudget(events: WorkEvent[], now: number): number {

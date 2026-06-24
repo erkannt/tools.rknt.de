@@ -347,6 +347,39 @@ describe('App', () => {
     expect(txt).toMatch(/Fr.*0400/)
   })
 
+  it('deletes the active target set on Delete', async () => {
+    const today = new Date(2026, 5, 24, 0, 0, 0).getTime()
+    localStorage.setItem(
+      'worktimer.events',
+      JSON.stringify([
+        {
+          type: 'WorkTargetsSet',
+          id: 'old',
+          at: 1,
+          effectiveFrom: today - 30 * 24 * 3600_000,
+          targets: { Mo: 480, Tu: 480, We: 480, Th: 480, Fr: 480 },
+        },
+        {
+          type: 'WorkTargetsSet',
+          id: 'new',
+          at: 2,
+          effectiveFrom: today,
+          targets: { Mo: 240, Tu: 240, We: 240, Th: 240, Fr: 240 },
+        },
+      ]),
+    )
+    const { getByRole, getByTestId } = render(App)
+    expect(getByTestId('active-targets').textContent).toMatch(/Mo.*0400/) // newer active
+
+    await fireEvent.click(getByRole('button', { name: /delete active targets/i }))
+
+    // Older event should now be active.
+    expect(getByTestId('active-targets').textContent).toMatch(/Mo.*0800/)
+    const remaining = loadEvents().filter(e => e.type === 'WorkTargetsSet')
+    expect(remaining).toHaveLength(1)
+    expect(remaining[0].id).toBe('old')
+  })
+
   it('shows the weekly total next to the active targets', () => {
     const today = new Date(2026, 5, 24, 0, 0, 0).getTime()
     // 510 + 480 + 0 + 480 + 240 = 1710 min = 28h30m

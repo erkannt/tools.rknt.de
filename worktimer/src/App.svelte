@@ -11,7 +11,7 @@
   import { deriveSessions, elapsedToday, elapsedOnDay, validateEdit, type Session } from './sessions'
   import { generateSampleEvents } from './seed'
   import { parseHHMM, formatHHMM } from './time'
-  import { activeTargets, dailyTarget, flexBudget, weekStartLocal, weeklyTarget } from './targets'
+  import { activeTargets, activeTargetEvent, dailyTarget, flexBudget, weekStartLocal, weeklyTarget } from './targets'
   import { WEEKDAYS } from './events'
 
   let events = $state<WorkEvent[]>(loadEvents())
@@ -111,6 +111,7 @@
   const budgetMs = $derived(flexBudget(events, now))
 
   const currentTargets = $derived(activeTargets(events, startOfDayMs(now)))
+  const currentTargetEvent = $derived(activeTargetEvent(events, startOfDayMs(now)))
   let targetInputs = $state<Record<string, string>>({ Mo: '', Tu: '', We: '', Th: '', Fr: '' })
   let effectiveFromInput = $state('')
   let targetsError = $state<string | null>(null)
@@ -310,6 +311,12 @@
     events = []
   }
 
+  function deleteActiveTargets() {
+    if (currentTargetEvent === null) return
+    removeEvents([currentTargetEvent.id])
+    events = loadEvents()
+  }
+
   async function importJson(e: Event) {
     const input = e.target as HTMLInputElement
     const file = input.files?.[0]
@@ -372,6 +379,7 @@
           {day} {targetsToInputs(currentTargets)[day]}{i < WEEKDAYS.length - 1 ? ', ' : ''}
         {/each}
         — Week: <span data-testid="active-targets-weekly">{hhmm((currentTargets.Mo + currentTargets.Tu + currentTargets.We + currentTargets.Th + currentTargets.Fr) * 60_000)}</span>
+        <button onclick={deleteActiveTargets}>Delete active targets</button>
       </p>
     {/if}
   </fieldset>
