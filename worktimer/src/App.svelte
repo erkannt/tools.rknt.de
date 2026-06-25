@@ -544,6 +544,14 @@
   }
 
   function formatBudget(ms: number): string {
+    const sign = ms < 0 ? "-" : "+";
+    const total = Math.floor(Math.abs(ms) / 60_000);
+    const hh = String(Math.floor(total / 60)).padStart(2, "0");
+    const mm = String(total % 60).padStart(2, "0");
+    return `${sign}${hh}:${mm}`;
+  }
+
+  function formatBudgetLabel(ms: number): string {
     const total = Math.floor(Math.abs(ms) / 60_000);
     const hh = String(Math.floor(total / 60));
     return `${hh}h`;
@@ -1016,7 +1024,7 @@
           y={chartGeom.yToPx(v) + 4}
           font-size="9"
           text-anchor="end"
-          fill="#222">{v === 0 ? "0" : formatBudget(v)}</text
+          fill="#222">{v === 0 ? "0" : formatBudgetLabel(v)}</text
         >
       {/each}
       {#each chartBars as b, i (i)}
