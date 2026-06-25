@@ -387,7 +387,7 @@ describe('App', () => {
       const { getByText } = render(App)
       const prev = getByText('Previous weeks', { selector: 'h2' }).closest('section')!
       const li = prev.querySelector('li')!
-      expect(li.textContent).toMatch(/Tu 16 09:00 - 13:15 \(04:15\)/)
+      expect(li.textContent).toMatch(/Tu\s+16 09:00 - 13:15 \(04:15\)/)
     } finally {
       vi.useRealTimers()
     }
@@ -472,9 +472,9 @@ describe('App', () => {
       const sum = prev.querySelector('details summary')!
       const dayItems = Array.from(sum.querySelectorAll('[data-day-item]')) as HTMLElement[]
       expect(dayItems).toHaveLength(5) // Mo-Fr
-      expect(dayItems[0].style.backgroundColor).toBe('seagreen') // Mon positive
+      expect(dayItems[0].style.backgroundColor).toBe('teal') // Mon positive
       expect(dayItems[1].style.backgroundColor).toBe('crimson')  // Tue negative
-      expect(dayItems[4].style.backgroundColor).toBe('rgb(52, 93, 138)') // Fri override (darker steelblue)
+      expect(dayItems[4].style.backgroundColor).toBe('cornflowerblue') // Fri override
     } finally {
       vi.useRealTimers()
     }
@@ -654,9 +654,9 @@ describe('App', () => {
     expect(items).toHaveLength(2)
     // Newest first.
     expect(items[0].textContent).toMatch(/2026-04-01/)
-    expect(items[0].textContent).toMatch(/Mo.*0830/)
+    expect(items[0].textContent).toMatch(/Mo\s+0830/)
     expect(items[1].textContent).toMatch(/2026-01-01/)
-    expect(items[1].textContent).toMatch(/Mo.*0800/)
+    expect(items[1].textContent).toMatch(/Mo\s+0800/)
   })
 
   it('shows weekly total per target set row', () => {
