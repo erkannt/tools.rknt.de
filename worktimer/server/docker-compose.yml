@@ -1,0 +1,12 @@
+# Local / self-hosted worktimer sync server.
+# In-memory and ephemeral: documents live only while the server runs and at
+# least one client holds them. Put a TLS-terminating reverse proxy in front
+# for production (the sync code is a bearer secret and must travel over wss).
+services:
+  sync:
+    build: .
+    ports:
+      - "1234:1234"
+    environment:
+      - PORT=1234
+    restart: unless-stopped
