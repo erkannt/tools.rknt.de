@@ -1,14 +1,10 @@
 <script lang="ts">
+  import { parseEventsJson, WEEKDAYS, type WorkEvent } from "./events";
   import {
-    addSession,
-    appendEvent,
-    loadEvents,
-    parseEventsJson,
-    removeEvents,
-    replaceEvents,
-    updateEventAt,
-    type WorkEvent,
-  } from "./events";
+    createStore,
+    generateSyncCode,
+    type SyncStatus,
+  } from "./store";
   import { deriveSessions, validateEdit, type Session } from "./sessions";
   import { generateSampleEvents } from "./seed";
   import {
@@ -26,9 +22,63 @@
     weekStartLocal,
     weeklyTarget,
   } from "./targets";
-  import { WEEKDAYS } from "./events";
 
-  let events = $state<WorkEvent[]>(loadEvents());
+  const store = createStore();
+  let events = $state<WorkEvent[]>(store.snapshot());
+
+  $effect(() => {
+    const unsubscribe = store.subscribe((next) => {
+      events = next;
+    });
+    return () => {
+      unsubscribe();
+      store.destroy();
+    };
+  });
+
+  // --- Sync (cross-device, via a shared secret code) ---
+  let syncCode = $state<string | null>(store.getSyncCode());
+  let syncStatus = $state<SyncStatus>(store.getStatus());
+  let syncInput = $state("");
+  let syncCopied = $state<"code" | "link" | null>(null);
+
+  $effect(() => store.onStatus((s) => (syncStatus = s)));
+
+  function createSync() {
+    store.setSyncCode(generateSyncCode());
+    syncCode = store.getSyncCode();
+  }
+
+  function connectSync() {
+    if (!syncInput.trim()) return;
+    store.setSyncCode(syncInput);
+    syncCode = store.getSyncCode();
+    syncInput = "";
+  }
+
+  function forgetSync() {
+    store.clearSyncCode();
+    syncCode = null;
+  }
+
+  async function copyToClipboard(text: string, what: "code" | "link") {
+    try {
+      await navigator.clipboard?.writeText(text);
+      syncCopied = what;
+      setTimeout(() => (syncCopied = null), 1500);
+    } catch {
+      /* clipboard unavailable */
+    }
+  }
+
+  function copyCode() {
+    if (syncCode) copyToClipboard(syncCode, "code");
+  }
+
+  function copyLink() {
+    const url = store.shareUrl();
+    if (url) copyToClipboard(url, "link");
+  }
   let now = $state(Date.now());
   let editingId = $state<string | null>(null);
   let editStart = $state("");
@@ -536,8 +586,7 @@
       addError = result.reason;
       return;
     }
-    addSession(addStartMs, addEndMs);
-    events = loadEvents();
+    store.addSession(addStartMs, addEndMs);
     addStartTime = "";
     addEndTime = "";
     addError = null;
@@ -571,15 +620,12 @@
       adjustError = "Use HHMM (e.g. 0030).";
       return;
     }
-    events = [
-      ...events,
-      appendEvent({
-        type: "FlexAdjusted",
-        at: Date.now(),
-        deltaMs: sign * amount,
-        reason: adjustReason,
-      }),
-    ];
+    store.appendEvent({
+      type: "FlexAdjusted",
+      at: Date.now(),
+      deltaMs: sign * amount,
+      reason: adjustReason,
+    });
     adjustAmount = "";
     adjustReason = "";
     adjustError = null;
@@ -606,21 +652,18 @@
       targetsError = "Invalid date.";
       return;
     }
-    events = [
-      ...events,
-      appendEvent({
-        type: "WorkTargetsSet",
-        at: Date.now(),
-        effectiveFrom: eff,
-        targets: parsed as {
-          Mo: number;
-          Tu: number;
-          We: number;
-          Th: number;
-          Fr: number;
-        },
-      }),
-    ];
+    store.appendEvent({
+      type: "WorkTargetsSet",
+      at: Date.now(),
+      effectiveFrom: eff,
+      targets: parsed as {
+        Mo: number;
+        Tu: number;
+        We: number;
+        Th: number;
+        Fr: number;
+      },
+    });
     targetsError = null;
   }
 
@@ -678,8 +721,7 @@
       session.stopId === null
         ? [session.startId]
         : [session.startId, session.stopId];
-    removeEvents(ids);
-    events = loadEvents();
+    store.removeEvents(ids);
     if (editingId === session.startId) {
       editingId = null;
       editError = null;
@@ -703,10 +745,9 @@
       editError = result.reason;
       return;
     }
-    updateEventAt(session.startId, start);
+    store.updateEventAt(session.startId, start);
     if (session.stopId !== null && stop !== null)
-      updateEventAt(session.stopId, stop);
-    events = loadEvents();
+      store.updateEventAt(session.stopId, stop);
     editingId = null;
     editError = null;
   }
@@ -719,41 +760,37 @@
   }
 
   function start() {
-    events = [...events, appendEvent({ type: "WorkStarted", at: Date.now() })];
+    store.appendEvent({ type: "WorkStarted", at: Date.now() });
   }
 
   function stop() {
-    events = [...events, appendEvent({ type: "WorkStopped", at: Date.now() })];
+    store.appendEvent({ type: "WorkStopped", at: Date.now() });
   }
 
   function loadSample() {
-    const next = generateSampleEvents({
-      today: Date.now(),
-      days: 90,
-      seed: Date.now(),
-    });
-    replaceEvents(next);
-    events = next;
+    store.replaceEvents(
+      generateSampleEvents({
+        today: Date.now(),
+        days: 90,
+        seed: Date.now(),
+      }),
+    );
   }
 
   function clearAll() {
-    replaceEvents([]);
-    events = [];
+    store.replaceEvents([]);
   }
 
   function deleteTargets(id: string) {
-    removeEvents([id]);
-    events = loadEvents();
+    store.removeEvents([id]);
   }
 
   function deleteAdjustment(id: string) {
-    removeEvents([id]);
-    events = loadEvents();
+    store.removeEvents([id]);
   }
 
   function deleteOverride(id: string) {
-    removeEvents([id]);
-    events = loadEvents();
+    store.removeEvents([id]);
   }
 
   function parseHHMMMin(s: string): number | null {
@@ -780,17 +817,14 @@
       overrideError = "Use HHMM (e.g. 0800).";
       return;
     }
-    events = [
-      ...events,
-      appendEvent({
-        type: "TargetOverride",
-        at: Date.now(),
-        startDay: start,
-        endDay: end,
-        targetMin: target,
-        reason: overrideReason,
-      }),
-    ];
+    store.appendEvent({
+      type: "TargetOverride",
+      at: Date.now(),
+      startDay: start,
+      endDay: end,
+      targetMin: target,
+      reason: overrideReason,
+    });
     overrideFrom = "";
     overrideTo = "";
     overrideAmount = "";
@@ -809,9 +843,7 @@
     const file = input.files?.[0];
     if (!file) return;
     const text = await file.text();
-    const next = parseEventsJson(text);
-    replaceEvents(next);
-    events = next;
+    store.replaceEvents(parseEventsJson(text));
     input.value = "";
   }
 
@@ -830,6 +862,53 @@
 
 <main class="stack">
   <h1>worktimer</h1>
+
+  <details class="sync" data-testid="sync-panel">
+    <summary>
+      Sync
+      <span
+        class="sync-dot"
+        data-testid="sync-status"
+        data-status={syncStatus}
+        title={syncStatus}
+      ></span>
+    </summary>
+    {#if syncCode}
+      <p>
+        This device syncs under a shared code. Open the link on another device
+        to join, or enter the code there manually.
+      </p>
+      <label>
+        Sync code
+        <input type="text" readonly value={syncCode} data-testid="sync-code" />
+      </label>
+      <div class="sync-actions">
+        <button onclick={copyCode}>
+          {syncCopied === "code" ? "Copied!" : "Copy code"}
+        </button>
+        <button onclick={copyLink}>
+          {syncCopied === "link" ? "Copied!" : "Copy link"}
+        </button>
+        <button onclick={forgetSync} data-testid="sync-forget">Disconnect</button>
+      </div>
+      <p data-testid="sync-status-text">Status: {syncStatus}</p>
+    {:else}
+      <p>Sync this device with others by sharing a secret code.</p>
+      <button onclick={createSync} data-testid="sync-create">
+        Create sync code
+      </button>
+      <label>
+        Enter existing code
+        <input
+          type="text"
+          bind:value={syncInput}
+          data-testid="sync-input"
+          placeholder="xxxx-xxxx-xxxx"
+        />
+      </label>
+      <button onclick={connectSync} data-testid="sync-connect">Connect</button>
+    {/if}
+  </details>
 
   {#if running}
     <button class="btn" onclick={stop}>Stop session</button>
@@ -1219,3 +1298,26 @@
     <button onclick={exportJson}>Export JSON</button>
   </section>
 </main>
+
+<style>
+  .sync-dot {
+    display: inline-block;
+    width: 0.6em;
+    height: 0.6em;
+    margin-inline-start: 0.4em;
+    border-radius: 50%;
+    background: gray;
+    vertical-align: middle;
+  }
+  .sync-dot[data-status="connected"] {
+    background: teal;
+  }
+  .sync-dot[data-status="connecting"] {
+    background: orange;
+  }
+  .sync-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-xs, 0.5rem);
+  }
+</style>

@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest'
+import * as Y from 'yjs'
 import {
   loadEvents,
   appendEvent,
@@ -7,149 +8,148 @@ import {
   replaceEvents,
   removeEvents,
   parseEventsJson,
-  STORAGE_KEY,
 } from './events'
 
+let doc: Y.Doc
+
 beforeEach(() => {
-  localStorage.clear()
+  doc = new Y.Doc()
 })
 
 describe('loadEvents', () => {
   it('returns empty array when nothing stored', () => {
-    expect(loadEvents()).toEqual([])
+    expect(loadEvents(doc)).toEqual([])
   })
 
-  it('returns parsed events from localStorage', () => {
-    const stored = [{ type: 'WorkStarted', id: 'a', at: 1000 }]
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(stored))
-    expect(loadEvents()).toEqual(stored)
+  it('returns events sorted by at', () => {
+    appendEvent(doc, { type: 'WorkStarted', at: 2000 })
+    appendEvent(doc, { type: 'WorkStopped', at: 1000 })
+    expect(loadEvents(doc).map(e => e.at)).toEqual([1000, 2000])
   })
 })
 
 describe('appendEvent', () => {
   it('persists a WorkStarted event with a generated id', () => {
-    const ev = appendEvent({ type: 'WorkStarted', at: 1234 })
+    const ev = appendEvent(doc, { type: 'WorkStarted', at: 1234 })
 
     expect(ev.id).toBeTypeOf('string')
     expect(ev.id.length).toBeGreaterThan(0)
     expect(ev.type).toBe('WorkStarted')
     expect(ev.at).toBe(1234)
 
-    expect(loadEvents()).toEqual([ev])
+    expect(loadEvents(doc)).toEqual([ev])
   })
 
   it('appends to existing events', () => {
-    const first = appendEvent({ type: 'WorkStarted', at: 1000 })
-    const second = appendEvent({ type: 'WorkStopped', at: 2000 })
+    const first = appendEvent(doc, { type: 'WorkStarted', at: 1000 })
+    const second = appendEvent(doc, { type: 'WorkStopped', at: 2000 })
 
-    expect(loadEvents()).toEqual([first, second])
+    expect(loadEvents(doc)).toEqual([first, second])
   })
 
   it('generates distinct ids', () => {
-    const a = appendEvent({ type: 'WorkStarted', at: 1 })
-    const b = appendEvent({ type: 'WorkStopped', at: 2 })
+    const a = appendEvent(doc, { type: 'WorkStarted', at: 1 })
+    const b = appendEvent(doc, { type: 'WorkStopped', at: 2 })
     expect(a.id).not.toBe(b.id)
   })
 })
 
 describe('addSession', () => {
   it('appends a paired WorkStarted/WorkStopped', () => {
-    const [start, stop] = addSession(1000, 2000)
+    const [start, stop] = addSession(doc, 1000, 2000)
     expect(start.type).toBe('WorkStarted')
     expect(stop.type).toBe('WorkStopped')
     expect(start.at).toBe(1000)
     expect(stop.at).toBe(2000)
     expect(start.id).not.toBe(stop.id)
-    expect(loadEvents()).toEqual([start, stop])
+    expect(loadEvents(doc)).toEqual([start, stop])
   })
 
   it('inserts a back-dated session in chronological position', () => {
-    const existing = appendEvent({ type: 'WorkStarted', at: 5000 })
-    const [start, stop] = addSession(1000, 2000)
-    expect(loadEvents().map(e => e.id)).toEqual([start.id, stop.id, existing.id])
+    const existing = appendEvent(doc, { type: 'WorkStarted', at: 5000 })
+    const [start, stop] = addSession(doc, 1000, 2000)
+    expect(loadEvents(doc).map(e => e.id)).toEqual([start.id, stop.id, existing.id])
   })
 })
 
-describe('events array ordering', () => {
-  it('appendEvent inserts back-dated events in chronological position', () => {
-    const a = appendEvent({ type: 'WorkStarted', at: 1000 })
-    const b = appendEvent({ type: 'WorkStarted', at: 500 })
+describe('events ordering', () => {
+  it('loadEvents orders back-dated events by at', () => {
+    const a = appendEvent(doc, { type: 'WorkStarted', at: 1000 })
+    const b = appendEvent(doc, { type: 'WorkStarted', at: 500 })
 
-    const stored = loadEvents()
-    expect(stored.map(e => e.id)).toEqual([b.id, a.id])
+    expect(loadEvents(doc).map(e => e.id)).toEqual([b.id, a.id])
   })
 
   it('updateEventAt re-sorts when the new at moves the event', () => {
-    const a = appendEvent({ type: 'WorkStarted', at: 1000 })
-    const b = appendEvent({ type: 'WorkStopped', at: 2000 })
+    const a = appendEvent(doc, { type: 'WorkStarted', at: 1000 })
+    const b = appendEvent(doc, { type: 'WorkStopped', at: 2000 })
 
-    updateEventAt(a.id, 3000)
+    updateEventAt(doc, a.id, 3000)
 
-    const stored = loadEvents()
-    expect(stored.map(e => e.id)).toEqual([b.id, a.id])
+    expect(loadEvents(doc).map(e => e.id)).toEqual([b.id, a.id])
   })
 })
 
 describe('updateEventAt', () => {
   it('updates the matching event in storage', () => {
-    const a = appendEvent({ type: 'WorkStarted', at: 1000 })
-    const b = appendEvent({ type: 'WorkStopped', at: 2000 })
+    const a = appendEvent(doc, { type: 'WorkStarted', at: 1000 })
+    const b = appendEvent(doc, { type: 'WorkStopped', at: 2000 })
 
-    const updated = updateEventAt(b.id, 2500)
+    const updated = updateEventAt(doc, b.id, 2500)
 
     expect(updated.id).toBe(b.id)
     expect(updated.at).toBe(2500)
-    expect(loadEvents()).toEqual([a, { ...b, at: 2500 }])
+    expect(loadEvents(doc)).toEqual([a, { ...b, at: 2500 }])
   })
 
   it('throws when the id is unknown', () => {
-    appendEvent({ type: 'WorkStarted', at: 1 })
-    expect(() => updateEventAt('nope', 5)).toThrow()
+    appendEvent(doc, { type: 'WorkStarted', at: 1 })
+    expect(() => updateEventAt(doc, 'nope', 5)).toThrow()
   })
 })
 
 describe('replaceEvents', () => {
   it('overwrites the persisted log', () => {
-    appendEvent({ type: 'WorkStarted', at: 1 })
-    appendEvent({ type: 'WorkStopped', at: 2 })
+    appendEvent(doc, { type: 'WorkStarted', at: 1 })
+    appendEvent(doc, { type: 'WorkStopped', at: 2 })
 
     const next = [
       { type: 'WorkStarted' as const, id: 'x', at: 100 },
       { type: 'WorkStopped' as const, id: 'y', at: 200 },
     ]
-    replaceEvents(next)
+    replaceEvents(doc, next)
 
-    expect(loadEvents()).toEqual(next)
+    expect(loadEvents(doc)).toEqual(next)
   })
 
   it('clears the log when given an empty array', () => {
-    appendEvent({ type: 'WorkStarted', at: 1 })
-    replaceEvents([])
-    expect(loadEvents()).toEqual([])
+    appendEvent(doc, { type: 'WorkStarted', at: 1 })
+    replaceEvents(doc, [])
+    expect(loadEvents(doc)).toEqual([])
   })
 })
 
 describe('removeEvents', () => {
   it('removes events with the given ids', () => {
-    const a = appendEvent({ type: 'WorkStarted', at: 1 })
-    const b = appendEvent({ type: 'WorkStopped', at: 2 })
-    const c = appendEvent({ type: 'WorkStarted', at: 3 })
+    const a = appendEvent(doc, { type: 'WorkStarted', at: 1 })
+    const b = appendEvent(doc, { type: 'WorkStopped', at: 2 })
+    const c = appendEvent(doc, { type: 'WorkStarted', at: 3 })
 
-    removeEvents([a.id, b.id])
+    removeEvents(doc, [a.id, b.id])
 
-    expect(loadEvents()).toEqual([c])
+    expect(loadEvents(doc)).toEqual([c])
   })
 
   it('is a no-op for unknown ids', () => {
-    const a = appendEvent({ type: 'WorkStarted', at: 1 })
-    removeEvents(['nope'])
-    expect(loadEvents()).toEqual([a])
+    const a = appendEvent(doc, { type: 'WorkStarted', at: 1 })
+    removeEvents(doc, ['nope'])
+    expect(loadEvents(doc)).toEqual([a])
   })
 
   it('handles an empty id list', () => {
-    const a = appendEvent({ type: 'WorkStarted', at: 1 })
-    removeEvents([])
-    expect(loadEvents()).toEqual([a])
+    const a = appendEvent(doc, { type: 'WorkStarted', at: 1 })
+    removeEvents(doc, [])
+    expect(loadEvents(doc)).toEqual([a])
   })
 })
 

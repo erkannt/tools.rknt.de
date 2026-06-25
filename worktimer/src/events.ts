@@ -1,4 +1,10 @@
+import * as Y from 'yjs'
+
+/** Legacy localStorage key — kept only for one-time migration into the Y.Doc. */
 export const STORAGE_KEY = 'worktimer.events'
+
+/** Name of the Y.Map (keyed by event id) that holds the event log. */
+export const EVENTS_MAP = 'events'
 
 export type Weekday = 'Mo' | 'Tu' | 'We' | 'Th' | 'Fr'
 export const WEEKDAYS: Weekday[] = ['Mo', 'Tu', 'We', 'Th', 'Fr']
@@ -39,39 +45,50 @@ export type NewEvent =
       reason: string
     }
 
-export function loadEvents(): WorkEvent[] {
-  const raw = localStorage.getItem(STORAGE_KEY)
-  if (raw === null) return []
-  return JSON.parse(raw) as WorkEvent[]
+/** The event log lives in a Y.Map keyed by event id; order is derived by `at`. */
+export function eventsMap(doc: Y.Doc): Y.Map<WorkEvent> {
+  return doc.getMap<WorkEvent>(EVENTS_MAP)
 }
 
-export function addSession(startedAt: number, stoppedAt: number): [WorkEvent, WorkEvent] {
+export function loadEvents(doc: Y.Doc): WorkEvent[] {
+  return Array.from(eventsMap(doc).values()).sort((a, b) => a.at - b.at)
+}
+
+export function addSession(
+  doc: Y.Doc,
+  startedAt: number,
+  stoppedAt: number,
+): [WorkEvent, WorkEvent] {
   const start: WorkEvent = { type: 'WorkStarted', id: crypto.randomUUID(), at: startedAt }
   const stop: WorkEvent = { type: 'WorkStopped', id: crypto.randomUUID(), at: stoppedAt }
-  const events = loadEvents()
-  events.push(start, stop)
-  events.sort((a, b) => a.at - b.at)
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(events))
+  const map = eventsMap(doc)
+  doc.transact(() => {
+    map.set(start.id, start)
+    map.set(stop.id, stop)
+  })
   return [start, stop]
 }
 
-export function appendEvent(ev: NewEvent): WorkEvent {
+export function appendEvent(doc: Y.Doc, ev: NewEvent): WorkEvent {
   const stored: WorkEvent = { ...ev, id: crypto.randomUUID() }
-  const events = loadEvents()
-  events.push(stored)
-  events.sort((a, b) => a.at - b.at)
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(events))
+  eventsMap(doc).set(stored.id, stored)
   return stored
 }
 
-export function replaceEvents(events: WorkEvent[]): void {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(events))
+export function replaceEvents(doc: Y.Doc, events: WorkEvent[]): void {
+  const map = eventsMap(doc)
+  doc.transact(() => {
+    map.clear()
+    for (const e of events) map.set(e.id, e)
+  })
 }
 
-export function removeEvents(ids: string[]): void {
+export function removeEvents(doc: Y.Doc, ids: string[]): void {
   if (ids.length === 0) return
-  const toRemove = new Set(ids)
-  replaceEvents(loadEvents().filter(e => !toRemove.has(e.id)))
+  const map = eventsMap(doc)
+  doc.transact(() => {
+    for (const id of ids) map.delete(id)
+  })
 }
 
 export function parseEventsJson(text: string): WorkEvent[] {
@@ -127,12 +144,11 @@ export function parseEventsJson(text: string): WorkEvent[] {
   })
 }
 
-export function updateEventAt(id: string, at: number): WorkEvent {
-  const events = loadEvents()
-  const target = events.find(e => e.id === id)
-  if (!target) throw new Error(`event ${id} not found`)
-  target.at = at
-  events.sort((a, b) => a.at - b.at)
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(events))
-  return target
+export function updateEventAt(doc: Y.Doc, id: string, at: number): WorkEvent {
+  const map = eventsMap(doc)
+  const current = map.get(id)
+  if (!current) throw new Error(`event ${id} not found`)
+  const updated = { ...current, at } as WorkEvent
+  map.set(id, updated)
+  return updated
 }

@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { render, fireEvent, cleanup } from '@testing-library/svelte'
 import { tick } from 'svelte'
 import App from './App.svelte'
-import { loadEvents } from './events'
+import { loadEvents } from './store'
 
 beforeEach(() => {
   localStorage.clear()
