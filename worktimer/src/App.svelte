@@ -674,6 +674,19 @@
     return () => clearInterval(id);
   });
 
+  // Swap the favicon to reflect whether a session is running.
+  $effect(() => {
+    const file = running ? "favicon-running.svg" : "favicon-idle.svg";
+    let link = document.querySelector<HTMLLinkElement>("link[rel~='icon']");
+    if (!link) {
+      link = document.createElement("link");
+      link.rel = "icon";
+      document.head.appendChild(link);
+    }
+    link.type = "image/svg+xml";
+    link.href = `${import.meta.env.BASE_URL}${file}`;
+  });
+
   function format(ms: number): string {
     const s = Math.floor(ms / 1000);
     const hh = String(Math.floor(s / 3600)).padStart(2, "0");
@@ -911,9 +924,9 @@
   </details>
 
   {#if running}
-    <button class="btn" onclick={stop}>Stop session</button>
+    <button class="btn btn-stop" onclick={stop}>Stop session</button>
   {:else}
-    <button class="btn" onclick={start}>Start session</button>
+    <button class="btn btn-start" onclick={start}>Start session</button>
   {/if}
 
   <fieldset>
@@ -1300,6 +1313,15 @@
 </main>
 
 <style>
+  .btn-start {
+    background-color: teal;
+    color: white;
+  }
+  .btn-stop {
+    background-color: crimson;
+    color: white;
+  }
+
   .sync-dot {
     display: inline-block;
     width: 0.6em;

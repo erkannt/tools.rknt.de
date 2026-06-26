@@ -758,6 +758,28 @@ describe('App', () => {
     expect(getByRole('button', { name: /stop/i })).toBeTruthy()
   })
 
+  it('colours the start/stop button teal/crimson by state', async () => {
+    const { getByRole } = render(App)
+    expect(getByRole('button', { name: /start/i }).className).toContain('btn-start')
+    await fireEvent.click(getByRole('button', { name: /start/i }))
+    expect(getByRole('button', { name: /stop/i }).className).toContain('btn-stop')
+  })
+
+  it('swaps the favicon between idle and running', async () => {
+    const { getByRole } = render(App)
+    await tick()
+    const icon = () => document.querySelector("link[rel~='icon']") as HTMLLinkElement
+    expect(icon().href).toContain('favicon-idle.svg')
+
+    await fireEvent.click(getByRole('button', { name: /start/i }))
+    await tick()
+    expect(icon().href).toContain('favicon-running.svg')
+
+    await fireEvent.click(getByRole('button', { name: /stop/i }))
+    await tick()
+    expect(icon().href).toContain('favicon-idle.svg')
+  })
+
   it('appends WorkStopped on Stop click and reverts to Start', async () => {
     const { getByRole, queryByRole } = render(App)
     await fireEvent.click(getByRole('button', { name: /start/i }))
