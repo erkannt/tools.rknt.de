@@ -13,6 +13,16 @@ import { createServer, type SyncServer } from '../server/server'
 
 type WorkEvent = { type: string; id: string; at: number }
 
+// The server now requires a permitted Origin on every connection. y-websocket
+// builds its socket as `new WS(url)` with no options, so inject the Origin
+// header via a WebSocket subclass used as the polyfill.
+const TEST_ORIGIN = 'http://localhost'
+class OriginWebSocket extends WebSocket {
+  constructor(address: string, protocols?: string | string[]) {
+    super(address, protocols, { origin: TEST_ORIGIN })
+  }
+}
+
 let server: SyncServer | null = null
 const providers: WebsocketProvider[] = []
 const docs: Y.Doc[] = []
@@ -32,8 +42,11 @@ function connect(url: string, room: string) {
   const doc = new Y.Doc()
   docs.push(doc)
   const provider = new WebsocketProvider(url, room, doc, {
-    WebSocketPolyfill: WebSocket as unknown as typeof globalThis.WebSocket,
+    WebSocketPolyfill: OriginWebSocket as unknown as typeof globalThis.WebSocket,
     connect: true,
+    // Sync strictly through the server, not the same-process BroadcastChannel,
+    // so these tests genuinely exercise the server (incl. offline/reconnect).
+    disableBc: true,
   })
   providers.push(provider)
   return { doc, provider, events: doc.getMap<WorkEvent>('events') }
@@ -49,7 +62,7 @@ async function waitFor(predicate: () => boolean, timeoutMs = 5000): Promise<void
 
 describe('cross-device sync', () => {
   it('propagates a new event from one device to another', async () => {
-    server = await createServer({ port: 0 })
+    server = await createServer({ port: 0, allowedOrigins: [TEST_ORIGIN] })
     const a = connect(server.url, 'room-1')
     const b = connect(server.url, 'room-1')
 
@@ -60,7 +73,7 @@ describe('cross-device sync', () => {
   })
 
   it('propagates an edit (last-writer-wins on at) and a delete', async () => {
-    server = await createServer({ port: 0 })
+    server = await createServer({ port: 0, allowedOrigins: [TEST_ORIGIN] })
     const a = connect(server.url, 'room-2')
     const b = connect(server.url, 'room-2')
 
@@ -79,7 +92,7 @@ describe('cross-device sync', () => {
   })
 
   it('keeps different sync codes (rooms) isolated', async () => {
-    server = await createServer({ port: 0 })
+    server = await createServer({ port: 0, allowedOrigins: [TEST_ORIGIN] })
     const a = connect(server.url, 'code-aaaa')
     const b = connect(server.url, 'code-bbbb')
 
@@ -92,7 +105,7 @@ describe('cross-device sync', () => {
   })
 
   it('reconciles edits made while offline after reconnecting', async () => {
-    server = await createServer({ port: 0 })
+    server = await createServer({ port: 0, allowedOrigins: [TEST_ORIGIN] })
     const a = connect(server.url, 'room-3')
     const b = connect(server.url, 'room-3')
 

@@ -26,9 +26,12 @@ class SharedDoc extends Y.Doc {
   /** conn -> set of awareness client ids controlled by that conn. */
   readonly conns = new Map<WebSocket, Set<number>>()
 
-  constructor(name: string) {
+  readonly maxDocBytes: number
+
+  constructor(name: string, maxDocBytes: number) {
     super({ gc: true })
     this.name = name
+    this.maxDocBytes = maxDocBytes
     this.awareness = new awarenessProtocol.Awareness(this)
     this.awareness.setLocalState(null)
 
@@ -106,6 +109,14 @@ function messageListener(conn: WebSocket, doc: SharedDoc, data: Uint8Array): voi
   const messageType = decoding.readVarUint(decoder)
   switch (messageType) {
     case MESSAGE_SYNC: {
+      // Reject before applying if this message could push the doc over the cap.
+      // `data.length` upper-bounds the update's contribution, so the server doc
+      // can never exceed the cap and an oversized doc is never stored or served.
+      if (Y.encodeStateAsUpdate(doc).length + data.length > doc.maxDocBytes) {
+        console.warn(`room "${doc.name}" would exceed max doc size; dropping writer`)
+        closeConn(doc, conn)
+        break
+      }
       encoding.writeVarUint(encoder, MESSAGE_SYNC)
       syncProtocol.readSyncMessage(decoder, encoder, doc, conn)
       // Reply only if readSyncMessage produced content (e.g. a sync step).
@@ -128,12 +139,17 @@ function docNameFromUrl(url: string | undefined): string {
   return decodeURIComponent(path.slice(1)) || 'default'
 }
 
-function setupConnection(registry: Map<string, SharedDoc>, conn: WebSocket, req: http.IncomingMessage): void {
+function setupConnection(
+  registry: Map<string, SharedDoc>,
+  limits: Limits,
+  conn: WebSocket,
+  req: http.IncomingMessage,
+): void {
   conn.binaryType = 'arraybuffer'
   const name = docNameFromUrl(req.url)
   let doc = registry.get(name)
   if (!doc) {
-    doc = new SharedDoc(name)
+    doc = new SharedDoc(name, limits.maxDocBytes)
     registry.set(name, doc)
     // Evict the empty doc from the registry when it self-destructs.
     doc.on('destroy', () => registry.delete(name))
@@ -169,6 +185,12 @@ function setupConnection(registry: Map<string, SharedDoc>, conn: WebSocket, req:
     closeConn(doc!, conn)
     clearInterval(pingInterval)
   })
+  // e.g. an oversized frame trips ws's maxPayload guard; close cleanly instead
+  // of letting it surface as an unhandled exception.
+  conn.on('error', () => {
+    closeConn(doc!, conn)
+    clearInterval(pingInterval)
+  })
 
   // Send our sync step 1 to kick off synchronisation.
   {
@@ -198,26 +220,69 @@ export type SyncServer = {
   close: () => Promise<void>
 }
 
+/** Resource limits, applied per connection / per room. */
+type Limits = {
+  maxRooms: number
+  maxDocBytes: number
+}
+
 export type CreateServerOptions = {
+  /**
+   * Origins permitted to connect (the browser `Origin` header). Required: a
+   * connection with a missing or non-matching Origin is rejected at the upgrade.
+   */
+  allowedOrigins: string[]
   /** Port to listen on. Use 0 for an ephemeral port (tests). */
   port?: number
   /** Host/interface to bind. Defaults to all interfaces. */
   host?: string
+  /** Maximum number of distinct live rooms (default 100). */
+  maxRooms?: number
+  /** Maximum size of a single websocket message in bytes (default 1 MB). */
+  maxMessageBytes?: number
+  /** Maximum encoded size of a single room's document in bytes (default 5 MB). */
+  maxDocBytes?: number
 }
 
 /**
  * Start an in-memory Yjs websocket sync server. Resolves once it is listening.
  * The same entry point is used by `make dev`, the container, and the tests.
  */
-export function createServer(options: CreateServerOptions = {}): Promise<SyncServer> {
-  const { port = 1234, host = '0.0.0.0' } = options
+export function createServer(options: CreateServerOptions): Promise<SyncServer> {
+  const {
+    allowedOrigins,
+    port = 1234,
+    host = '0.0.0.0',
+    maxRooms = 100,
+    maxMessageBytes = 1_000_000,
+    maxDocBytes = 5_000_000,
+  } = options
+
+  if (!allowedOrigins || allowedOrigins.length === 0) {
+    throw new Error('createServer requires a non-empty allowedOrigins list')
+  }
+  const origins = new Set(allowedOrigins)
+  const limits: Limits = { maxRooms, maxDocBytes }
+
   const registry = new Map<string, SharedDoc>()
   const httpServer = http.createServer((_req, res) => {
     res.writeHead(200, { 'Content-Type': 'text/plain' })
     res.end('worktimer sync server\n')
   })
-  const wss = new WebSocketServer({ server: httpServer })
-  wss.on('connection', (conn, req) => setupConnection(registry, conn, req))
+
+  const wss = new WebSocketServer({
+    server: httpServer,
+    maxPayload: maxMessageBytes,
+    verifyClient: (info: { origin?: string; req: http.IncomingMessage }) => {
+      // Mandatory origin: reject missing or non-permitted origins.
+      if (!info.origin || !origins.has(info.origin)) return false
+      // Room cap: reject a brand-new room once the limit is reached.
+      const room = docNameFromUrl(info.req.url)
+      if (!registry.has(room) && registry.size >= limits.maxRooms) return false
+      return true
+    },
+  })
+  wss.on('connection', (conn, req) => setupConnection(registry, limits, conn, req))
 
   return new Promise((resolve, reject) => {
     httpServer.on('error', reject)
