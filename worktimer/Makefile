@@ -1,6 +1,11 @@
 # Origin the local vite dev server runs on; the sync server requires it.
 DEV_ORIGIN ?= http://localhost:8080
 
+# Sync server the built bundle connects to. wss:// because the prod container
+# sits behind Traefik doing automatic HTTPS. Vite inlines this at build time;
+# `make dev` skips the build and falls back to ws://localhost:1234 (src/store.ts).
+SYNC_URL ?= wss://worktimer-sync.rknt.de
+
 .PHONY: dev
 dev: node_modules
 	@ALLOWED_ORIGINS=$(DEV_ORIGIN) npx tsx server/index.ts & \
@@ -14,7 +19,7 @@ dev-server: node_modules
 
 .PHONY: build
 build: node_modules
-	npx vite build
+	VITE_SYNC_URL=$(SYNC_URL) npx vite build
 
 .PHONY: prod
 prod: node_modules
