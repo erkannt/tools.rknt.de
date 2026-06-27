@@ -1,46 +1,46 @@
 body {
-	font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-	font-size: var(--step-0);
-	color: #222;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: var(--step-0);
+  color: #222;
 }
 
 h1 {
-	font-size: var(--step-4);
+  font-size: var(--step-4);
 }
 h2 {
-	font-size: var(--step-3);
+  font-size: var(--step-3);
 }
 h3 {
-	font-size: var(--step-2);
+  font-size: var(--step-2);
 }
 h4 {
-	font-size: var(--step-1);
+  font-size: var(--step-1);
 }
 h1,
 h2,
 h3,
 h4 {
-	font-weight: 700;
-	margin-bottom: 1em;
+  font-weight: 700;
+  margin-bottom: 1em;
 }
 
 a:not([class]) {
-	text-decoration-skip-ink: auto;
-	text-underline-offset: 0.12em;
-	color: rebeccapurple;
+  text-decoration-skip-ink: auto;
+  text-underline-offset: 0.12em;
+  color: rebeccapurple;
 }
 :link:hover {
-	text-decoration-thickness: max(3px, 0.1875rem, 0.12em);
+  text-decoration-thickness: max(3px, 0.1875rem, 0.12em);
 }
 
 main {
-	margin-inline: auto;
-	padding-inline: var(--space-l);
-	max-width: 90ch;
-	margin-top: var(--space-3xl);
+  margin-inline: auto;
+  padding-inline: var(--space-xs);
+  max-width: 90ch;
+  margin-top: var(--space-3xl);
 }
 
 fieldset {
-	background-color: cornsilk;
-	border-color: cornflowerblue;
+  background-color: cornsilk;
+  border-color: cornflowerblue;
 }
