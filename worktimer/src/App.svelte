@@ -176,14 +176,14 @@
     return days.reverse();
   });
 
-  const weekPastDaysTotal = $derived.by(() => {
+  const weekTotal = $derived.by(() => {
     let sum = 0;
     for (let d = thisWeekStart; d < today; d = nextDay(d)) {
       sum += workedPerDay.get(d) ?? 0;
     }
     return sum;
   });
-  const weekTotalMs = $derived(weekPastDaysTotal + elapsedMs);
+  const weekTotalMs = $derived(weekTotal + elapsedMs);
 
   const weekTargetInfo = $derived(weeklyTarget(events, thisWeekStart));
   const weekDeltaMs = $derived(
@@ -1239,28 +1239,28 @@
   {/snippet}
 
   <section>
-    <h2>Today</h2>
-    <p>
-      <time data-testid="elapsed-today">{format(elapsedMs)}</time>
+    <h2>
+      This week
+      {#if weekDeltaMs !== null}
+        <span data-testid="week-delta">{formatBudget(weekDeltaMs)}</span>
+      {:else}
+        <span data-testid="week-total">{hhmm(weekTotalMs)}</span>
+      {/if}
+    </h2>
+    <h3>
+      Today
       {#if todayDeltaMs !== null}
         <span data-testid="today-delta">{formatBudget(todayDeltaMs)}</span>
+      {:else}
+        <time data-testid="elapsed-today">{format(elapsedMs)}</time>
       {/if}
-    </p>
+    </h3>
     <ul>
       {#each todaySessions as session (session.startId)}
         {@render sessionRow(session)}
       {/each}
     </ul>
-  </section>
 
-  <section>
-    <h2>This week</h2>
-    <p>
-      <span data-testid="week-total">{hhmm(weekTotalMs)}</span>
-      {#if weekDeltaMs !== null}
-        <span data-testid="week-delta">{formatBudget(weekDeltaMs)}</span>
-      {/if}
-    </p>
     {#each pastDaysThisWeek as day (day.dayStart)}
       <details data-day-start={day.dayStart}>
         <summary>
