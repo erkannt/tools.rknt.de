@@ -53,6 +53,7 @@ export type Store = {
   getStatus(): SyncStatus
   onStatus(cb: (status: SyncStatus) => void): () => void
 
+  ready: Promise<void>
   destroy(): void
 }
 
@@ -86,11 +87,13 @@ export function createStore(): Store {
 
   // Local persistence (skipped where IndexedDB is unavailable, e.g. tests).
   let idb: IndexeddbPersistence | null = null
+  let ready: Promise<void>
   if (typeof indexedDB !== 'undefined') {
     idb = new IndexeddbPersistence(LOCAL_DB_NAME, doc)
-    idb.whenSynced.then(migrateLegacyData)
+    ready = idb.whenSynced.then(migrateLegacyData)
   } else {
     migrateLegacyData()
+    ready = Promise.resolve()
   }
 
   function migrateLegacyData(): void {
@@ -209,6 +212,8 @@ export function createStore(): Store {
       statusListeners.add(cb)
       return () => statusListeners.delete(cb)
     },
+
+    ready,
 
     destroy() {
       disconnectProvider()

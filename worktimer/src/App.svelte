@@ -89,6 +89,15 @@
 
   const sessions = $derived(deriveSessions(events));
   const running = $derived(events.at(-1)?.type === "WorkStarted");
+
+  store.ready.then(() => {
+    const action = new URLSearchParams(location.search).get("action");
+    if (!action) return;
+    history.replaceState({}, "", location.pathname);
+    const isRunning = store.snapshot().at(-1)?.type === "WorkStarted";
+    if (action === "start" && !isRunning) store.appendEvent({ type: "WorkStarted", at: Date.now() });
+    else if (action === "stop" && isRunning) store.appendEvent({ type: "WorkStopped", at: Date.now() });
+  });
   const today = $derived(startOfDayMs(now));
   const thisWeekStart = $derived(weekStartLocal(today));
 
