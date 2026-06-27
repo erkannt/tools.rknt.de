@@ -1,10 +1,6 @@
 <script lang="ts">
   import { parseEventsJson, WEEKDAYS, type WorkEvent } from "./events";
-  import {
-    createStore,
-    generateSyncCode,
-    type SyncStatus,
-  } from "./store";
+  import { createStore, generateSyncCode, type SyncStatus } from "./store";
   import { deriveSessions, validateEdit, type Session } from "./sessions";
   import { generateSampleEvents } from "./seed";
   import {
@@ -95,8 +91,10 @@
     if (!action) return;
     history.replaceState({}, "", location.pathname);
     const isRunning = store.snapshot().at(-1)?.type === "WorkStarted";
-    if (action === "start" && !isRunning) store.appendEvent({ type: "WorkStarted", at: Date.now() });
-    else if (action === "stop" && isRunning) store.appendEvent({ type: "WorkStopped", at: Date.now() });
+    if (action === "start" && !isRunning)
+      store.appendEvent({ type: "WorkStarted", at: Date.now() });
+    else if (action === "stop" && isRunning)
+      store.appendEvent({ type: "WorkStopped", at: Date.now() });
   });
   const today = $derived(startOfDayMs(now));
   const thisWeekStart = $derived(weekStartLocal(today));
@@ -883,54 +881,9 @@
 </script>
 
 <main class="stack">
-  <h1>worktimer</h1>
-
-  <details class="sync" data-testid="sync-panel">
-    <summary>
-      Sync
-      <span
-        class="sync-dot"
-        data-testid="sync-status"
-        data-status={syncStatus}
-        title={syncStatus}
-      ></span>
-    </summary>
-    {#if syncCode}
-      <p>
-        This device syncs under a shared code. Open the link on another device
-        to join, or enter the code there manually.
-      </p>
-      <label>
-        Sync code
-        <input type="text" readonly value={syncCode} data-testid="sync-code" />
-      </label>
-      <div class="sync-actions">
-        <button onclick={copyCode}>
-          {syncCopied === "code" ? "Copied!" : "Copy code"}
-        </button>
-        <button onclick={copyLink}>
-          {syncCopied === "link" ? "Copied!" : "Copy link"}
-        </button>
-        <button onclick={forgetSync} data-testid="sync-forget">Disconnect</button>
-      </div>
-      <p data-testid="sync-status-text">Status: {syncStatus}</p>
-    {:else}
-      <p>Sync this device with others by sharing a secret code.</p>
-      <button onclick={createSync} data-testid="sync-create">
-        Create sync code
-      </button>
-      <label>
-        Enter existing code
-        <input
-          type="text"
-          bind:value={syncInput}
-          data-testid="sync-input"
-          placeholder="xxxx-xxxx-xxxx"
-        />
-      </label>
-      <button onclick={connectSync} data-testid="sync-connect">Connect</button>
-    {/if}
-  </details>
+  <h1>
+    worktimer <span data-testid="flex-budget">{formatBudget(budgetMs)}</span>
+  </h1>
 
   {#if running}
     <button class="btn btn-stop" onclick={stop}>Stop session</button>
@@ -1172,9 +1125,54 @@
     {/if}
   </details>
 
-  <p>
-    Flex budget: <span data-testid="flex-budget">{formatBudget(budgetMs)}</span>
-  </p>
+  <details class="sync" data-testid="sync-panel">
+    <summary>
+      Sync
+      <span
+        class="sync-dot"
+        data-testid="sync-status"
+        data-status={syncStatus}
+        title={syncStatus}
+      ></span>
+    </summary>
+    {#if syncCode}
+      <p>
+        This device syncs under a shared code. Open the link on another device
+        to join, or enter the code there manually.
+      </p>
+      <label>
+        Sync code
+        <input type="text" readonly value={syncCode} data-testid="sync-code" />
+      </label>
+      <div class="sync-actions">
+        <button onclick={copyCode}>
+          {syncCopied === "code" ? "Copied!" : "Copy code"}
+        </button>
+        <button onclick={copyLink}>
+          {syncCopied === "link" ? "Copied!" : "Copy link"}
+        </button>
+        <button onclick={forgetSync} data-testid="sync-forget"
+          >Disconnect</button
+        >
+      </div>
+      <p data-testid="sync-status-text">Status: {syncStatus}</p>
+    {:else}
+      <p>Sync this device with others by sharing a secret code.</p>
+      <button onclick={createSync} data-testid="sync-create">
+        Create sync code
+      </button>
+      <label>
+        Enter existing code
+        <input
+          type="text"
+          bind:value={syncInput}
+          data-testid="sync-input"
+          placeholder="xxxx-xxxx-xxxx"
+        />
+      </label>
+      <button onclick={connectSync} data-testid="sync-connect">Connect</button>
+    {/if}
+  </details>
 
   {#snippet sessionRow(session: Session, showWeekday: boolean = false)}
     <li>
