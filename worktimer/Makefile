@@ -29,10 +29,19 @@ prod: node_modules
 check: node_modules
 	npx svelte-check --tsconfig ./tsconfig.app.json && npx tsc -p tsconfig.node.json && npx vitest run
 
+LOCAL_TRUNK_VER := $(shell date --utc +%Y%m%d%H%M%S)-$(shell git rev-parse --short HEAD)$(shell if git diff --quiet; then echo ""; else echo "-dirty"; fi)
+
+.PHONY: container
+container:
+	cd server && docker build -t rknt/worktimer-sync:$(LOCAL_TRUNK_VER) .
 
 .PHONY: release
-release: build
+release: build container
 	mc mirror --overwrite --remove ./dist rknt/tools/worktimer
+	docker push rknt/worktimer-sync:$(LOCAL_TRUNK_VER)
+	cd /home/hff/repos/rknt-server && git pull
+	yq -i '.services.worktimer-sync.image = "rknt/worktimer-sync:$(LOCAL_TRUNK_VER)"' /home/hff/repos/rknt-server/worktimer-sync/docker-compose.yml
+	cd /home/hff/repos/rknt-server && git add worktimer-sync/docker-compose.yml && git commit -m "bump worktimer-sync image version" && git push
 
 node_modules: package.json pnpm-lock.yaml
 	pnpm install --frozen-lockfile
