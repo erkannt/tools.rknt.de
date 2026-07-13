@@ -1,6 +1,6 @@
 # Local / self-hosted worktimer sync server.
-# In-memory and ephemeral: documents live only while the server runs and at
-# least one client holds them. Put a TLS-terminating reverse proxy in front
+# Documents are persisted to ./data so devices can sync even when they are
+# never online at the same time. Put a TLS-terminating reverse proxy in front
 # for production (the sync code is a bearer secret and must travel over wss).
 services:
   sync:
@@ -17,4 +17,10 @@ services:
       - MAX_ROOMS=100
       - MAX_MESSAGE_BYTES=1000000
       - MAX_DOC_BYTES=5000000
+      # Persistence: room snapshots are written here and pruned after TTL days.
+      # Remove DATA_DIR to revert to the original in-memory-only behaviour.
+      - DATA_DIR=/app/data
+      - PERSIST_TTL_DAYS=14
+    volumes:
+      - ./data:/app/data
     restart: unless-stopped

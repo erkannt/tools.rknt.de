@@ -1,12 +1,14 @@
-// Minimal in-memory Yjs websocket sync server.
+// Minimal Yjs websocket sync server with optional file-based persistence.
 //
 // Adapted from the canonical y-websocket server utility, trimmed to the pieces
 // worktimer needs: per-room shared docs, the sync + awareness protocols, and
-// connection keepalive. Documents live only in memory for as long as the
-// process runs and at least one client holds them — there is no persistence
-// layer (see the plan; durable storage is a later add via y-protocols hooks).
+// connection keepalive. Without DATA_DIR, documents live only in memory for as
+// long as at least one client holds them. With DATA_DIR, each room is snapshotted
+// to disk on change (debounced) and flushed when the last client disconnects, so
+// devices can sync even when they are never online at the same time.
 
 import http from 'node:http'
+import fs from 'node:fs'
 import type { AddressInfo } from 'node:net'
 import { WebSocketServer, WebSocket } from 'ws'
 import * as Y from 'yjs'
@@ -14,6 +16,7 @@ import * as syncProtocol from 'y-protocols/sync'
 import * as awarenessProtocol from 'y-protocols/awareness'
 import * as encoding from 'lib0/encoding'
 import * as decoding from 'lib0/decoding'
+import { createPersistStore, type PersistStore } from './store.ts'
 
 const MESSAGE_SYNC = 0
 const MESSAGE_AWARENESS = 1
@@ -27,6 +30,8 @@ class SharedDoc extends Y.Doc {
   readonly conns = new Map<WebSocket, Set<number>>()
 
   readonly maxDocBytes: number
+  /** Set after initial load so that the load itself does not trigger a re-persist. */
+  persistStore?: PersistStore
 
   constructor(name: string, maxDocBytes: number) {
     super({ gc: true })
@@ -61,6 +66,7 @@ class SharedDoc extends Y.Doc {
       encoding.writeVarUint(encoder, MESSAGE_SYNC)
       syncProtocol.writeUpdate(encoder, update)
       broadcast(this, encoding.toUint8Array(encoder), origin)
+      this.persistStore?.persist(this.name, this)
     })
   }
 }
@@ -93,8 +99,11 @@ function closeConn(doc: SharedDoc, conn: WebSocket): void {
   if (controlled) {
     doc.conns.delete(conn)
     awarenessProtocol.removeAwarenessStates(doc.awareness, Array.from(controlled), null)
-    // Drop the doc once the last client disconnects (in-memory, ephemeral).
-    if (doc.conns.size === 0) doc.destroy()
+    if (doc.conns.size === 0) {
+      // Flush any pending debounced write before the doc is destroyed.
+      doc.persistStore?.flushPersist(doc.name, doc)
+      doc.destroy()
+    }
   }
   try {
     conn.close()
@@ -151,8 +160,13 @@ function setupConnection(
   if (!doc) {
     doc = new SharedDoc(name, limits.maxDocBytes)
     registry.set(name, doc)
-    // Evict the empty doc from the registry when it self-destructs.
     doc.on('destroy', () => registry.delete(name))
+    if (limits.store) {
+      // Load persisted state before setting doc.store so the load's update
+      // events don't trigger a redundant re-persist of the just-loaded data.
+      limits.store.loadSync(name, doc)
+      doc.persistStore = limits.store
+    }
   }
   doc.conns.set(conn, new Set())
 
@@ -220,10 +234,11 @@ export type SyncServer = {
   close: () => Promise<void>
 }
 
-/** Resource limits, applied per connection / per room. */
+/** Resource limits and optional persistence, applied per connection / per room. */
 type Limits = {
   maxRooms: number
   maxDocBytes: number
+  store?: PersistStore
 }
 
 export type CreateServerOptions = {
@@ -242,6 +257,15 @@ export type CreateServerOptions = {
   maxMessageBytes?: number
   /** Maximum encoded size of a single room's document in bytes (default 5 MB). */
   maxDocBytes?: number
+  /**
+   * Directory to persist room snapshots in. When set, each room's Yjs state is
+   * written to disk on change (debounced) and flushed when the last client
+   * disconnects, enabling async sync across devices. When unset the server is
+   * purely in-memory (original behaviour).
+   */
+  dataDir?: string
+  /** How many days to keep room files before pruning them (default 14). */
+  persistTtlDays?: number
 }
 
 /**
@@ -256,13 +280,22 @@ export function createServer(options: CreateServerOptions): Promise<SyncServer> 
     maxRooms = 100,
     maxMessageBytes = 1_000_000,
     maxDocBytes = 5_000_000,
+    dataDir,
+    persistTtlDays = 14,
   } = options
 
   if (!allowedOrigins || allowedOrigins.length === 0) {
     throw new Error('createServer requires a non-empty allowedOrigins list')
   }
   const origins = new Set(allowedOrigins)
-  const limits: Limits = { maxRooms, maxDocBytes }
+
+  let store: PersistStore | undefined
+  if (dataDir) {
+    fs.mkdirSync(dataDir, { recursive: true })
+    store = createPersistStore(dataDir, persistTtlDays)
+    store.cleanup()
+  }
+  const limits: Limits = { maxRooms, maxDocBytes, store }
 
   const registry = new Map<string, SharedDoc>()
   const httpServer = http.createServer((_req, res) => {
@@ -294,7 +327,7 @@ export function createServer(options: CreateServerOptions): Promise<SyncServer> 
         close: () =>
           new Promise<void>(res => {
             for (const conn of wss.clients) conn.terminate()
-            wss.close(() => httpServer.close(() => res()))
+            wss.close(() => httpServer.close(() => { store?.destroy(); res() }))
           }),
       })
     })
