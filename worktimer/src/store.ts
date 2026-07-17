@@ -36,6 +36,14 @@ const SYNC_URL: string =
 
 export type SyncStatus = 'offline' | 'connecting' | 'connected'
 
+/**
+ * User-facing status of a live provider: connected means the socket is open
+ * AND the initial sync handshake has completed. Exported for tests.
+ */
+export function providerStatus(p: { wsconnected: boolean; synced: boolean }): SyncStatus {
+  return p.wsconnected && p.synced ? 'connected' : 'connecting'
+}
+
 export type Store = {
   snapshot(): WorkEvent[]
   subscribe(cb: (events: WorkEvent[]) => void): () => void
@@ -125,11 +133,16 @@ export function createStore(): Store {
 
   function connect(code: string): void {
     disconnectProvider()
-    provider = new WebsocketProvider(SYNC_URL, code, doc)
+    const p = new WebsocketProvider(SYNC_URL, code, doc)
+    provider = p
     setStatus('connecting')
-    provider.on('status', (e: { status: 'connecting' | 'connected' | 'disconnected' }) => {
-      setStatus(e.status === 'connected' ? 'connected' : 'connecting')
-    })
+    // "connected" only once the initial sync handshake has completed: an open
+    // socket that hasn't exchanged state yet doesn't have the server's data,
+    // so reporting it as connected would overstate. y-websocket re-emits both
+    // events on every reconnect, and flips synced back to false on any drop.
+    const update = () => setStatus(providerStatus(p))
+    p.on('status', update)
+    p.on('sync', update)
   }
 
   function disconnectProvider(): void {
