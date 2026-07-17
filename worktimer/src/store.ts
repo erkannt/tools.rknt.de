@@ -12,6 +12,7 @@
 import * as Y from 'yjs'
 import { IndexeddbPersistence } from 'y-indexeddb'
 import { WebsocketProvider } from 'y-websocket'
+import { wireReconnect } from './reconnect'
 import {
   STORAGE_KEY,
   eventsMap,
@@ -139,6 +140,11 @@ export function createStore(): Store {
     setStatus('offline')
   }
 
+  // Close the update-loss window around page suspension: reconnect promptly
+  // on resume/online and on local edits made while offline, instead of
+  // waiting out y-websocket's backoff (see reconnect.ts for the full story).
+  const unwireReconnect = wireReconnect(doc, () => provider)
+
   function getStoredCode(): string | null {
     if (typeof localStorage === 'undefined') return null
     return localStorage.getItem(SYNC_CODE_KEY)
@@ -216,6 +222,7 @@ export function createStore(): Store {
     ready,
 
     destroy() {
+      unwireReconnect()
       disconnectProvider()
       statusListeners.clear()
       idb?.destroy()
