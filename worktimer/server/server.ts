@@ -21,6 +21,9 @@ import { createPersistStore, type PersistStore } from './store.ts'
 const MESSAGE_SYNC = 0
 const MESSAGE_AWARENESS = 1
 const PING_TIMEOUT_MS = 30_000
+/** Grace period on shutdown for in-flight messages to be drained and persisted
+ * before a still-open connection is force-terminated. */
+const SHUTDOWN_GRACE_MS = 2_000
 
 /** A Y.Doc shared across all connections subscribed to one room. */
 class SharedDoc extends Y.Doc {
@@ -326,8 +329,18 @@ export function createServer(options: CreateServerOptions): Promise<SyncServer> 
         port: resolved,
         close: () =>
           new Promise<void>(res => {
-            for (const conn of wss.clients) conn.terminate()
-            wss.close(() => httpServer.close(() => { store?.destroy(); res() }))
+            // Close cleanly so any in-flight sync message already on the wire
+            // is read and persisted before the connection goes away; force-
+            // terminate stragglers after a grace period so shutdown can't hang
+            // on a peer that never acknowledges the close handshake.
+            const forceTimer = setTimeout(() => {
+              for (const conn of wss.clients) conn.terminate()
+            }, SHUTDOWN_GRACE_MS)
+            wss.close(() => {
+              clearTimeout(forceTimer)
+              httpServer.close(() => { store?.destroy(); res() })
+            })
+            for (const conn of wss.clients) conn.close()
           }),
       })
     })

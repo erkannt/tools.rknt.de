@@ -134,4 +134,32 @@ describe('server persistence', () => {
     await new Promise(r => setTimeout(r, 300))
     expect(b.events.has('e1')).toBe(false)
   })
+
+  it('flushes a pending debounced write when the server shuts down', async () => {
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'worktimer-persist-test-'))
+    server = await createServer({
+      port: 0,
+      allowedOrigins: [TEST_ORIGIN],
+      dataDir: tmpDir,
+    })
+
+    // A connects and writes an event, then the server is shut down (e.g. a
+    // deploy) before the 500ms debounce timer has a chance to fire on its own
+    // and before A disconnects. The pending write must still reach disk.
+    const a = connect(server.url, 'shutdown-room')
+    await waitFor(() => a.provider.wsconnected)
+    a.events.set('e1', { type: 'WorkStarted', id: 'e1', at: 1000 })
+    await server.close()
+    server = null
+
+    // A fresh server instance reads back whatever was persisted.
+    server = await createServer({
+      port: 0,
+      allowedOrigins: [TEST_ORIGIN],
+      dataDir: tmpDir,
+    })
+    const b = connect(server.url, 'shutdown-room')
+    await waitFor(() => b.events.has('e1'))
+    expect(b.events.get('e1')).toEqual({ type: 'WorkStarted', id: 'e1', at: 1000 })
+  })
 })
