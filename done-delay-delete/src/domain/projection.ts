@@ -17,10 +17,6 @@ export type State = {
   actions: Action[];
 };
 
-export function emptyState(): State {
-  return { actions: [] };
-}
-
 export function project(events: ActionEvent[], now: number): State {
   const byId = new Map<string, Action>();
 
