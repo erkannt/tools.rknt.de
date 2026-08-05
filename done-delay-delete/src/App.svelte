@@ -59,7 +59,7 @@
   }
 
   function focusCreate() {
-    document.querySelector<HTMLTextAreaElement>(".create textarea")?.focus();
+    document.querySelector<HTMLInputElement>(".create input")?.focus();
   }
 
   onMount(() => {

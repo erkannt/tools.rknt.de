@@ -79,19 +79,9 @@
     color: #1a1a1a;
   }
 
-  .status {
-    font-size: var(--step--2);
-    color: #999;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-  }
-
   @media (max-width: 36rem) {
     .action {
       flex-wrap: wrap;
-    }
-    .status {
-      display: none;
     }
   }
 </style>

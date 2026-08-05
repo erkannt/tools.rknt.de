@@ -52,11 +52,11 @@ describe("App", () => {
   it("creates an action via the form and persists it", async () => {
     mountApp();
     await tick();
-    const textarea = document.querySelector<HTMLTextAreaElement>(
-      ".create textarea",
+    const input = document.querySelector<HTMLInputElement>(
+      ".create input",
     )!;
-    textarea.value = "buy milk";
-    textarea.dispatchEvent(new Event("input"));
+    input.value = "buy milk";
+    input.dispatchEvent(new Event("input"));
     await tick();
 
     const form = document.querySelector<HTMLFormElement>(".create")!;

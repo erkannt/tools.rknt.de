@@ -15,7 +15,7 @@
 </script>
 
 <form class="create" onsubmit={submit}>
-  <input type="text" bind:value={text} aria-label="New action text" rows="2" />
+  <input type="text" bind:value={text} aria-label="New action text" />
   <button class="submit" type="submit" disabled={!text.trim()}
     >create action</button
   >
