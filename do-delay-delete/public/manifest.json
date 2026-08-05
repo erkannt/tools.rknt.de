@@ -1,0 +1,25 @@
+{
+  "name": "DoDelayDelete",
+  "short_name": "DDD",
+  "description": "Delay deletions, keep the calm",
+  "id": "/do-delay-delete/",
+  "start_url": "/do-delay-delete/",
+  "display": "standalone",
+  "background_color": "#1a1a1a",
+  "theme_color": "#DC143C",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "./icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
