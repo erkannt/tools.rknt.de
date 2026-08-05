@@ -9,6 +9,7 @@
   import type { ActionEvent } from "./domain/events";
   import { loadEvents, saveEvents } from "./domain/persistence";
   import { landingActions, project } from "./domain/projection";
+  import { tallyToday, titleFor } from "./domain/tally";
   import CreateAction from "./components/CreateAction.svelte";
   import EmptyState from "./components/EmptyState.svelte";
   import Landing from "./components/Landing.svelte";
@@ -18,6 +19,11 @@
 
   const model = $derived(project(events, now));
   const landing = $derived(landingActions(model));
+  const title = $derived(titleFor(tallyToday(events, now)));
+
+  $effect(() => {
+    document.title = title;
+  });
 
   const storage = () =>
     typeof localStorage !== "undefined" ? localStorage : undefined;
@@ -68,7 +74,7 @@
 
 <main class="app">
   <header class="hero">
-    <h1>done delay delete</h1>
+    <h1>{title}</h1>
   </header>
 
   {#if landing.length > 0}
@@ -102,7 +108,7 @@
 
   .hero h1 {
     margin: 0;
-    font-size: var(--step-5);
+    font-size: var(--step-1);
     color: #1a1a1a;
   }
 
@@ -110,10 +116,9 @@
     content: "";
     display: block;
     width: 100%;
-    height: 0.35rem;
+    height: 0.25rem;
     margin: var(--space-xs) auto 0;
     border-radius: 999px;
     background: crimson;
   }
 </style>
-
