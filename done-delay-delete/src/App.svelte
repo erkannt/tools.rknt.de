@@ -1,6 +1,11 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { createAction, deleteAction, delayAction, markDone } from "./domain/commands";
+  import {
+    createAction,
+    deleteAction,
+    delayAction,
+    markDone,
+  } from "./domain/commands";
   import type { ActionEvent } from "./domain/events";
   import { loadEvents, saveEvents } from "./domain/persistence";
   import { landingActions, project } from "./domain/projection";
@@ -14,7 +19,8 @@
   const model = $derived(project(events, now));
   const landing = $derived(landingActions(model));
 
-  const storage = () => (typeof localStorage !== "undefined" ? localStorage : undefined);
+  const storage = () =>
+    typeof localStorage !== "undefined" ? localStorage : undefined;
 
   function persist() {
     const s = storage();
@@ -62,12 +68,16 @@
 
 <main class="app">
   <header class="hero">
-    <h1>{landing.length > 0 ? "What will you get done?" : "Done. Delay. Delete."}</h1>
-    <p class="tagline">Three actions at a time. The queue always has room for the next one.</p>
+    <h1>done delay delete</h1>
   </header>
 
   {#if landing.length > 0}
-    <Landing actions={landing} onDone={done} onDelay={delay} onDelete={remove} />
+    <Landing
+      actions={landing}
+      onDone={done}
+      onDelay={delay}
+      onDelete={remove}
+    />
   {:else}
     <EmptyState onFirstAction={focusCreate} />
   {/if}
@@ -99,15 +109,11 @@
   .hero h1::after {
     content: "";
     display: block;
-    width: 4rem;
+    width: 100%;
     height: 0.35rem;
     margin: var(--space-xs) auto 0;
     border-radius: 999px;
     background: crimson;
   }
-
-  .tagline {
-    margin-top: var(--space-s);
-    color: #555;
-  }
 </style>
+

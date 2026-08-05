@@ -15,13 +15,10 @@
 </script>
 
 <form class="create" onsubmit={submit}>
-  <textarea
-    bind:value={text}
-    placeholder="What do you need to do?"
-    aria-label="New action text"
-    rows="2"
-  ></textarea>
-  <button class="submit" type="submit" disabled={!text.trim()}>create action</button>
+  <input type="text" bind:value={text} aria-label="New action text" rows="2" />
+  <button class="submit" type="submit" disabled={!text.trim()}
+    >create action</button
+  >
 </form>
 
 <style>
@@ -30,23 +27,22 @@
     flex-direction: column;
     gap: var(--space-s);
     padding: var(--space-s) var(--space-m);
-    border-radius: 16px;
+    border-radius: 2px;
     background: #ffffff;
     border: 1px solid #ececec;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
   }
 
-  textarea {
-    resize: vertical;
+  input {
     font: inherit;
     padding: var(--space-2xs) var(--space-xs);
-    border-radius: 12px;
+    border-radius: 2px;
     border: 1px solid #d6d6d6;
     background: #fbfbfb;
     color: inherit;
   }
 
-  textarea:focus {
+  input:focus {
     outline: 2px solid crimson;
     outline-offset: 1px;
     border-color: transparent;
@@ -54,9 +50,8 @@
   }
 
   .submit {
-    align-self: flex-end;
+    width: 100%;
     padding: var(--space-2xs) var(--space-m);
-    border-radius: 999px;
     border: none;
     background: crimson;
     color: #fff;
@@ -70,3 +65,4 @@
     cursor: not-allowed;
   }
 </style>
+
