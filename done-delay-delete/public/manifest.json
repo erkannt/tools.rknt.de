@@ -1,9 +1,9 @@
 {
-  "name": "DoDelayDelete",
+  "name": "DoneDelayDelete",
   "short_name": "DDD",
   "description": "Delay deletions, keep the calm",
-  "id": "/do-delay-delete/",
-  "start_url": "/do-delay-delete/",
+  "id": "/done-delay-delete/",
+  "start_url": "/done-delay-delete/",
   "display": "standalone",
   "background_color": "#1a1a1a",
   "theme_color": "#DC143C",

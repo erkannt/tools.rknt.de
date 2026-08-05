@@ -1,4 +1,4 @@
-const CACHE_NAME = 'do-delay-delete-v1';
+const CACHE_NAME = 'done-delay-delete-v1';
 const ASSETS_TO_PRECACHE = [
   '/',
   '/index.html',

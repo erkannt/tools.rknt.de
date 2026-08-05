@@ -30,4 +30,4 @@ clean:
 
 .PHONY: release
 release: build
-	mc mirror --overwrite --remove ./dist rknt/tools/do-delay-delete
+	mc mirror --overwrite --remove ./dist rknt/tools/done-delay-delete
