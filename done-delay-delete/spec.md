@@ -9,6 +9,13 @@ A todo list with a kind landing.
 - done, delay, delete all remove the action from the landing page, making space for another action from the queue
 - delaying an action makes it return in the future, the older the action is the further back it gets place in the queue
 
+### Queue behaviour
+
+- order queue by `showAt`
+- `showAt` = `createAt` if action has never been delayed
+- delay command raises event with new `showAt` = `now() + delay`
+- delay is `fibonacci(numberOfDelays + 1) x 6h`
+
 ## Architecture
 
 - event sourced
