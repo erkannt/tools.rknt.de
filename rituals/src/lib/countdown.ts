@@ -1,5 +1,9 @@
+import type { TimerSpec } from "./types";
+
 export interface CountdownState {
   index: number;
+  repeats: number;
+  repeat: number;
   duration: number;
   remaining: number;
 }
@@ -24,12 +28,18 @@ export class CountdownService {
     }
   }
 
-  start(index: number, duration: number) {
+  start(index: number, timer: TimerSpec) {
     if (this.interval) {
       clearInterval(this.interval);
       this.interval = null;
     }
-    this.state = { index, duration, remaining: duration };
+    this.state = {
+      index,
+      repeats: timer.repeats,
+      repeat: 1,
+      duration: timer.duration,
+      remaining: timer.duration,
+    };
     this.onTick(this.state);
 
     this.interval = setInterval(() => {
@@ -43,11 +53,17 @@ export class CountdownService {
         this.playBeep(100);
       } else if (newRemaining === 0) {
         this.playBeep(400);
-      }
-
-      if (newRemaining === 0) {
-        clearInterval(this.interval!);
-        this.interval = null;
+        if (this.state.repeat < this.state.repeats) {
+          this.state = {
+            ...this.state,
+            repeat: this.state.repeat + 1,
+            remaining: this.state.duration,
+          };
+          this.onTick(this.state);
+        } else {
+          clearInterval(this.interval!);
+          this.interval = null;
+        }
       }
     }, 1000) as unknown as number;
   }

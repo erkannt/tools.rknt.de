@@ -1,8 +1,15 @@
-import type { RitualLine } from "./types";
+import type { RitualLine, TimerSpec } from "./types";
 
-export function parseDuration(content: string): number | null {
-  const match = content.trim().match(/(?:^|\s)(\d+)\s*$/);
-  return match ? parseInt(match[1], 10) : null;
+export function parseTimer(content: string): TimerSpec | null {
+  const trimmed = content.trim();
+  const repeated = trimmed.match(/(?:^|\s)(\d+)x(\d+)\s*$/);
+  if (repeated) {
+    const repeats = parseInt(repeated[1], 10);
+    if (repeats < 1) return null;
+    return { repeats, duration: parseInt(repeated[2], 10) };
+  }
+  const single = trimmed.match(/(?:^|\s)(\d+)\s*$/);
+  return single ? { repeats: 1, duration: parseInt(single[1], 10) } : null;
 }
 
 export function renderRitualLines(content: string): RitualLine[] {
@@ -22,7 +29,7 @@ export function renderRitualLines(content: string): RitualLine[] {
     } else if (inPreBlock) {
       preContent += line + "\n";
     } else {
-      const duration = parseDuration(line);
+      const duration = parseTimer(line);
       result.push({
         type: "checkbox",
         content: line,

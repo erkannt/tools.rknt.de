@@ -14,7 +14,9 @@
   const router = createRouter(syncFromUrl);
   const countdownService = new CountdownService(
     () => new AudioContext(),
-    (state) => { countdown = state; },
+    (state) => {
+      countdown = state;
+    },
   );
 
   // ── View State ────────────────────────────────────────────────────
@@ -38,7 +40,13 @@
   let selectedForImport = $state<Set<string>>(new Set());
 
   let checkedItems = $state<Set<number>>(new Set());
-  let countdown = $state<{ index: number; duration: number; remaining: number } | null>(null);
+  let countdown = $state<{
+    index: number;
+    repeats: number;
+    repeat: number;
+    duration: number;
+    remaining: number;
+  } | null>(null);
 
   // ── Routing ───────────────────────────────────────────────────────
   function syncFromUrl() {
@@ -266,10 +274,11 @@
     countdownService.clear();
     if (currentRitual) {
       const lines = renderRitualLines(currentRitual.markdown);
-      countdownService.initAudio(lines.some((l) => l.type === "checkbox" && l.duration !== null));
+      countdownService.initAudio(
+        lines.some((l) => l.type === "checkbox" && l.duration !== null),
+      );
     }
   }
-
 </script>
 
 <main>
@@ -317,7 +326,9 @@
             if you add a line with only <code>---</code> everything below it
             will appear as is<br />
             lines ending with a number (e.g. <code>breathe 60</code>) start a
-            countdown timer when all items above are checked
+            countdown timer when all items above are checked<br />
+            lines ending with <code>NxM</code> (e.g. <code>breathe 5x30</code>)
+            repeat the timer N times for M seconds each
           </p>
         </details>
       </div>
@@ -347,12 +358,17 @@
     </nav>
     <h1 class="ritual-title">{currentRitual.name}</h1>
     <div class="countdown-container">
-      <div
-        class="countdown-bar"
-        style="width: {countdown
-          ? (countdown.remaining / countdown.duration) * 100
-          : 0}%"
-      ></div>
+      {#if countdown}
+        {#if countdown.repeats > 1}
+          <span class="countdown-label"
+            >{countdown.repeat}/{countdown.repeats}</span
+          >
+        {/if}
+        <div
+          class="countdown-bar"
+          style="width: {(countdown.remaining / countdown.duration) * 100}%"
+        ></div>
+      {/if}
     </div>
     <div class="rendered-ritual">
       {#each renderRitualLines(currentRitual.markdown) as line (line.index)}
@@ -584,12 +600,23 @@
     height: 2rem;
     margin-block-end: var(--space-l);
     overflow: hidden;
+    position: relative;
   }
 
   .countdown-bar {
     height: 100%;
     background: cornsilk;
     transition: width 0.2s ease-out;
+  }
+
+  .countdown-label {
+    color: black;
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
   }
 
   code {

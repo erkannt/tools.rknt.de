@@ -67,14 +67,14 @@ describe("CountdownService", () => {
 
   it("starts countdown with correct initial state", () => {
     const svc = makeService();
-    svc.start(2, 5);
-    expect(svc.getState()).toEqual({ index: 2, duration: 5, remaining: 5 });
-    expect(tickStates).toEqual([{ index: 2, duration: 5, remaining: 5 }]);
+    svc.start(2, { repeats: 1, duration: 5 });
+    expect(svc.getState()).toEqual({ index: 2, repeats: 1, repeat: 1, duration: 5, remaining: 5 });
+    expect(tickStates).toEqual([{ index: 2, repeats: 1, repeat: 1, duration: 5, remaining: 5 }]);
   });
 
   it("decrements remaining on each tick", () => {
     const svc = makeService();
-    svc.start(0, 3);
+    svc.start(0, { repeats: 1, duration: 3 });
 
     vi.advanceTimersByTime(1000);
     expect(svc.getState()?.remaining).toBe(2);
@@ -88,7 +88,7 @@ describe("CountdownService", () => {
 
   it("fires onTick callback on each tick", () => {
     const svc = makeService();
-    svc.start(0, 3);
+    svc.start(0, { repeats: 1, duration: 3 });
     expect(tickStates).toHaveLength(1); // initial
 
     vi.advanceTimersByTime(1000);
@@ -107,7 +107,7 @@ describe("CountdownService", () => {
   it("plays short beep at remaining 2 and 1", () => {
     const svc = makeService();
     svc.initAudio(true);
-    svc.start(0, 3);
+    svc.start(0, { repeats: 1, duration: 3 });
 
     vi.advanceTimersByTime(1000); // remaining=2
     expect(mockAudioCtx.createOscillator).toHaveBeenCalledTimes(1);
@@ -119,7 +119,7 @@ describe("CountdownService", () => {
   it("plays long beep when countdown reaches 0", () => {
     const svc = makeService();
     svc.initAudio(true);
-    svc.start(0, 2);
+    svc.start(0, { repeats: 1, duration: 2 });
 
     vi.advanceTimersByTime(1000); // remaining=1, short beep
     expect(mockAudioCtx.createOscillator).toHaveBeenCalledTimes(1);
@@ -130,7 +130,7 @@ describe("CountdownService", () => {
 
   it("does not play beep if audioCtx was never initialized", () => {
     const svc = makeService();
-    svc.start(0, 2);
+    svc.start(0, { repeats: 1, duration: 2 });
 
     vi.advanceTimersByTime(2000);
     expect(mockAudioCtx.createOscillator).not.toHaveBeenCalled();
@@ -140,7 +140,7 @@ describe("CountdownService", () => {
     mockAudioCtx.state = "suspended";
     const svc = makeService();
     svc.initAudio(true);
-    svc.start(0, 1);
+    svc.start(0, { repeats: 1, duration: 1 });
 
     vi.advanceTimersByTime(1000);
     expect(mockAudioCtx.resume).toHaveBeenCalledOnce();
@@ -148,7 +148,7 @@ describe("CountdownService", () => {
 
   it("clears interval and resets state", () => {
     const svc = makeService();
-    svc.start(0, 5);
+    svc.start(0, { repeats: 1, duration: 5 });
     expect(svc.getState()).not.toBeNull();
 
     svc.clear();
@@ -158,16 +158,16 @@ describe("CountdownService", () => {
 
   it("clears previous interval when starting new countdown", () => {
     const svc = makeService();
-    svc.start(0, 5);
+    svc.start(0, { repeats: 1, duration: 5 });
     expect(svc.getState()?.index).toBe(0);
 
-    svc.start(1, 3);
-    expect(svc.getState()).toEqual({ index: 1, duration: 3, remaining: 3 });
+    svc.start(1, { repeats: 1, duration: 3 });
+    expect(svc.getState()).toEqual({ index: 1, repeats: 1, repeat: 1, duration: 3, remaining: 3 });
   });
 
-  it("stops ticking after countdown reaches 0", () => {
+  it("stops ticking after single countdown reaches 0", () => {
     const svc = makeService();
-    svc.start(0, 2);
+    svc.start(0, { repeats: 1, duration: 2 });
 
     vi.advanceTimersByTime(2000); // reach 0
     expect(svc.getState()?.remaining).toBe(0);
@@ -175,5 +175,44 @@ describe("CountdownService", () => {
     vi.advanceTimersByTime(1000); // extra tick should not change state
     expect(svc.getState()?.remaining).toBe(0);
     expect(tickStates.at(-1)?.remaining).toBe(0);
+  });
+
+  it("advances to next repeat with reset remaining", () => {
+    const svc = makeService();
+    svc.start(0, { repeats: 2, duration: 2 });
+
+    vi.advanceTimersByTime(2000); // repeat 1 reaches 0
+    expect(svc.getState()).toEqual({ index: 0, repeats: 2, repeat: 2, duration: 2, remaining: 2 });
+
+    vi.advanceTimersByTime(2000); // repeat 2 reaches 0
+    expect(svc.getState()?.remaining).toBe(0);
+    expect(svc.getState()?.repeat).toBe(2);
+  });
+
+  it("stops ticking after last repeat", () => {
+    const svc = makeService();
+    svc.start(0, { repeats: 2, duration: 2 });
+
+    vi.advanceTimersByTime(2000); // repeat 1 -> repeat 2
+    vi.advanceTimersByTime(2000); // repeat 2 reaches 0
+
+    const lastState = svc.getState();
+    vi.advanceTimersByTime(1000); // extra tick should not change state
+    expect(svc.getState()).toEqual(lastState);
+    expect(tickStates.at(-1)).toEqual(lastState);
+  });
+
+  it("plays long beep at each repeat completion", () => {
+    const svc = makeService();
+    svc.initAudio(true);
+    svc.start(0, { repeats: 2, duration: 2 });
+
+    vi.advanceTimersByTime(1000); // remaining=1, short beep
+    vi.advanceTimersByTime(1000); // repeat 1 completes, long beep
+    expect(mockAudioCtx.createOscillator).toHaveBeenCalledTimes(2);
+
+    vi.advanceTimersByTime(1000); // remaining=1, short beep
+    vi.advanceTimersByTime(1000); // repeat 2 completes, long beep
+    expect(mockAudioCtx.createOscillator).toHaveBeenCalledTimes(4);
   });
 });
