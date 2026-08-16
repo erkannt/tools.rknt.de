@@ -23,6 +23,7 @@ check: svelte-check test
 
 .PHONY: e2e
 e2e:
+	rm -rf .rodney
 	./scripts/e2e.sh
 
 node_modules: package.json pnpm-lock.yaml
