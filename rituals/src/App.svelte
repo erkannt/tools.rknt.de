@@ -3,6 +3,7 @@
   import { renderRitualLines } from "./lib/ritualParser";
   import { encodeRituals, decodeRituals } from "./lib/shareCodec";
   import { CountdownService } from "./lib/countdown";
+  import { WakeLockService } from "./lib/wakeLock";
   import { parseUrl, createRouter } from "./lib/router";
   import { createRitualStore } from "./stores/ritualStore";
 
@@ -12,6 +13,7 @@
   // ── Stores & Services ─────────────────────────────────────────────
   const ritualStore = createRitualStore();
   const router = createRouter(syncFromUrl);
+  const wakeLockService = new WakeLockService();
   const countdownService = new CountdownService(
     () => new AudioContext(),
     (state) => {
@@ -91,6 +93,14 @@
       deferredPrompt = null;
     });
   }
+
+  // ── Screen Wake Lock ─────────────────────────────────────────────
+  $effect(() => {
+    if (view === "view") {
+      wakeLockService.acquire();
+      return () => wakeLockService.release();
+    }
+  });
 
   // ── PWA Install ───────────────────────────────────────────────────
   async function handleInstall() {
