@@ -45,8 +45,11 @@ interface Ritual {
 
 ## PWA Setup
 - Service worker in `public/sw.js`
-- Caches: index.html, manifest, icons
-- Cache-first strategy for cached assets, network-first for others
+- Cache version (`CACHE_NAME`) is auto-injected per build: `vite.config.ts`'s `inject-service-worker-build-id` plugin replaces `__BUILD_ID__` in `dist/sw.js` with a build timestamp, so every release gets a fresh cache and old caches are purged on `activate`
+- Precache uses scope-relative URLs (from `self.registration.scope`) matching the `/rituals/` base path
+- Fetch strategy: network-first for navigation requests (app shell revalidates on every launch), cache-first for hashed JS/CSS assets
+- Offline: navigation falls back to the cached `index.html`
+- Client-side auto-update in `index.html`: `registration.update()` on load plus a guarded `controllerchange` listener that reloads the page once, so the first launch after a deploy picks up the new version without a manual refresh
 - `beforeinstallprompt` event enables custom install UI
 
 ## Styling

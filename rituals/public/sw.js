@@ -1,55 +1,75 @@
-const CACHE_NAME = 'rituals-v1';
+const CACHE_PREFIX = "rituals";
+const CACHE_NAME = `${CACHE_PREFIX}-__BUILD_ID__`;
+
+const SCOPE_URL = new URL(".", self.registration.scope);
 const ASSETS_TO_PRECACHE = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  '/icon-192.png',
-  '/icon-512.png'
+  SCOPE_URL.href,
+  new URL("./index.html", SCOPE_URL).href,
+  new URL("./manifest.json", SCOPE_URL).href,
+  new URL("./icon-192.png", SCOPE_URL).href,
+  new URL("./icon-512.png", SCOPE_URL).href,
 ];
 
-self.addEventListener('install', (event) => {
+self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS_TO_PRECACHE);
-    })
+    caches
+      .open(CACHE_NAME)
+      .then((cache) =>
+        Promise.allSettled(ASSETS_TO_PRECACHE.map((url) => cache.add(url)))
+      )
   );
   self.skipWaiting();
 });
 
-self.addEventListener('activate', (event) => {
+self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
+    caches.keys().then((cacheNames) =>
+      Promise.all(
         cacheNames
-          .filter((name) => name !== CACHE_NAME)
+          .filter(
+            (name) => name.startsWith(CACHE_PREFIX) && name !== CACHE_NAME
+          )
           .map((name) => caches.delete(name))
-      );
-    })
+      )
+    )
   );
   self.clients.claim();
 });
 
-self.addEventListener('fetch', (event) => {
-  if (event.request.method !== 'GET') return;
+self.addEventListener("fetch", (event) => {
+  if (event.request.method !== "GET") return;
 
-  event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        return cachedResponse;
-      }
-
-      return fetch(event.request).then((response) => {
-        if (!response || response.status !== 200 || response.type !== 'basic') {
-          return response;
-        }
-
-        const responseToCache = response.clone();
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, responseToCache);
-        });
-
-        return response;
-      });
-    })
-  );
+  if (event.request.mode === "navigate") {
+    event.respondWith(networkFirst(event.request));
+  } else {
+    event.respondWith(cacheFirst(event.request));
+  }
 });
+
+async function networkFirst(request) {
+  const cache = await caches.open(CACHE_NAME);
+  try {
+    const response = await fetch(request);
+    if (response && response.status === 200) {
+      cache.put(request, response.clone());
+    }
+    return response;
+  } catch {
+    const cached =
+      (await cache.match(request)) ||
+      (await cache.match(new URL("./index.html", SCOPE_URL).href));
+    return cached || Response.error();
+  }
+}
+
+async function cacheFirst(request) {
+  const cached = await caches.match(request);
+  if (cached) return cached;
+
+  const response = await fetch(request);
+  if (response && response.status === 200 && response.type === "basic") {
+    const cache = await caches.open(CACHE_NAME);
+    cache.put(request, response.clone());
+  }
+  return response;
+}

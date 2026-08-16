@@ -1,29 +1,39 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/rituals.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#B0C4DE" />
-    <meta
-      name="description"
-      content="Rituals, checklists, habits. Create, use, iterate"
-    />
-    <link rel="manifest" href="/manifest.json" />
-    <link rel="apple-touch-icon" href="/icon-192.png" />
-    <title>rituals</title>
-  </head>
-  <body>
-    <div id="app"></div>
-    <script type="module" src="/src/main.ts"></script>
-    <script>
-      if ("serviceWorker" in navigator) {
-        window.addEventListener("load", () => {
-          navigator.serviceWorker.register("./sw.js").catch((err) => {
-            console.log("SW registration failed:", err);
-          });
-        });
-      }
-    </script>
-  </body>
+
+	<head>
+		<meta charset="UTF-8">
+		<link rel="icon" type="image/svg+xml" href="/rituals.svg">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<meta name="theme-color" content="#B0C4DE">
+		<meta name="description" content="Rituals, checklists, habits. Create, use, iterate">
+		<link rel="manifest" href="/manifest.json">
+		<link rel="apple-touch-icon" href="/icon-192.png">
+		<title>rituals</title>
+	</head>
+
+	<body>
+		<div id="app"></div>
+		<script type="module" src="/src/main.ts"></script>
+		<script>
+			if ("serviceWorker" in navigator) {
+				window.addEventListener("load", () => {
+					navigator.serviceWorker.register("./sw.js").then((registration) => {
+						registration.update();
+					}).catch((err) => {
+						console.log("SW registration failed:", err);
+					});
+			});
+
+		if (navigator.serviceWorker.controller) {
+			let refreshing = false;
+			navigator.serviceWorker.addEventListener("controllerchange", () => {
+				if (refreshing) return;
+				window.location.reload();
+				refreshing = true;
+			});
+	}
+}
+		</script>
+	</body>
 </html>
