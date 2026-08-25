@@ -72,4 +72,17 @@ export default defineConfig({
   plugins: [svelte(), slidesPlugin()],
   root: ".",
   base: "/talks/",
+  build: {
+    rollupOptions: {
+      output: {
+        assetFileNames(assetInfo) {
+          // .mjs isn't in most default nginx mime.types; emit as .js instead
+          if (assetInfo.name?.endsWith(".mjs")) {
+            return "assets/[name]-[hash].js";
+          }
+          return "assets/[name]-[hash].[ext]";
+        },
+      },
+    },
+  },
 });
