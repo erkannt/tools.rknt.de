@@ -17,6 +17,7 @@
   let numPages = $state(0);
   let renderTask: { cancel(): void; promise: Promise<void> } | null = null;
   let touchStartX = 0;
+  let isFullscreen = $state(false);
 
   $effect(() => {
     const url = `slides/${encodeURIComponent(file)}`;
@@ -141,6 +142,14 @@
       document.exitFullscreen();
     }
   }
+
+  $effect(() => {
+    function onFullscreenChange() {
+      isFullscreen = !!document.fullscreenElement;
+    }
+    document.addEventListener("fullscreenchange", onFullscreenChange);
+    return () => document.removeEventListener("fullscreenchange", onFullscreenChange);
+  });
 </script>
 
 <svelte:window onkeydown={handleKeydown} />
@@ -153,7 +162,11 @@
       <div class="annotation-layer" bind:this={annotationDiv}></div>
     </div>
     <div class="counter">{pageNum} / {numPages}</div>
-    <a class="back" href="./">← Back</a>
+<button
+      class="fullscreen-toggle"
+      onclick={toggleFullscreen}
+      aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+    >{isFullscreen ? "⊡" : "⛶"}</button>
   {:else}
     <p class="loading">Loading…</p>
   {/if}
@@ -204,18 +217,22 @@
     pointer-events: none;
   }
 
-  .back {
+.fullscreen-toggle {
     position: absolute;
     top: var(--space-s);
-    left: var(--space-s);
+    right: var(--space-s);
+    background: none;
+    border: none;
+    padding: 0;
     color: rgba(255, 255, 255, 0.4);
-    text-decoration: none;
-    font-size: var(--step--1);
+    font-size: var(--step-0);
+    line-height: 1;
+    cursor: pointer;
     opacity: 0;
     transition: opacity 0.15s;
   }
 
-  .presenter:hover .back {
+  .presenter:hover .fullscreen-toggle {
     opacity: 1;
   }
 
