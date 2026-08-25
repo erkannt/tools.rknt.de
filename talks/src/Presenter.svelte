@@ -11,10 +11,12 @@
   let { file }: Props = $props();
 
   let canvas: HTMLCanvasElement | undefined = $state(undefined);
+  let annotationDiv: HTMLDivElement | undefined = $state(undefined);
   let pdf: pdfjsLib.PDFDocumentProxy | null = $state(null);
   let pageNum = $state(1);
   let numPages = $state(0);
   let renderTask: { cancel(): void; promise: Promise<void> } | null = null;
+  let touchStartX = 0;
 
   $effect(() => {
     const url = `slides/${encodeURIComponent(file)}`;
@@ -47,6 +49,36 @@
       await renderTask.promise;
     } catch {
       // render was cancelled — ignore
+      return;
+    }
+
+    renderAnnotations(page, vp);
+  }
+
+  async function renderAnnotations(
+    page: pdfjsLib.PDFPageProxy,
+    vp: pdfjsLib.PageViewport
+  ) {
+    if (!annotationDiv) return;
+    const div = annotationDiv;
+    const annotations = await page.getAnnotations();
+    div.innerHTML = "";
+    div.style.width = `${vp.width}px`;
+    div.style.height = `${vp.height}px`;
+
+    for (const ann of annotations as Array<Record<string, unknown>>) {
+      if (ann["subtype"] !== "Link") continue;
+      const url = (ann["url"] ?? ann["unsafeUrl"]) as string | undefined;
+      if (!url) continue;
+      const [x1, y1, x2, y2] = vp.convertToViewportRectangle(
+        ann["rect"] as [number, number, number, number]
+      );
+      const a = document.createElement("a");
+      a.href = url;
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      a.style.cssText = `position:absolute;left:${Math.min(x1,x2)}px;top:${Math.min(y1,y2)}px;width:${Math.abs(x2-x1)}px;height:${Math.abs(y2-y1)}px`;
+      div.appendChild(a);
     }
   }
 
@@ -87,18 +119,19 @@
         toggleFullscreen();
         break;
       case "Escape":
-        if (!document.fullscreenElement) history.back();
+        if (document.fullscreenElement) document.exitFullscreen();
         break;
     }
   }
 
-  function handleClick(e: MouseEvent) {
-    if (e.button !== 0) return;
-    if (e.clientX >= window.innerWidth / 2) {
-      next();
-    } else {
-      prev();
-    }
+  function handleTouchStart(e: TouchEvent) {
+    touchStartX = e.touches[0].clientX;
+  }
+
+  function handleTouchEnd(e: TouchEvent) {
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    if (Math.abs(dx) < 50) return;
+    if (dx < 0) next(); else prev();
   }
 
   function toggleFullscreen() {
@@ -112,17 +145,15 @@
 
 <svelte:window onkeydown={handleKeydown} />
 
-<!-- svelte-ignore a11y_click_events_have_key_events -->
 <!-- svelte-ignore a11y_no_static_element_interactions -->
-<div class="presenter" onclick={handleClick}>
+<div class="presenter" ontouchstart={handleTouchStart} ontouchend={handleTouchEnd}>
   {#if pdf}
-    <canvas bind:this={canvas}></canvas>
+    <div class="slide-wrapper">
+      <canvas bind:this={canvas}></canvas>
+      <div class="annotation-layer" bind:this={annotationDiv}></div>
+    </div>
     <div class="counter">{pageNum} / {numPages}</div>
-    <a
-      class="back"
-      href="./"
-      onclick={(e) => e.stopPropagation()}
-    >← Back</a>
+    <a class="back" href="./">← Back</a>
   {:else}
     <p class="loading">Loading…</p>
   {/if}
@@ -136,12 +167,31 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    cursor: pointer;
     user-select: none;
+  }
+
+  .slide-wrapper {
+    position: relative;
+    line-height: 0;
   }
 
   canvas {
     display: block;
+  }
+
+  .annotation-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    overflow: hidden;
+  }
+
+  .annotation-layer :global(a) {
+    display: block;
+    position: absolute;
+    pointer-events: auto;
+    cursor: pointer;
   }
 
   .counter {
