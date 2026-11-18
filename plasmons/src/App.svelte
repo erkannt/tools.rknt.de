@@ -7,14 +7,8 @@
   // Up to the NA 1.7 objective limit in the 1.788 coverslip: asin(1.7 / 1.788) ≈ 72°
   const angles = steps(30, 72, 0.1); // degrees
 
-  const defaultWavelength = 632.8; // nm, He-Ne laser
-  let wavelengthInput: number | null = $state(defaultWavelength);
-  // An emptied or out-of-range input falls back to the default rather than breaking the curve.
-  const wavelength = $derived(
-    wavelengthInput != null && wavelengthInput >= 400 && wavelengthInput <= 1000
-      ? wavelengthInput
-      : defaultWavelength,
-  );
+  // He-Ne laser. Fixed because the layer indices are only valid at this wavelength.
+  const wavelength = 632.8; // nm
 
   let params: Params = $state({ ...defaultParams });
 
@@ -86,10 +80,7 @@
       <section class="stack" aria-labelledby="light-heading" style="--stack-space: var(--space-xs)">
         <h2 id="light-heading">Light</h2>
 
-        <label>
-          Wavelength (nm)
-          <input type="number" min="400" max="1000" step="0.1" bind:value={wavelengthInput} />
-        </label>
+        <p>Wavelength: {wavelength} nm</p>
       </section>
     </div>
 
