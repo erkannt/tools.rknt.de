@@ -4,10 +4,10 @@
   import { steps } from "./lib/plot";
   import { reflectance } from "./lib/reflectance";
 
-  // Assumption until this becomes an input.
-  const angles = steps(40, 80, 0.1); // degrees
+  // Up to the NA 1.7 objective limit in the 1.788 coverslip: asin(1.7 / 1.788) ≈ 72°
+  const angles = steps(30, 72, 0.1); // degrees
 
-  const defaultWavelength = 633; // nm
+  const defaultWavelength = 632.8; // nm, He-Ne laser
   let wavelengthInput: number | null = $state(defaultWavelength);
   // An emptied or out-of-range input falls back to the default rather than breaking the curve.
   const wavelength = $derived(
@@ -88,7 +88,7 @@
 
         <label>
           Wavelength (nm)
-          <input type="number" min="400" max="1000" step="1" bind:value={wavelengthInput} />
+          <input type="number" min="400" max="1000" step="0.1" bind:value={wavelengthInput} />
         </label>
       </section>
     </div>

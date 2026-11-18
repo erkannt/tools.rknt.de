@@ -1,7 +1,8 @@
 import type { Layer } from "./layers";
 
 /**
- * Reflectance (0–1) of the layer stack for each angle of incidence.
+ * Reflectance (0–1) of the layer stack for p-polarised light at each angle of incidence.
+ * Complex indices use the n + ik convention (k > 0 absorbs).
  *
  * STUB: returns a made-up resonance dip that moves with the layer values so
  * the UI can be wired up. Replace with the real multilayer calculation.

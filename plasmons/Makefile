@@ -21,6 +21,11 @@ test: node_modules
 .PHONY: check
 check: svelte-check test
 
+# Reference reflectance curves from tmm, committed so tests don't need Python.
+.PHONY: fixtures
+fixtures:
+	uv run scripts/fixtures.py src/lib/fixtures/tmm.json
+
 node_modules: package.json pnpm-lock.yaml
 	pnpm install --frozen-lockfile
 
