@@ -1,3 +1,19 @@
+<script lang="ts">
+  import Curve from "./Curve.svelte";
+  import { buildLayers, defaultParams, fixed, formatIndex, type Params } from "./lib/layers";
+  import { steps } from "./lib/plot";
+  import { reflectance } from "./lib/reflectance";
+
+  // Assumptions until these become inputs.
+  const wavelength = 633; // nm
+  const angles = steps(40, 80, 0.1); // degrees
+
+  let params: Params = $state({ ...defaultParams });
+
+  const layers = $derived(buildLayers(params));
+  const curve = $derived(reflectance(layers, wavelength, angles));
+</script>
+
 <main class="stack">
   <h1>Plasmon Curves</h1>
 
@@ -9,51 +25,51 @@
         <legend>Cytosol</legend>
         <label>
           Refractive index
-          <input type="range" name="cytosol-ri" min="1.34" max="1.40" step="0.001" value="1.37" />
-          <output for="cytosol-ri">1.370</output>
+          <input type="range" id="cytosol-ri" min="1.34" max="1.40" step="0.001" bind:value={params.cytosolIndex} />
+          <output for="cytosol-ri">{params.cytosolIndex.toFixed(3)}</output>
         </label>
         <p>Thickness: ∞</p>
       </fieldset>
 
       <fieldset>
         <legend>Membrane</legend>
-        <p>Refractive index: 1.5000</p>
-        <p>Thickness: 8 nm</p>
+        <p>Refractive index: {formatIndex(fixed.membraneIndex)}</p>
+        <p>Thickness: {fixed.membraneThickness} nm</p>
       </fieldset>
 
       <fieldset>
         <legend>Media</legend>
-        <p>Refractive index: 1.3350</p>
+        <p>Refractive index: {formatIndex(fixed.mediaIndex)}</p>
         <label>
           Thickness (nm)
-          <input type="range" name="media-thickness" min="0" max="150" step="1" value="50" />
-          <output for="media-thickness">50</output>
+          <input type="range" id="media-thickness" min="0" max="150" step="1" bind:value={params.mediaThickness} />
+          <output for="media-thickness">{params.mediaThickness}</output>
         </label>
       </fieldset>
 
       <fieldset>
         <legend>Gold</legend>
-        <p>Refractive index: 0.1943 + 3.5921i</p>
+        <p>Refractive index: {formatIndex(fixed.goldIndex)}</p>
         <label>
           Thickness (nm)
-          <input type="range" name="gold-thickness" min="38" max="55" step="0.5" value="47" />
-          <output for="gold-thickness">47</output>
+          <input type="range" id="gold-thickness" min="38" max="55" step="0.5" bind:value={params.goldThickness} />
+          <output for="gold-thickness">{params.goldThickness}</output>
         </label>
       </fieldset>
 
       <fieldset>
         <legend>Chromium</legend>
-        <p>Refractive index: 3.3000 + 4.2731i</p>
+        <p>Refractive index: {formatIndex(fixed.chromiumIndex)}</p>
         <label>
           Thickness (nm)
-          <input type="range" name="chromium-thickness" min="2" max="5" step="0.1" value="3" />
-          <output for="chromium-thickness">3</output>
+          <input type="range" id="chromium-thickness" min="2" max="5" step="0.1" bind:value={params.chromiumThickness} />
+          <output for="chromium-thickness">{params.chromiumThickness}</output>
         </label>
       </fieldset>
 
       <fieldset>
         <legend>Coverslip</legend>
-        <p>Refractive index: 1.7880</p>
+        <p>Refractive index: {formatIndex(fixed.coverslipIndex)}</p>
         <p>Thickness: ∞</p>
       </fieldset>
     </section>
@@ -61,20 +77,7 @@
     <section class="stack" aria-labelledby="curve-heading" style="--stack-space: var(--space-s)">
       <h2 id="curve-heading">Curve</h2>
 
-      <svg viewBox="0 0 600 400" role="img" aria-labelledby="curve-title">
-        <title id="curve-title">Reflectance against angle of incidence</title>
-
-        <!-- axes -->
-        <line x1="60" y1="20" x2="60" y2="340" stroke="currentColor" />
-        <line x1="60" y1="340" x2="580" y2="340" stroke="currentColor" />
-
-        <!-- axis labels -->
-        <text x="320" y="385" text-anchor="middle" font-size="16">Angle of incidence (°)</text>
-        <text x="20" y="180" text-anchor="middle" font-size="16" transform="rotate(-90 20 180)">Reflectance</text>
-
-        <!-- curve (placeholder) -->
-        <path d="M 60 40 C 300 40, 320 300, 360 300 S 420 60, 580 60" fill="none" stroke="currentColor" stroke-width="2" />
-      </svg>
+      <Curve {angles} reflectance={curve} />
     </section>
   </div>
 </main>
@@ -82,11 +85,6 @@
 <style>
   main {
     padding: var(--space-m);
-  }
-
-  svg {
-    inline-size: 100%;
-    block-size: auto;
   }
 
   label {
