@@ -1,0 +1,31 @@
+.stack {
+	display: flex;
+	flex-direction: column;
+	justify-content: flex-start;
+}
+
+.stack > * {
+	margin-block: 0;
+}
+
+.stack > * + * {
+	margin-block-start: var(--stack-space, var(--space-l));
+}
+
+/* https://every-layout.dev/layouts/sidebar/ */
+.with-sidebar {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--sidebar-gap, var(--space-l));
+}
+
+.with-sidebar > :first-child {
+	flex-basis: var(--sidebar-width, 20rem);
+	flex-grow: 1;
+}
+
+.with-sidebar > :last-child {
+	flex-basis: 0;
+	flex-grow: 999;
+	min-inline-size: var(--sidebar-content-min, 50%);
+}
