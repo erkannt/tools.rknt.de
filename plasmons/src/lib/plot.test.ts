@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { linePath, linearScale, steps } from "./plot";
+import { crossesPath, linePath, linearScale, steps } from "./plot";
 
 describe("linearScale", () => {
   it("maps domain ends onto range ends", () => {
@@ -29,5 +29,11 @@ describe("linePath", () => {
 
   it("is empty for no points", () => {
     expect(linePath([], [])).toBe("");
+  });
+});
+
+describe("crossesPath", () => {
+  it("draws both diagonals of each cross", () => {
+    expect(crossesPath([10], [20], 2)).toBe("M 8.00 18.00 L 12.00 22.00 M 8.00 22.00 L 12.00 18.00");
   });
 });

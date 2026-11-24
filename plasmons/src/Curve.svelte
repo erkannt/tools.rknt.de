@@ -1,10 +1,16 @@
 <script lang="ts">
-  import { linePath, linearScale, steps, ticks } from "./lib/plot";
+  import { crossesPath, linePath, linearScale, steps, ticks } from "./lib/plot";
 
   let {
     angles,
     reflectance,
-  }: { angles: number[]; reflectance: number[] } = $props();
+    points,
+  }: {
+    angles: number[];
+    reflectance: number[];
+    /** Data points drawn as red crosses underneath the curve. */
+    points?: { angles: number[]; reflectance: number[] };
+  } = $props();
 
   const width = 600;
   const height = 400;
@@ -19,6 +25,7 @@
   const yTicks = ticks(steps(0, 1, 0.2), y);
 
   const path = $derived(linePath(angles.map(x), reflectance.map(y)));
+  const crosses = $derived(points && crossesPath(points.angles.map(x), points.reflectance.map(y), 3));
 </script>
 
 <svg viewBox="0 0 {width} {height}" role="img" aria-labelledby="curve-title">
@@ -41,6 +48,10 @@
 
   <text x={(margin.left + width - margin.right) / 2} y={height - 10} text-anchor="middle" font-size="16">Angle of incidence (°)</text>
   <text x="18" y={(margin.top + height - margin.bottom) / 2} text-anchor="middle" font-size="16" transform="rotate(-90 18 {(margin.top + height - margin.bottom) / 2})">Reflectance</text>
+
+  {#if crosses}
+    <path d={crosses} fill="none" stroke="red" stroke-width="1.5" />
+  {/if}
 
   <path d={path} fill="none" stroke="currentColor" stroke-width="2" />
 </svg>

@@ -35,3 +35,6 @@ export const paramRanges: Record<keyof Params, { min: number; max: number; step:
 /** Standard deviation of the Gaussian noise added to simulated reflectance. */
 export const noiseRange = { min: 0, max: 0.05, step: 0.001 };
 export const defaultNoise = 0.01;
+
+/** Spacing in degrees of the simulated data points; coarser than the curve to keep links short. */
+export const pointSpacing = 0.2;

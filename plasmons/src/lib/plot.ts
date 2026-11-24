@@ -26,3 +26,13 @@ export function ticks(
 ): Tick[] {
   return values.map((value) => ({ value, position: scale(value) }));
 }
+
+/** SVG path `d` attribute drawing an ✕ of half-width `size` at each point. */
+export function crossesPath(xs: number[], ys: number[], size: number): string {
+  return xs
+    .map((x, i) => {
+      const [x0, x1, y0, y1] = [x - size, x + size, ys[i] - size, ys[i] + size].map((v) => v.toFixed(2));
+      return `M ${x0} ${y0} L ${x1} ${y1} M ${x0} ${y1} L ${x1} ${y0}`;
+    })
+    .join(" ");
+}
