@@ -1,5 +1,6 @@
 <script lang="ts">
   import { parseRoute } from "./lib/route";
+  import Create from "./views/Create.svelte";
   import Explore from "./views/Explore.svelte";
 
   let hash = $state(location.hash);
@@ -13,6 +14,8 @@
 
   {#if route.view === "explore"}
     <Explore />
+  {:else if route.view === "create"}
+    <Create />
   {/if}
 </main>
 

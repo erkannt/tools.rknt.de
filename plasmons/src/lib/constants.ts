@@ -31,3 +31,7 @@ export const paramRanges: Record<keyof Params, { min: number; max: number; step:
   goldThickness: { min: 38, max: 55, step: 0.5 },
   chromiumThickness: { min: 2, max: 5, step: 0.1 },
 };
+
+/** Standard deviation of the Gaussian noise added to simulated reflectance. */
+export const noiseRange = { min: 0, max: 0.05, step: 0.001 };
+export const defaultNoise = 0.01;

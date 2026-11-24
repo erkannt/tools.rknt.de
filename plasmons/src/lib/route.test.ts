@@ -6,6 +6,10 @@ describe("parseRoute", () => {
     expect(parseRoute(hash)).toEqual({ view: "explore" });
   });
 
+  it("shows the create view for #/create", () => {
+    expect(parseRoute("#/create")).toEqual({ view: "create" });
+  });
+
   it("falls back to the explore view for unknown routes", () => {
     expect(parseRoute("#/nope/abc")).toEqual({ view: "explore" });
   });
