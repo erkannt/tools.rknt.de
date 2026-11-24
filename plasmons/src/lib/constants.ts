@@ -26,10 +26,10 @@ export const defaultParams: Params = {
 
 /** Slider bounds for each adjustable value. */
 export const paramRanges: Record<keyof Params, { min: number; max: number; step: number }> = {
-  cytosolIndex: { min: 1.34, max: 1.4, step: 0.001 },
+  cytosolIndex: { min: 1.34, max: 1.45, step: 0.001 },
   mediaThickness: { min: 0, max: 150, step: 1 },
-  goldThickness: { min: 38, max: 55, step: 0.5 },
-  chromiumThickness: { min: 2, max: 5, step: 0.1 },
+  goldThickness: { min: 35, max: 70, step: 0.5 },
+  chromiumThickness: { min: 1, max: 7, step: 0.1 },
 };
 
 /** Standard deviation of the Gaussian noise added to simulated reflectance. */

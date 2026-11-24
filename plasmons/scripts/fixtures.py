@@ -36,10 +36,10 @@ DEFAULT_PARAMS = {
     "chromiumThickness": 3,
 }
 PARAM_RANGES = {
-    "cytosolIndex": (1.34, 1.40),
+    "cytosolIndex": (1.34, 1.45),
     "mediaThickness": (0, 150),
-    "goldThickness": (38, 55),
-    "chromiumThickness": (2, 5),
+    "goldThickness": (35, 70),
+    "chromiumThickness": (1, 7),
 }
 
 
