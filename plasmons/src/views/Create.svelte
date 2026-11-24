@@ -1,16 +1,15 @@
 <script lang="ts">
   import Curve from "../Curve.svelte";
   import ParamControls from "../ParamControls.svelte";
-  import { angleRange, defaultNoise, defaultParams, noiseRange, pointSpacing, wavelength } from "../lib/constants";
+  import { angleRange, defaultNoise, defaultParams, noiseRange, wavelength } from "../lib/constants";
   import { buildLayers, type Params } from "../lib/layers";
-  import { encodePoints } from "../lib/link";
-  import { addNoise } from "../lib/noise";
+  import { encodeSimulation } from "../lib/link";
   import { steps } from "../lib/plot";
   import { randomSeed } from "../lib/random";
   import { reflectance } from "../lib/reflectance";
+  import { pointAngles, simulate } from "../lib/simulate";
 
   const angles = steps(angleRange.min, angleRange.max, angleRange.step); // degrees
-  const pointAngles = steps(angleRange.min, angleRange.max, pointSpacing); // degrees
 
   let params: Params = $state({ ...defaultParams });
   let noise = $state(defaultNoise);
@@ -19,11 +18,9 @@
 
   const layers = $derived(buildLayers(params));
   const curve = $derived(reflectance(layers, wavelength, angles));
-  const points = $derived(addNoise(reflectance(layers, wavelength, pointAngles), noise, seed));
+  const points = $derived(simulate({ params, noise, seed }));
 
-  const link = $derived(
-    `${location.origin}${location.pathname}#/fit/${encodePoints({ start: angleRange.min, step: pointSpacing, reflectance: points })}`,
-  );
+  const link = $derived(`${location.origin}${location.pathname}#/fit/${encodeSimulation({ params, noise, seed })}`);
 
   let copyStatus: "idle" | "copied" | "failed" = $state("idle");
   let resetTimer: ReturnType<typeof setTimeout> | undefined;

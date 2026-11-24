@@ -1,36 +1,31 @@
 import { describe, expect, it } from "vitest";
-import { decodePoints, encodePoints, pointAngles, type Points } from "./link";
+import { decodeSimulation, encodeSimulation } from "./link";
+import type { Simulation } from "./simulate";
 
-describe("point links", () => {
-  const points: Points = {
-    start: 30,
-    step: 0.2,
-    reflectance: Array.from({ length: 211 }, (_, i) => (Math.sin(i) + 1) / 2),
+describe("simulation links", () => {
+  const sim: Simulation = {
+    params: { cytosolIndex: 1.371, mediaThickness: 73, goldThickness: 46.5, chromiumThickness: 3.2 },
+    noise: 0.013,
+    seed: 0xdeadbeef,
   };
 
-  it("round-trip to within the 16-bit precision", () => {
-    const decoded = decodePoints(encodePoints(points))!;
-    expect(decoded.start).toBe(points.start);
-    expect(decoded.step).toBe(points.step);
-    expect(decoded.reflectance).toHaveLength(points.reflectance.length);
-    decoded.reflectance.forEach((r, i) => expect(Math.abs(r - points.reflectance[i])).toBeLessThanOrEqual(0.5 / 0xffff));
-  });
-
-  it("keep 0 and 1 exact", () => {
-    expect(decodePoints(encodePoints({ start: 0, step: 1, reflectance: [0, 1] }))!.reflectance).toEqual([0, 1]);
+  it("round-trip exactly", () => {
+    expect(decodeSimulation(encodeSimulation(sim))).toEqual(sim);
   });
 
   it("are URL safe and short", () => {
-    const encoded = encodePoints(points);
+    const encoded = encodeSimulation(sim);
     expect(encoded).toMatch(/^[A-Za-z0-9_-]+$/);
-    expect(encoded.length).toBeLessThan(600);
+    expect(encoded.length).toBeLessThan(80);
   });
 
-  it.each(["", "!!!", "AAAA", encodePoints(points).slice(0, -4)])("reject invalid input %j", (s) => {
-    expect(decodePoints(s)).toBeNull();
-  });
-
-  it("give evenly spaced angles", () => {
-    expect(pointAngles({ start: 30, step: 0.5, reflectance: [0, 0, 0] })).toEqual([30, 30.5, 31]);
+  it.each([
+    ["empty", ""],
+    ["not base64", "!!!"],
+    ["too short", encodeSimulation(sim).slice(0, -4)],
+    ["negative noise", encodeSimulation({ ...sim, noise: -1 })],
+    ["non-finite param", encodeSimulation({ ...sim, params: { ...sim.params, goldThickness: NaN } })],
+  ])("reject %s input", (_, s) => {
+    expect(decodeSimulation(s)).toBeNull();
   });
 });

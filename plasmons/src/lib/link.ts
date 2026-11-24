@@ -1,47 +1,41 @@
-/** Evenly spaced data points: angle i is `start + i * step`. */
-export type Points = { start: number; step: number; reflectance: number[] };
+import type { Params } from "./layers";
+import type { Simulation } from "./simulate";
 
-const VERSION = 1;
-const HEADER = 1 + 8 + 8 + 2; // version, start, step, count
-const MAX = 0xffff;
+const VERSION = 2;
+// Fixed order, so the encoding doesn't depend on object key order.
+const PARAM_KEYS: (keyof Params)[] = ["cytosolIndex", "mediaThickness", "goldThickness", "chromiumThickness"];
+const LENGTH = 1 + 4 + 8 + 8 * PARAM_KEYS.length; // version, seed, noise, params
 
-/**
- * Packs points into a URL-safe base64 string. Reflectance must be in [0, 1]; it is
- * stored as 16-bit integers, so it comes back rounded to the nearest 1/65535.
- */
-export function encodePoints({ start, step, reflectance }: Points): string {
-  const view = new DataView(new ArrayBuffer(HEADER + 2 * reflectance.length));
+/** Packs a simulation into a short URL-safe base64 string. */
+export function encodeSimulation({ params, noise, seed }: Simulation): string {
+  const view = new DataView(new ArrayBuffer(LENGTH));
   view.setUint8(0, VERSION);
-  view.setFloat64(1, start);
-  view.setFloat64(9, step);
-  view.setUint16(17, reflectance.length);
-  reflectance.forEach((r, i) => view.setUint16(HEADER + 2 * i, Math.round(r * MAX)));
+  view.setUint32(1, seed);
+  view.setFloat64(5, noise);
+  PARAM_KEYS.forEach((key, i) => view.setFloat64(13 + 8 * i, params[key]));
   return toBase64Url(new Uint8Array(view.buffer));
 }
 
-/** The inverse of `encodePoints`; null if the string isn't a valid encoding. */
-export function decodePoints(encoded: string): Points | null {
+/** The inverse of `encodeSimulation`; null if the string isn't a valid encoding. */
+export function decodeSimulation(encoded: string): Simulation | null {
   let bytes: Uint8Array;
   try {
     bytes = fromBase64Url(encoded);
   } catch {
     return null;
   }
-  if (bytes.length < HEADER) return null;
+  if (bytes.length !== LENGTH) return null;
 
   const view = new DataView(bytes.buffer);
   if (view.getUint8(0) !== VERSION) return null;
-  const start = view.getFloat64(1);
-  const step = view.getFloat64(9);
-  const count = view.getUint16(17);
-  if (bytes.length !== HEADER + 2 * count || !Number.isFinite(start) || !(step > 0)) return null;
+  const seed = view.getUint32(1);
+  const noise = view.getFloat64(5);
+  const values = PARAM_KEYS.map((_, i) => view.getFloat64(13 + 8 * i));
+  if (!(noise >= 0) || !values.every(Number.isFinite)) return null;
 
-  const reflectance = Array.from({ length: count }, (_, i) => view.getUint16(HEADER + 2 * i) / MAX);
-  return { start, step, reflectance };
+  const params = Object.fromEntries(PARAM_KEYS.map((key, i) => [key, values[i]])) as Params;
+  return { params, noise, seed };
 }
-
-export const pointAngles = ({ start, step, reflectance }: Points): number[] =>
-  reflectance.map((_, i) => start + i * step);
 
 function toBase64Url(bytes: Uint8Array): string {
   const binary = Array.from(bytes, (b) => String.fromCharCode(b)).join("");
