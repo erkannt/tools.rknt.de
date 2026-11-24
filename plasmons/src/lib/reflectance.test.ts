@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { buildLayers, defaultParams, type Layer } from "./layers";
+import { defaultParams, wavelength } from "./constants";
+import { buildLayers, type Layer } from "./layers";
 import { reflectance } from "./reflectance";
 import { steps } from "./plot";
 import fixtures from "./fixtures/tmm.json";
@@ -8,7 +9,7 @@ describe("reflectance", () => {
   const angles = steps(40, 80, 0.5);
 
   it("returns one value in [0, 1] per angle", () => {
-    const r = reflectance(buildLayers(defaultParams), 633, angles);
+    const r = reflectance(buildLayers(defaultParams), wavelength, angles);
     expect(r).toHaveLength(angles.length);
     for (const v of r) {
       expect(v).toBeGreaterThanOrEqual(0);

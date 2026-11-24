@@ -1,14 +1,11 @@
 <script lang="ts">
   import Curve from "./Curve.svelte";
-  import { buildLayers, defaultParams, fixed, formatIndex, type Params } from "./lib/layers";
+  import { angleRange, defaultParams, fixed, paramRanges, wavelength } from "./lib/constants";
+  import { buildLayers, formatIndex, type Params } from "./lib/layers";
   import { steps } from "./lib/plot";
   import { reflectance } from "./lib/reflectance";
 
-  // Up to the NA 1.7 objective limit in the 1.788 coverslip: asin(1.7 / 1.788) ≈ 72°
-  const angles = steps(30, 72, 0.1); // degrees
-
-  // He-Ne laser. Fixed because the layer indices are only valid at this wavelength.
-  const wavelength = 632.8; // nm
+  const angles = steps(angleRange.min, angleRange.max, angleRange.step); // degrees
 
   let params: Params = $state({ ...defaultParams });
 
@@ -28,7 +25,7 @@
           <legend>Cytosol</legend>
           <label>
             Refractive index
-            <input type="range" id="cytosol-ri" min="1.34" max="1.40" step="0.001" bind:value={params.cytosolIndex} />
+            <input type="range" id="cytosol-ri" {...paramRanges.cytosolIndex} bind:value={params.cytosolIndex} />
             <output for="cytosol-ri">{params.cytosolIndex.toFixed(3)}</output>
           </label>
           <p>Thickness: ∞</p>
@@ -45,7 +42,7 @@
           <p>Refractive index: {formatIndex(fixed.mediaIndex)}</p>
           <label>
             Thickness (nm)
-            <input type="range" id="media-thickness" min="0" max="150" step="1" bind:value={params.mediaThickness} />
+            <input type="range" id="media-thickness" {...paramRanges.mediaThickness} bind:value={params.mediaThickness} />
             <output for="media-thickness">{params.mediaThickness}</output>
           </label>
         </fieldset>
@@ -55,7 +52,7 @@
           <p>Refractive index: {formatIndex(fixed.goldIndex)}</p>
           <label>
             Thickness (nm)
-            <input type="range" id="gold-thickness" min="38" max="55" step="0.5" bind:value={params.goldThickness} />
+            <input type="range" id="gold-thickness" {...paramRanges.goldThickness} bind:value={params.goldThickness} />
             <output for="gold-thickness">{params.goldThickness}</output>
           </label>
         </fieldset>
@@ -65,7 +62,7 @@
           <p>Refractive index: {formatIndex(fixed.chromiumIndex)}</p>
           <label>
             Thickness (nm)
-            <input type="range" id="chromium-thickness" min="2" max="5" step="0.1" bind:value={params.chromiumThickness} />
+            <input type="range" id="chromium-thickness" {...paramRanges.chromiumThickness} bind:value={params.chromiumThickness} />
             <output for="chromium-thickness">{params.chromiumThickness}</output>
           </label>
         </fieldset>

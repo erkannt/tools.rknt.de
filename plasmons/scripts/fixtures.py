@@ -28,7 +28,7 @@ MEDIA = complex(1.335, 0)
 MEMBRANE = complex(1.5, 0)
 MEMBRANE_THICKNESS = 8
 
-# Mirrors defaultParams and the slider ranges in src/lib/layers.ts / App.svelte.
+# Mirrors src/lib/constants.ts; src/lib/fixtures.test.ts checks they agree.
 DEFAULT_PARAMS = {
     "cytosolIndex": 1.37,
     "mediaThickness": 50,
